@@ -7,6 +7,10 @@
     <version>1.0.0</version>
 
     <packaging>pom</packaging>
+    <modules>
+        <module>core</module>
+        <module>osba</module>
+    </modules>
 
     <name>euonia-parent</name>
     <description>Euonia framework for Java.</description>
@@ -27,12 +31,27 @@
     </developers>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.version>1.0</project.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
-        <jdk.version>17</jdk.version>
+        <java.version>25</java.version>
+        <jdk.version>25</jdk.version>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                    <source>25</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
