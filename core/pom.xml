@@ -6,13 +6,12 @@
     <parent>
           <groupId>com.euonia</groupId>
           <artifactId>parent</artifactId>
-          <version>1.0.0</version>
+        <version>${revision}</version>
     </parent>
 
-    <groupId>com.euonia</groupId>
     <artifactId>core</artifactId>
     <name>euonia core module</name>
-    <version>1.0.0</version>
+
     <description>Core module of the Euonia framework</description>
 
     <properties>
