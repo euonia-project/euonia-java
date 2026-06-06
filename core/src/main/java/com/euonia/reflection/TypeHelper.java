@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public final class TypeHelper {
     private TypeHelper() {
     }
@@ -44,7 +45,7 @@ public final class TypeHelper {
 
         // Collections/Map/JSON
         if (Collection.class.isAssignableFrom(boxedDesired) || boxedDesired.isArray()
-                || Map.class.isAssignableFrom(boxedDesired)) {
+            || Map.class.isAssignableFrom(boxedDesired)) {
             return convertToCollectionOrMap(boxedDesired, value);
         }
 
@@ -81,9 +82,10 @@ public final class TypeHelper {
             return conv;
 
         throw new IllegalArgumentException(String.format("Cannot convert value of type %s to %s (value=%s)",
-                value.getClass().getName(), desiredType.getName(), value));
+            value.getClass().getName(), desiredType.getName(), value));
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T coerceValue(Class<T> desiredType, Object value) {
         return (T) coerceValue(desiredType, (value == null ? null : value.getClass()), value);
     }
@@ -112,7 +114,7 @@ public final class TypeHelper {
 
     private static boolean isPrimitiveNumber(Class<?> c) {
         return c == int.class || c == long.class || c == short.class || c == byte.class
-                || c == float.class || c == double.class;
+            || c == float.class || c == double.class;
     }
 
     private static Object defaultPrimitiveValue(Class<?> primitiveType) {
@@ -135,39 +137,46 @@ public final class TypeHelper {
         return null;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked", "IfCanBeSwitch"})
     private static Object convertToEnum(Class<?> enumType, Object value) {
-        switch (value) {
-            case null -> {
+
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Enum) {
+            return value;
+        }
+
+        if (value instanceof String target) {
+            String string = target.trim();
+            if (string.isEmpty()) {
                 return null;
             }
-            case String string -> {
-                String s = string.trim();
-                if (s.isEmpty())
-                    return null;
+            try {
+                return Enum.valueOf((Class<? extends Enum>) enumType, string);
+            } catch (IllegalArgumentException ex) {
+                // Try ordinal
                 try {
-                    return Enum.valueOf((Class<? extends Enum>) enumType, s);
-                } catch (IllegalArgumentException ex) {
-                    try {
-                        int ord = Integer.parseInt(s);
-                        Enum[] constants = (Enum[]) enumType.getEnumConstants();
-                        if (ord >= 0 && ord < constants.length)
-                            return constants[ord];
-                    } catch (NumberFormatException ignored) {
-                    }
-                    throw ex;
+                    int ord = Integer.parseInt(string);
+                    Enum[] constants = (Enum[]) enumType.getEnumConstants();
+                    if (ord >= 0 && ord < constants.length)
+                        return constants[ord];
+                } catch (NumberFormatException ignored) {
                 }
-            }
-            case Number number -> {
-                int ord = number.intValue();
-                Enum[] constants = (Enum[]) enumType.getEnumConstants();
-                if (ord >= 0 && ord < constants.length)
-                    return constants[ord];
-                throw new IllegalArgumentException("Enum ordinal out of range: " + ord);
-            }
-            default -> {
+                throw ex;
             }
         }
+
+        if (value instanceof Number number) {
+            int ord = number.intValue();
+            Enum[] constants = (Enum[]) enumType.getEnumConstants();
+            if (ord >= 0 && ord < constants.length) {
+                return constants[ord];
+            }
+            throw new IllegalArgumentException("Enum ordinal out of range: " + ord);
+        }
+
         String vs = value.toString();
         if (vs != null && !vs.isEmpty()) {
             return convertToEnum(enumType, vs);
@@ -256,9 +265,9 @@ public final class TypeHelper {
     // available)
     private static boolean isDateTimeTarget(Class<?> boxedDesired) {
         return boxedDesired == Date.class || boxedDesired == Instant.class || boxedDesired == LocalDateTime.class
-                || boxedDesired == LocalDate.class || boxedDesired == LocalTime.class
-                || boxedDesired == OffsetDateTime.class
-                || boxedDesired == ZonedDateTime.class;
+            || boxedDesired == LocalDate.class || boxedDesired == LocalTime.class
+            || boxedDesired == OffsetDateTime.class
+            || boxedDesired == ZonedDateTime.class;
     }
 
     private static Object convertToDateTime(Class<?> target, Object value) {
@@ -290,8 +299,8 @@ public final class TypeHelper {
         }
 
         if (Temporal.class.isAssignableFrom(target) || target == LocalDate.class || target == LocalDateTime.class
-                || target == LocalTime.class || target == Instant.class || target == OffsetDateTime.class
-                || target == ZonedDateTime.class) {
+            || target == LocalTime.class || target == Instant.class || target == OffsetDateTime.class
+            || target == ZonedDateTime.class) {
             if (value instanceof Number) {
                 long epoch = ((Number) value).longValue();
                 Instant inst = Instant.ofEpochMilli(epoch);
@@ -302,12 +311,12 @@ public final class TypeHelper {
             if (s.isEmpty())
                 return null;
             List<java.util.function.Function<String, Object>> parsers = Arrays.asList(
-                    Instant::parse,
-                    OffsetDateTime::parse,
-                    ZonedDateTime::parse,
-                    LocalDateTime::parse,
-                    LocalDate::parse,
-                    LocalTime::parse);
+                Instant::parse,
+                OffsetDateTime::parse,
+                ZonedDateTime::parse,
+                LocalDateTime::parse,
+                LocalDate::parse,
+                LocalTime::parse);
             for (var p : parsers) {
                 try {
                     Object parsed = p.apply(s);
@@ -317,11 +326,11 @@ public final class TypeHelper {
                         case "OffsetDateTime" -> convertInstantToTarget(target, ((OffsetDateTime) parsed).toInstant());
                         case "ZonedDateTime" -> convertInstantToTarget(target, ((ZonedDateTime) parsed).toInstant());
                         case "LocalDateTime" -> convertInstantToTarget(target,
-                                ((LocalDateTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
+                            ((LocalDateTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
                         case "LocalDate" -> convertInstantToTarget(target,
-                                ((LocalDate) parsed).atStartOfDay(ZoneId.systemDefault()).toInstant());
+                            ((LocalDate) parsed).atStartOfDay(ZoneId.systemDefault()).toInstant());
                         case "LocalTime" -> convertInstantToTarget(target, LocalDateTime
-                                .of(LocalDate.now(), (LocalTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
+                            .of(LocalDate.now(), (LocalTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
                         default -> null;
                     };
                 } catch (DateTimeParseException ignored) {

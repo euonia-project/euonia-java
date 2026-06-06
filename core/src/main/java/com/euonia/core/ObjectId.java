@@ -124,13 +124,27 @@ public final class ObjectId {
 
     @Override
     public String toString() {
-        return switch (value) {
-            case UUID uuid -> uuid.toString();
-            case ULID uuid -> ulid().toString();
-            case Long l -> l.toString();
-            case Integer i -> i.toString();
-            case String s -> s;
-            default -> value.toString();
-        };
+
+        if (value instanceof UUID target) {
+            return target.toString();
+        }
+
+        if (value instanceof Integer target) {
+            return target.toString();
+        }
+
+        if (value instanceof Long target) {
+            return target.toString();
+        }
+
+        if (value instanceof String target) {
+            return target;
+        }
+
+        if (value instanceof ULID target) {
+            return target.toString();
+        }
+
+        return value.toString();
     }
 }
