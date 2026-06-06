@@ -3,6 +3,7 @@ package com.euonia.osba.rules;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Represents a collection of broken rules that have been violated during rule checking.
@@ -85,7 +86,16 @@ public final class BrokenRuleCollection {
      *
      * @return an unmodifiable list of broken rules
      */
-    public synchronized List<BrokenRule> asList() {
-        return Collections.unmodifiableList(new ArrayList<>(rules));
+    public synchronized List<BrokenRule> list() {
+        return List.copyOf(rules);
+    }
+
+    /**
+     * Returns a stream of broken rules in the collection.
+     *
+     * @return a stream of broken rules
+     */
+    public synchronized Stream<BrokenRule> stream() {
+        return new ArrayList<>(rules).stream();
     }
 }

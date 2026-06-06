@@ -63,4 +63,11 @@ public interface TrackableObject {
      * @return true if the object can be saved, false otherwise
      */
     boolean isSavable();
+
+    /**
+     * Indicates whether the object is currently busy, which means that it is performing an operation that should not be interrupted, such as saving or deleting.
+     *
+     * @return true if the object is busy, false otherwise
+     */
+    boolean isBusy();
 }
