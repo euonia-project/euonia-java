@@ -1,5 +1,6 @@
 package com.euonia.reflection;
 
+import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
@@ -58,10 +59,11 @@ public class FieldData<T> implements TrackableObject {
     }
 
     public void setValue(T value) {
-        if (value == null || !value.getClass().isAssignableFrom(this.value.getClass())) {
-            throw new IllegalArgumentException("Value must be of type " + this.value.getClass().getName());
+        if (this.value == null && value == null) {
+            return;
         }
-        if (this.value == value) {
+
+        if (Objects.equals(this.value, value)) {
             return;
         }
         this.value = value;

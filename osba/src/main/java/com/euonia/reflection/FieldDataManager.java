@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class FieldDataManager {
     private final Map<String, FieldData<?>> fieldData = new HashMap<>();
     private final List<PropertyInfo<?>> properties;
@@ -25,7 +26,7 @@ public class FieldDataManager {
             hierarchy.add(currentType);
             currentType = currentType.getSuperclass();
         }
-        while (currentType != null && !(currentType.isAssignableFrom(BusinessObject.class)));
+        while (currentType != null && !(BusinessObject.class.isAssignableFrom(currentType)));
 
         for (var index = hierarchy.size() - 1; index >= 0; index--) {
             var source = PropertyInfoManager.getPropertyListCache(hierarchy.get(index));
@@ -48,11 +49,11 @@ public class FieldDataManager {
     }
 
     public FieldData<?> getFieldData(String fieldName) {
-        if (!fieldData.containsKey(fieldName)) {
-            throw new IllegalArgumentException(String.format("Field '%s' is not registered.", fieldName));
-        }
+//        if (!fieldData.containsKey(fieldName)) {
+//            throw new IllegalArgumentException(String.format("Field '%s' is not registered.", fieldName));
+//        }
 
-        return fieldData.get(fieldName);
+        return fieldData.getOrDefault(fieldName, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -82,6 +83,7 @@ public class FieldDataManager {
      * @param <T>      the type of the property
      * @return the loaded field data
      */
+    @SuppressWarnings("UnusedReturnValue")
     public <T> FieldData<T> loadFieldData(PropertyInfo<T> property, T value) {
         var field = getOrCreateFieldData(property);
         field.setValue(value);
@@ -123,13 +125,14 @@ public class FieldDataManager {
      *
      * @param businessObjectType the business object type for which to initialize static fields
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public synchronized static void initStaticFields(Class<?> businessObjectType) {
         var fields = businessObjectType.getDeclaredFields();
         for (var field : fields) {
             if (field.getModifiers() == java.lang.reflect.Modifier.STATIC) {
                 field.setAccessible(true);
                 try {
-                    var _ = field.get(null);
+                    field.get(null);
                 } catch (IllegalAccessException e) {
                     //
                 }
