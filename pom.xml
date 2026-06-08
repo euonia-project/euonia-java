@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.euonia</groupId>
+    <artifactId>parent</artifactId>
+    <version>${revision}</version>
+
+    <packaging>pom</packaging>
+    <modules>
+        <module>core</module>
+        <module>osba</module>
+        <module>domain</module>
+    </modules>
+
+    <name>euonia-parent</name>
+    <description>Euonia framework for Java.</description>
+    <url>https://euonia.com</url>
+
+    <scm>
+        <url>https://github.com/NerosoftDev/euonia-java</url>
+        <connection>scm:git:git://github.com/NerosoftDev/euonia-java.git</connection>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>damon</name>
+            <id>Codespilot</id>
+            <email>zhaorong@outlook.com</email>
+            <url>https://github.com/Codespilot</url>
+        </developer>
+    </developers>
+
+    <properties>
+        <revision>1.0.0</revision>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.version>1.0</project.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>17</java.version>
+        <jdk.version>17</jdk.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
