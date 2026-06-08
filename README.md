@@ -266,7 +266,7 @@ mvn spring-boot:run
 
 ## Donate
 
-<img alt="donate" width="512" src="https://github.com/Codespilot/oss/blob/master/donate.png" />
+<img alt="donate" width="512" src="https://qiniu-cdn.zhaorong.pro/images/donate.png" />
 
 ---
 
