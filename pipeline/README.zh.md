@@ -1,75 +1,74 @@
+# Pipeline 模块
 
-# Pipeline Module
-
-A lightweight, async middleware pipeline framework for Java, inspired by ASP.NET Core's pipeline pattern. Enables chainable request/response processing with behaviors, delegates, and pluggable dependency injection.
+一个轻量级的异步中间件管道框架，受 ASP.NET Core 管道模式启发。支持可链式组合的请求/响应处理，包含行为（Behaviors）、委托（Delegates）和可插拔的依赖注入。
 
 ---
 
-## Architecture
+## 架构
 
 ```
-Request / Context
+请求 / 上下文
         │
         ▼
 ┌──────────────────────┐
-│  Pipeline.use(…)     │  ← Behavior 1 (logging, auth, validation…)
+│  Pipeline.use(…)     │  ← 行为 1（日志、认证、验证…）
 ├──────────────────────┤
-│  Pipeline.use(…)     │  ← Behavior 2 (transformation, enrichment…)
+│  Pipeline.use(…)     │  ← 行为 2（转换、增强…）
 ├──────────────────────┤
-│  Pipeline.use(…)     │  ← Behavior N
+│  Pipeline.use(…)     │  ← 行为 N
 ├──────────────────────┤
-│  Accumulate / Handler│  ← Terminal handler (user logic)
+│  Accumulate / Handler│  ← 终端处理器（用户逻辑）
 └──────────────────────┘
         │
         ▼
-  Response / Void
+  响应 / Void
 ```
 
-Each behavior is a **middleware** that receives the context and a `next` delegate. Behaviors can:
-- Execute code **before** the next component
-- Execute code **after** the next component (via the returned `CompletionStage`)
-- Short-circuit the pipeline by **not calling** `next.invoke()`
-- **Modify** the context before passing it downstream
+每个行为是一个**中间件**，接收上下文和一个 `next` 委托。行为可以：
+- 在下一个组件**之前**执行代码
+- 在下一个组件**之后**执行代码（通过返回的 `CompletionStage`）
+- **不调用** `next.invoke()` 来**短路**管道
+- 在传入下游之前**修改**上下文
 
 ---
 
-## Core Concepts
+## 核心概念
 
-### Pipeline (Fire-and-Forget)
+### Pipeline（即发即忘）
 
-| Interface / Class | Description |
-|-------------------|-------------|
-| `Pipeline` | Builder interface — chain behaviors via `.use()`, then `.build()` or `.runAsync()` |
-| `PipelineBase` | Abstract implementation with component list, reverse-chain build, and `@PipelineBehaviors` support |
+| 接口 / 类 | 描述 |
+|-----------|------|
+| `Pipeline` | 构建器接口 — 通过 `.use()` 链式组合行为，然后调用 `.build()` 或 `.runAsync()` |
+| `PipelineBase` | 抽象实现，包含组件列表、反向链构建和 `@PipelineBehaviors` 支持 |
 | `PipelineDelegate` | `FunctionalInterface` — `CompletionStage<Void> invoke(Object context)` |
-| `PipelineBehavior` | Behavior contract — `CompletionStage<Void> handleAsync(Object, PipelineDelegate)` |
+| `PipelineBehavior` | 行为契约 — `CompletionStage<Void> handleAsync(Object, PipelineDelegate)` |
 
-### RequestResponsePipeline (Typed Request/Response)
+### RequestResponsePipeline（类型化的请求/响应）
 
-| Interface / Class | Description |
-|-------------------|-------------|
-| `RequestResponsePipeline<TRequest, TResponse>` | Builder for typed request/response pipelines |
-| `RequestResponsePipelineBase<TRequest, TResponse>` | Abstract implementation |
+| 接口 / 类 | 描述 |
+|-----------|------|
+| `RequestResponsePipeline<TRequest, TResponse>` | 类型化请求/响应管道的构建器 |
+| `RequestResponsePipelineBase<TRequest, TResponse>` | 抽象实现 |
 | `RequestResponsePipelineDelegate<TRequest, TResponse>` | `CompletionStage<TResponse> invoke(TRequest)` |
 | `RequestResponsePipelineBehavior<TRequest, TResponse>` | `CompletionStage<TResponse> handleAsync(TRequest, PipelineDelegate)` |
-| `RequestPipelineDelegate<TRequest>` | Fire-and-forget variant: `CompletionStage<Void> invoke(TRequest)` |
+| `RequestPipelineDelegate<TRequest>` | 即发即忘变体：`CompletionStage<Void> invoke(TRequest)` |
 
-### Infrastructure
+### 基础设施
 
-| Interface / Class | Description |
-|-------------------|-------------|
-| `PipelineFactory` | Creates `Pipeline` or `RequestResponsePipeline` instances |
-| `DefaultPipelineFactory` | Default factory backed by `ServiceResolver` |
-| `DefaultPipelineProvider` | Default `Pipeline` implementation |
-| `DefaultRequestResponsePipelineProvider<TRequest, TResponse>` | Default typed pipeline implementation |
-| `@PipelineBehaviors` | Annotation to auto-discover behaviors from context type |
-| `ServiceResolver` | Abstraction for DI — standalone (`SimpleServiceResolver`) or Spring integration |
+| 接口 / 类 | 描述 |
+|-----------|------|
+| `PipelineFactory` | 创建 `Pipeline` 或 `RequestResponsePipeline` 实例 |
+| `DefaultPipelineFactory` | 基于 `ServiceResolver` 的默认工厂 |
+| `DefaultPipelineProvider` | 默认的 `Pipeline` 实现 |
+| `DefaultRequestResponsePipelineProvider<TRequest, TResponse>` | 默认的类型化管道实现 |
+| `@PipelineBehaviors` | 从上下文类型自动发现行为的注解 |
+| `ServiceResolver` | DI 抽象 — 独立使用（`SimpleServiceResolver`）或 Spring 集成 |
 
 ---
 
-## Getting Started
+## 快速入门
 
-### Step 1: Add Dependency
+### 第一步：添加依赖
 
 ```xml
 <dependency>
@@ -79,13 +78,13 @@ Each behavior is a **middleware** that receives the context and a `next` delegat
 </dependency>
 ```
 
-### Step 2: Basic Pipeline
+### 第二步：基础管道
 
 ```java
 import com.euonia.pipeline.*;
 import com.euonia.reflection.SimpleServiceResolver;
 
-// Create resolver and pipeline
+// 创建解析器和管道
 var resolver = new SimpleServiceResolver();
 Pipeline pipeline = new DefaultPipelineProvider(resolver)
     .use((ctx, next) -> {
@@ -93,13 +92,13 @@ Pipeline pipeline = new DefaultPipelineProvider(resolver)
         return next.invoke(ctx).thenRun(() -> System.out.println("After: " + ctx));
     });
 
-// Run
+// 运行
 pipeline.runAsync("Hello, Pipeline!")
     .toCompletableFuture()
     .join();
 ```
 
-### Step 3: Custom Behavior Class
+### 第三步：自定义行为类
 
 ```java
 public class LoggingBehavior implements PipelineBehavior {
@@ -108,21 +107,21 @@ public class LoggingBehavior implements PipelineBehavior {
         long start = System.nanoTime();
         return next.invoke(context).thenRun(() -> {
             long elapsed = (System.nanoTime() - start) / 1_000_000;
-            System.out.println("[" + context.getClass().getSimpleName() + "] completed in " + elapsed + "ms");
+            System.out.println("[" + context.getClass().getSimpleName() + "] 耗时 " + elapsed + "ms");
         });
     }
 }
 
-// Usage
+// 使用
 Pipeline pipeline = new DefaultPipelineProvider(resolver)
     .use(LoggingBehavior.class)
     .use((ctx, next) -> {
-        // business logic
+        // 业务逻辑
         return next.invoke(ctx);
     });
 ```
 
-### Step 4: Request/Response Pipeline
+### 第四步：请求/响应管道
 
 ```java
 DefaultRequestResponsePipelineProvider<Integer, Integer> pipeline =
@@ -137,7 +136,7 @@ int result = pipeline.runAsync(2, request -> CompletableFuture.completedFuture(r
 // result == 5  (2 * 2 + 1)
 ```
 
-**PlusOneBehavior:**
+**PlusOneBehavior：**
 ```java
 public class PlusOneBehavior implements RequestResponsePipelineBehavior<Integer, Integer> {
     @Override
@@ -150,39 +149,39 @@ public class PlusOneBehavior implements RequestResponsePipelineBehavior<Integer,
 
 ---
 
-## Usage Examples
+## 使用示例
 
-### Lambda Behaviors
+### Lambda 行为
 
 ```java
-// Inline lambda (fire-and-forget)
+// 内联 lambda（即发即忘）
 pipeline.use((ctx, next) -> {
     System.out.println("Processing: " + ctx);
     return next.invoke(ctx);
 });
 
-// Inline lambda (request/response)
+// 内联 lambda（请求/响应）
 requestResponsePipeline.use((req, next) ->
     next.invoke(req).thenApply(resp -> "Wrapped: " + resp)
 );
 ```
 
-### Dependency Injection via ServiceResolver
+### 通过 ServiceResolver 进行依赖注入
 
-Behaviors can declare extra parameters beyond the context — they are resolved automatically from the `ServiceResolver`.
+行为可以声明除上下文以外的额外参数 — 它们会从 `ServiceResolver` 自动解析。
 
 ```java
-// Define a service
+// 定义服务
 public class SuffixService {
     private final String suffix;
     public SuffixService(String suffix) { this.suffix = suffix; }
     public String apply(String value) { return value + suffix; }
 }
 
-// Register it
+// 注册
 resolver.register(SuffixService.class, new SuffixService("-ok"));
 
-// Pipeline behavior with auto-resolved dependency
+// 具有自动解析依赖的管道行为
 public class ReflectionBehavior {
     private final RequestResponsePipelineDelegate<String, String> next;
 
@@ -195,7 +194,7 @@ public class ReflectionBehavior {
     }
 }
 
-// Usage
+// 使用
 pipeline.use(ReflectionBehavior.class);
 String result = pipeline.runAsync("input", CompletableFuture::completedFuture)
     .toCompletableFuture()
@@ -203,9 +202,9 @@ String result = pipeline.runAsync("input", CompletableFuture::completedFuture)
 // result == "input-ok"
 ```
 
-### `@PipelineBehaviors` — Auto-Discovery
+### `@PipelineBehaviors` — 自动发现
 
-Annotate your context class to automatically attach relevant behaviors:
+在上下文类上添加注解，自动附加相关的行为：
 
 ```java
 @PipelineBehaviors({ValidationBehavior.class, AuditBehavior.class})
@@ -213,33 +212,33 @@ public class CreateOrderCommand {
     // ...
 }
 
-// When you call runAsync, the annotation is discovered automatically:
+// 调用 runAsync 时，注解会被自动发现：
 pipeline.runAsync(new CreateOrderCommand())
     .toCompletableFuture()
     .join();
-// ValidationBehavior and AuditBehavior execute before any explicitly registered behaviors
+// ValidationBehavior 和 AuditBehavior 会在所有手动注册的行为之前执行
 ```
 
-### Fluent Builder with Composite Pipeline
+### Fluent Builder 与复合管道
 
 ```java
-Pipeline pipeline = resolver.create()  // via PipelineFactory
+Pipeline pipeline = resolver.create()  // 通过 PipelineFactory
     .use(AuthenticationBehavior.class)
     .use(AuthorizationBehavior.class)
-    .use(ValidationBehavior.class, 0)  // insert at specific index
+    .use(ValidationBehavior.class, 0)  // 插入到指定索引位置
     .use((ctx, next) -> next.invoke(ctx))
-    .build();  // freezes the pipeline, clears component list
+    .build();  // 冻结管道，清空组件列表
 
 pipeline.invoke(context).toCompletableFuture().join();
 ```
 
-### Resolver Dependency Parameters in `handle` / `handleAsync`
+### 在 `handle` / `handleAsync` 中解析依赖参数
 
-Behaviors written as plain classes (not implementing `PipelineBehavior`) are resolved via reflection. The first parameter is the **context**, and all subsequent parameters are **auto-injected** from the `ServiceResolver`:
+使用普通类（不实现 `PipelineBehavior`）编写的行为通过反射解析。第一个参数是**上下文**，后续参数从 `ServiceResolver` **自动注入**：
 
 ```java
-// Plain class — method name must be "handle" or "handleAsync"
-// Return type must be CompletionStage
+// 普通类 — 方法名必须为 "handle" 或 "handleAsync"
+// 返回类型必须为 CompletionStage
 public class MyBehavior {
     private final PipelineDelegate next;
 
@@ -247,7 +246,7 @@ public class MyBehavior {
         this.next = next;
     }
 
-    // context + auto-injected services
+    // 上下文 + 自动注入的服务
     public CompletionStage<Void> handleAsync(MyContext ctx, LoggerService logger, MetricsService metrics) {
         logger.info("Processing " + ctx);
         metrics.increment();
@@ -258,9 +257,9 @@ public class MyBehavior {
 
 ---
 
-## Spring Boot Integration
+## Spring Boot 集成
 
-### Configuration
+### 配置
 
 ```java
 @Configuration
@@ -272,15 +271,15 @@ public class PipelineConfiguration {
 }
 ```
 
-### Using Spring-Managed Beans in Behaviors
+### 在行为中使用 Spring 管理的 Bean
 
-Behaviors can inject any Spring bean through constructor parameters. The `ApplicationContextServiceResolver` (from `euonia-spring` module) handles auto-wiring automatically.
+行为可以通过构造函数参数注入任何 Spring Bean。`ApplicationContextServiceResolver`（来自 `euonia-spring` 模块）会自动处理自动装配。
 
 ```java
 @Component
 public class SpringLoggingBehavior {
     private final PipelineDelegate next;
-    private final LoggerService logger;  // Spring bean
+    private final LoggerService logger;  // Spring Bean
 
     public SpringLoggingBehavior(PipelineDelegate next, LoggerService logger) {
         this.next = next;
@@ -288,7 +287,7 @@ public class SpringLoggingBehavior {
     }
 
     public CompletionStage<Void> handleAsync(Object ctx) {
-        logger.info("Pipeline processing: " + ctx);
+        logger.info("管道处理: " + ctx);
         return next.invoke(ctx);
     }
 }
@@ -309,7 +308,7 @@ public void execute() {
 
 ---
 
-## API Reference
+## API 参考
 
 ### `Pipeline`
 
@@ -326,16 +325,16 @@ public interface Pipeline {
 }
 ```
 
-| Method | Description |
-|--------|-------------|
-| `use(component)` | Appends a pipeline component |
-| `use(component, index)` | Inserts a component at the given position |
-| `use(handler)` | Appends a lambda handler `(ctx, next) → CompletionStage<Void>` |
-| `use(type, args)` | Appends a component resolved from the given class with constructor arguments |
-| `useOf(contextType, ahead)` | Auto-discovers `@PipelineBehaviors` annotation on the context type |
-| `build()` | Freezes the pipeline and returns the outermost delegate |
-| `runAsync(context)` | Shorthand: calls `useOf` then `build().invoke(context)` |
-| `runAsync(context, accumulate)` | Shorthand with terminal handler |
+| 方法 | 描述 |
+|------|------|
+| `use(component)` | 追加一个管道组件 |
+| `use(component, index)` | 在指定位置插入一个组件 |
+| `use(handler)` | 追加一个 lambda 处理器 `(ctx, next) → CompletionStage<Void>` |
+| `use(type, args)` | 从指定类解析并追加一个组件，附带构造函数参数 |
+| `useOf(contextType, ahead)` | 自动发现上下文类型上的 `@PipelineBehaviors` 注解 |
+| `build()` | 冻结管道并返回最外层的委托 |
+| `runAsync(context)` | 快捷方式：调用 `useOf` 后执行 `build().invoke(context)` |
+| `runAsync(context, accumulate)` | 带有终端处理器的快捷方式 |
 
 ### `PipelineBehavior`
 
@@ -348,7 +347,7 @@ public interface PipelineBehavior {
 
 ### `RequestResponsePipeline<TRequest, TResponse>`
 
-Same fluent API as `Pipeline`, but typed with `TRequest` / `TResponse`:
+与 `Pipeline` 相同的 Fluent API，但带有 `TRequest` / `TResponse` 类型参数：
 
 ```java
 CompletionStage<TResponse> runAsync(TRequest context);
@@ -357,26 +356,26 @@ CompletionStage<TResponse> runAsync(TRequest context, Function<TRequest, Complet
 
 ---
 
-## Design & Implementation Details
+## 设计与实现细节
 
-### Reverse-Chain Construction
+### 反向链式构建
 
-When `.build()` is called, components are assembled **inside-out** — the last registered component wraps the previous ones. This means:
+调用 `.build()` 时，组件按**从内到外**的方式组装 — 最后注册的组件包裹前面的组件。这意味着：
 
 ```java
 pipeline.use(A).use(B).use(C);
-// Execution order: A → B → C
-// Construction: C wraps B wraps A
+// 执行顺序: A → B → C
+// 构造顺序: C 包裹 B, B 包裹 A
 ```
 
-### Behavior Resolution Priority
+### 行为解析优先级
 
-1. **`PipelineBehavior` interface** — if the class implements `PipelineBehavior`, it is resolved via `ServiceResolver.getServiceOrCreate()` and invoked through the interface contract.
-2. **Reflection-based** — otherwise, the framework searches for `handle` or `handleAsync` methods (returning `CompletionStage`). Constructor arguments are populated by prepending the `next` delegate.
+1. **`PipelineBehavior` 接口** — 如果类实现了 `PipelineBehavior`，则通过 `ServiceResolver.getServiceOrCreate()` 解析，并通过接口契约调用。
+2. **基于反射** — 否则，框架搜索 `handle` 或 `handleAsync` 方法（返回 `CompletionStage`）。构造函数参数通过将 `next` 委托前置填充。
 
-### Annotation-Driven Auto-Discovery
+### 注解驱动的自动发现
 
-The `@PipelineBehaviors` annotation enables **declarative pipeline configuration**:
+`@PipelineBehaviors` 注解实现了**声明式管道配置**：
 
 ```java
 @Retention(RetentionPolicy.RUNTIME)
@@ -386,16 +385,16 @@ public @interface PipelineBehaviors {
 }
 ```
 
-When `runAsync(context)` is called (or `useOf(contextType, true)` explicitly), the annotation on the context's class is scanned. Behaviors listed in the annotation are registered **ahead of** all manually registered components.
+当调用 `runAsync(context)`（或显式调用 `useOf(contextType, true)`）时，会扫描上下文类上的注解。注解中列出的行为会被注册到**所有手动注册组件之前**。
 
 ---
 
-## Testing
+## 测试
 
-The pipeline module is designed for testability:
+管道模块设计为易于测试：
 
 ```java
-// Unit test with SimpleServiceResolver
+// 使用 SimpleServiceResolver 进行单元测试
 var resolver = new SimpleServiceResolver();
 var pipeline = new DefaultPipelineProvider(resolver);
 
