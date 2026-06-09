@@ -1,5 +1,12 @@
 package com.euonia.osba;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
+
 import com.euonia.osba.abstracts.RuleCheckable;
 import com.euonia.osba.abstracts.UseBusinessContext;
 import com.euonia.osba.rules.BrokenRuleCollection;
@@ -9,13 +16,6 @@ import com.euonia.reflection.FieldDataManager;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.reflection.PropertyInfoManager;
 import com.euonia.security.UnauthorizedAccessException;
-
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 public abstract class BusinessObject<B extends BusinessObject<B>> implements UseBusinessContext, RuleCheckable {
     private final List<PropertyInfo<?>> changedProperties = new ArrayList<>();
@@ -156,6 +156,10 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
 
     public final void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
+    }
+
+    public final void removePropertyChangeListener(PropertyChangeListener listener) {
+        support.removePropertyChangeListener(listener);
     }
 
     protected void onPropertyChanged(String propertyName, Object oldValue, Object newValue) {
