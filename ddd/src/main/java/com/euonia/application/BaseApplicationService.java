@@ -16,7 +16,11 @@ public abstract class BaseApplicationService implements ApplicationService {
         this.serviceResolver = serviceResolver;
     }
 
-    public UserPrincipal getUser() {
+    protected <T> T getService(Class<T> type) {
+        return (T) serviceResolver.getService(type);
+    }
+
+    protected UserPrincipal getUser() {
         return serviceResolver.getService(UserPrincipal.class);
     }
 }
