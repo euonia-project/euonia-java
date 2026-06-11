@@ -1,12 +1,12 @@
 package com.euonia.reflection;
 
 /**
- * ServiceResolver is an interface that defines methods for resolving and
+ * ServiceProvider is an interface that defines methods for resolving and
  * creating service instances.
  * Implementations of this interface can provide custom logic for retrieving and
  * instantiating services.
  */
-public interface ServiceResolver {
+public interface ServiceProvider {
     /**
      * Retrieves a service instance of the specified type. If the service is not
      * found, it returns null.

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * SimpleServiceResolver is a basic implementation of the ServiceResolver
+ * {@code SimpleServiceProvider} is a basic implementation of the {@link ServiceProvider}
  * interface
  * that uses a ConcurrentHashMap to store and retrieve service instances.
  * It allows for registering services and creating new instances using
@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * provided
  * arguments and creates an instance of the specified type.
  */
-public class SimpleServiceResolver implements ServiceResolver {
+public class SimpleServiceProvider implements ServiceProvider {
     private final Map<Class<?>, Object> services = new ConcurrentHashMap<>();
 
     public <T> void register(Class<T> type, T instance) {
@@ -68,7 +68,7 @@ public class SimpleServiceResolver implements ServiceResolver {
             constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException e) {
+                 | NoSuchMethodException e) {
             throw new IllegalStateException("Could not construct type: " + type.getName(), e);
         }
     }

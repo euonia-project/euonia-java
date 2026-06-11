@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 
 /**
- * DelegateServiceResolver is an implementation of the ServiceResolver interface
+ * DelegateServiceProvider is an implementation of the ServiceProvider interface
  * that delegates service resolution to a provided Function.
  * It allows for flexible service resolution by using a custom Function to
  * retrieve services based on their class type.
@@ -13,18 +13,18 @@ import java.util.function.Function;
  * create an instance of the specified type with the provided constructor
  * arguments.
  */
-public class DelegateServiceResolver implements ServiceResolver {
+public class DelegateServiceProvider implements ServiceProvider {
 
     private final Function<Class<?>, ?> beanFactory;
 
     /**
-     * Creates a new instance of DelegateServiceResolver with the given bean factory
+     * Creates a new instance of DelegateServiceProvider with the given bean factory
      * function.
      *
      * @param beanFactory the function used to resolve services based on their class
      *                    type
      */
-    public DelegateServiceResolver(Function<Class<?>, ?> beanFactory) {
+    public DelegateServiceProvider(Function<Class<?>, ?> beanFactory) {
         this.beanFactory = beanFactory;
     }
 

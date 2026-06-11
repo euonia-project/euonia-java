@@ -7,14 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("DelegateServiceResolver")
-class DelegateServiceResolverTest {
+@DisplayName("DelegateServiceProvider")
+class DelegateServiceProviderTest {
 
     @Test
     @DisplayName("Given registered service when resolving then delegated instance is returned")
     void givenRegisteredServiceWhenResolvingThenReturnDelegatedInstance() {
         SampleService instance = new SampleService();
-        DelegateServiceResolver resolver = new DelegateServiceResolver(type -> type == SampleService.class ? instance : null);
+        DelegateServiceProvider resolver = new DelegateServiceProvider(type -> type == SampleService.class ? instance : null);
 
         assertSame(instance, resolver.getService(SampleService.class));
         assertNull(resolver.getService(NeedsArguments.class));
@@ -23,7 +23,7 @@ class DelegateServiceResolverTest {
     @Test
     @DisplayName("Given matching constructor arguments when creating instance then object is constructed")
     void givenMatchingConstructorArgumentsWhenCreatingInstanceThenReturnConstructedObject() {
-        DelegateServiceResolver resolver = new DelegateServiceResolver(type -> null);
+        DelegateServiceProvider resolver = new DelegateServiceProvider(type -> null);
 
         NeedsArguments instance = resolver.createInstance(NeedsArguments.class, "demo", 3);
 
@@ -34,7 +34,7 @@ class DelegateServiceResolverTest {
     @Test
     @DisplayName("Given no matching constructor when creating instance then illegal state is thrown")
     void givenNoMatchingConstructorWhenCreatingInstanceThenThrowIllegalState() {
-        DelegateServiceResolver resolver = new DelegateServiceResolver(type -> null);
+        DelegateServiceProvider resolver = new DelegateServiceProvider(type -> null);
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> resolver.createInstance(NeedsArguments.class, 42));
