@@ -20,10 +20,16 @@ graph TD
         Pipeline --> Core
         Spring --> Core
         Spring --> UoW
+        BusAbstract --> Core
+        BusCore --> BusAbstract
+        BusCore --> Pipeline
+        BusInmemory --> BusCore
+        BusRabbitmq --> BusCore
         Sample --> DDD
         Sample --> OSBA
         Sample --> Pipeline
         Sample --> Spring
+        Sample --> BusCore
     end
 
     style Core fill:#4A90D9,color:#fff
@@ -32,6 +38,10 @@ graph TD
     style OSBA fill:#E8833A,color:#fff
     style Pipeline fill:#E74C3C,color:#fff
     style Spring fill:#2ECC71,color:#fff
+    style BusAbstract fill:#F39C12,color:#fff
+    style BusCore fill:#E67E22,color:#fff
+    style BusInmemory fill:#D35400,color:#fff
+    style BusRabbitmq fill:#C0392B,color:#fff
     style Sample fill:#9B59B6,color:#fff
 ```
 
@@ -106,6 +116,59 @@ Pipeline pipeline = new DefaultPipelineProvider(resolver)
 // Run
 pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 ```
+
+### Bus Abstract (`euonia-bus-abstract`)
+> Foundational messaging abstractions: message contracts, conventions, transport strategies, metadata, and marker annotations for the bus layer. Depends on `core`.
+
+| Class / Interface | Purpose |
+|-------------------|---------|
+| `MessageContext` | Runtime message context: reply, failure, and completion event publishers |
+| `MessageContextBase` | Abstract context implementation with event handling |
+| `HandlerContext` | Handler-level context contract |
+| `RoutedMessage` | Message envelope: payload, IDs, correlation ID, metadata, and headers |
+| `MessageEnvelope` | Lightweight message wrapper for transport |
+| `MessageMetadata` | Message metadata: type, correlation, conversation IDs |
+| `MessageHeaders` | Key-value message header collection |
+| `MessageBusOptions` | Bus configuration options |
+| `Dispatcher` | Dispatch contract for resolving transport names |
+| `MessageRegistration` | Handler registration record |
+| `MessageConvention` / `DefaultMessageConvention` / `AnnotationMessageConvention` | Convention system for classifying messages (unicast/multicast/request) |
+| `BaseMessageConvention` / `MessageConventionBuilder` | Convention aggregator and builder |
+| `TransportStrategy` / `BaseTransportStrategy` / `AnnotationTransportStrategy` | Transport selection strategies |
+| `LocalMessageTransportStrategy` / `DistributedMessageTransportStrategy` | Local vs. distributed transport selection |
+| `@Command` / `@Event` / `@Request` | Message type marker annotations |
+| `Queue` / `Topic` / `Request` | Contract-based message type marker interfaces |
+| `Transport` | Transport contract interface |
+| `MessageSubscribedEvent` / `MessageProcessedEvent` | Lifecycle event DTOs |
+
+### Bus Core (`euonia-bus-core`)
+> Runtime orchestration layer: handler discovery, registration, dispatch, and bus API. Depends on `pipeline` and `bus-abstract`.
+
+| Class / Interface | Purpose |
+|-------------------|---------|
+| `Bus` | Top-level bus interface for `send`, `publish`, `call` operations |
+| `MessageBus` | Bus implementation shell |
+| `Handler<M, R>` | Typed message handler interface |
+| `StrategicDispatcher` | Dispatcher that resolves transport names via configured strategies |
+| `MessageHandlerFinder` | Scans classes for `@Subscribe` methods and `Handler` implementations |
+| `DefaultHandlerContext` | Runtime handler resolution and invocation via `ServiceProvider` |
+| `MessageHandler` / `MessageHandlerFactory` | Handler wrapper and factory for per-channel dispatch |
+| `PipelineMessage` | Wraps message execution through `RequestResponsePipeline` |
+| `MessageCache` | Centralized channel naming (defaults to FQCN, `@Channel` override) |
+| `SendOptions` / `PublishOptions` / `CallOptions` | Typed operation options |
+| `ExtendableOptions` | Base class for extensible option sets |
+
+**Key features:**
+- Discovers handlers via `@Subscribe` annotated methods or `Handler<M,R>` interface
+- Single-handler channels support request/response (unicast); multi-handler channels run in parallel (multicast)
+- `TransportStrategy` system maps message types to transports (local vs. distributed)
+- Integrates with Pipeline for middleware-style message processing
+
+### Bus InMemory (`euonia-bus-inmemory`)
+> In-memory transport adapter (scaffold). Provides local message dispatch without external infrastructure.
+
+### Bus RabbitMQ (`euonia-bus-rabbitmq`)
+> RabbitMQ transport adapter (scaffold). Provides distributed message dispatch via RabbitMQ broker.
 
 ### Spring (`euonia-spring`)
 > Spring Framework integration module. Bridges `ServiceProvider` with Spring's `ApplicationContext` for seamless dependency injection in pipeline and other Euonia components.
@@ -226,6 +289,27 @@ The `sample` module demonstrates **Euonia framework integration with Spring Boot
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>domain-driven-design</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<!-- Message Bus (abstractions) -->
+<dependency>
+    <groupId>com.euonia</groupId>
+    <artifactId>bus-abstract</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<!-- Message Bus (core runtime) -->
+<dependency>
+    <groupId>com.euonia</groupId>
+    <artifactId>bus-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<!-- Message Bus (RabbitMQ transport) -->
+<dependency>
+    <groupId>com.euonia</groupId>
+    <artifactId>bus-rabbitmq</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
