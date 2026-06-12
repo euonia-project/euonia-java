@@ -120,26 +120,98 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 ### Bus Abstract（euonia-bus-abstract）
 > 消息总线抽象层：定义消息契约、约定、传输策略、元数据与标记注解。依赖 `core`。
 
+**核心契约**
+
 | 类 / 接口 | 作用 |
 |-------------------|---------|
 | `MessageContext` | 运行时消息上下文：回复、失败和完成事件发布 |
-| `MessageContextBase` | 带事件处理的抽象上下文实现 |
-| `HandlerContext` | 处理器级上下文契约 |
-| `RoutedMessage` | 消息信封：负载、ID、关联 ID、元数据和头信息 |
-| `MessageEnvelope` | 轻量级消息传输包装 |
-| `MessageMetadata` | 消息元数据：类型、关联、会话 ID |
-| `MessageHeaders` | 键值对消息头集合 |
-| `MessageBusOptions` | 总线配置选项 |
-| `Dispatcher` | 解析传输名称的调度器契约 |
-| `MessageRegistration` | 处理器注册记录 |
-| `MessageConvention` / `DefaultMessageConvention` / `AnnotationMessageConvention` | 消息分类约定系统（单播/多播/请求） |
-| `BaseMessageConvention` / `MessageConventionBuilder` | 约定聚合器与构建器 |
-| `TransportStrategy` / `BaseTransportStrategy` / `AnnotationTransportStrategy` | 传输选择策略 |
-| `LocalMessageTransportStrategy` / `DistributedMessageTransportStrategy` | 本地与分布式传输选择 |
-| `@Command` / `@Event` / `@Request` | 消息类型标记注解 |
-| `Queue` / `Topic` / `Request` | 基于契约的消息类型标记接口 |
-| `Transport` | 传输契约接口 |
-| `MessageSubscribedEvent` / `MessageProcessedEvent` | 生命周期事件 DTO |
+| `MessageContextBase` | 线程安全的上下文实现，支持事件发布与关闭时回调 |
+| `HandlerContext` | 处理器级上下文契约，支持订阅与分发 |
+| `RoutedMessage` | 抽象消息信封：负载、ID、关联 ID、通道、元数据、头信息 |
+| `MessageEnvelope` | 最小化信封契约（messageId、correlationId、conversationId、channel） |
+| `MessageMetadata` | 强类型元数据映射，实现 `Map<String,Object>`，支持 `get(key, type)` |
+| `MessageHeaders` | 头信息常量：`MESSAGE_ID`、`CORRELATION_ID`、`CONVERSATION_ID`、`CONTENT_TYPE`、`REQUEST_TRACE_ID`、`AUTHORIZATION` |
+| `MessageBusOptions` | 总线配置：默认传输、管道行为开关、约定与策略访问 |
+| `Dispatcher` | 调度器契约：`List<String> determine(Class<?>)` |
+| `MessageRegistration` | 不可变注册记录：channel、messageType、handlerType、method |
+| `MessageConventionType` | 枚举：`NONE`、`UNICAST`、`MULTICAST`、`REQUEST` |
+
+**约定系统**
+
+| 类 / 接口 | 作用 |
+|-------------------|---------|
+| `MessageConvention` | 契约：`isUnicastType`、`isMulticastType`、`isRequestType` |
+| `DefaultMessageConvention` | 基于类继承的约定，使用 `Queue`/`Topic`/`Request` 契约接口 |
+| `AnnotationMessageConvention` | 基于注解的约定，使用 `@Command`/`@Event`/`@Request` 注解 |
+| `BaseMessageConvention` | 组合约定，支持缓存、可插拔约定与每种类型的谓词覆盖 |
+| `OverridableMessageConvention` | 代理约定，每种类型可单独设置谓词覆盖 |
+| `MessageConventionBuilder` | 流式构建器：`evaluateUnicast`、`evaluateMulticast`、`evaluateRequest`、`add(C)` |
+
+**传输策略**
+
+| 类 / 接口 | 作用 |
+|-------------------|---------|
+| `TransportStrategy` | 契约：`outgoing(Class<?>)`、`incoming(Class<?>)` |
+| `BaseTransportStrategy` | 组合策略，支持缓存和可插拔策略列表 |
+| `DefaultTransportStrategy` | 无操作兜底（始终返回 `false`） |
+| `AnnotationTransportStrategy` | 匹配 `@DispatchIn`/`@ReceiveIn` 注解的传输名称 |
+| `OverridableTransportStrategy` | 代理策略，可单独设置谓词覆盖 |
+| `LocalMessageTransportStrategy` | 匹配标注 `@LocalMessage` 的类型 |
+| `DistributedMessageTransportStrategy` | 匹配标注 `@DistributedMessage` 的类型 |
+
+**注解**
+
+| 注解 | 目标 | 作用 |
+|------------|--------|---------|
+| `@Subscribe` | 方法 | 声明消息处理器方法；`value` = 通道，`group` = 消费者组 |
+| `@Command` | 类型 | 标记为单播命令 |
+| `@Event` | 类型 | 标记为多播事件 |
+| `@Request` | 类型 | 标记为请求类型，含显式 `responseType` |
+| `@Channel` | 类型 | 覆盖默认通道名（默认全限定类名） |
+| `@Enqueue` | 类型 | 队列映射：`value`（队列名）与 `priority`（优先级） |
+| `@LocalMessage` | 类型 | 标记仅本地传输 |
+| `@DistributedMessage` | 类型 | 标记仅分布式传输 |
+| `@DispatchIn` | 类型 | 约束发送到指定传输 |
+| `@ReceiveIn` | 类型 | 约束从指定传输接收 |
+
+**契约接口**
+
+| 接口 | 作用 |
+|-----------|---------|
+| `Queue` | 标记：单播点对点消息 |
+| `Topic` | 标记：发布-订阅消息 |
+| `Request<R>` | 标记：请求-响应消息，响应类型为 `R` |
+| `Transport` | 传输抽象：`publishAsync`、`sendAsync`、`requestAsync` |
+
+**接收者**
+
+| 接口 | 作用 |
+|-----------|---------|
+| `Recipient` | 基础契约：`getName()`；继承 `AutoCloseable` |
+| `Executor` | `Recipient` 的标记子接口 |
+| `Subscriber` | `Recipient` 的标记子接口 |
+
+**事件**
+
+| 类 | 作用 |
+|-------|---------|
+| `MessageSubscribedEvent` | 处理器订阅时触发（channel、messageType、handlerType） |
+| `MessageReceivedEvent` | 传输层接收到消息时触发 |
+| `MessageAcknowledgedEvent` | 消息确认时触发（RECEIVED 类型） |
+| `MessageDeliveredEvent` | 消息成功投递时触发 |
+| `MessageHandledEvent` | 处理器完成处理时触发（消息 + 处理器类型） |
+| `MessageRepliedEvent` | 附带响应结果触发 |
+| `MessageProcessedEvent` | 基础事件：消息 + 上下文 + `MessageProcessType` |
+| `MessageProcessType` | 枚举：`SEND`、`DELIVERED`、`RECEIVED` |
+
+**异常**
+
+| 类 | 作用 |
+|-------|---------|
+| `MessageTypeException` | 无效或不支持的消息类型路由 |
+| `MessageProcessingException` | 处理器或处理过程失败 |
+| `MessageDeliverException` | 消息投递失败 |
+| `MessageTransportException` | 传输层失败 |
 
 ### Bus Core（euonia-bus-core）
 > 运行时编排层：处理器发现、注册、调度与总线 API。依赖 `pipeline` 和 `bus-abstract`。

@@ -120,26 +120,98 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 ### Bus Abstract (`euonia-bus-abstract`)
 > Foundational messaging abstractions: message contracts, conventions, transport strategies, metadata, and marker annotations for the bus layer. Depends on `core`.
 
+**Core Contracts**
+
 | Class / Interface | Purpose |
 |-------------------|---------|
 | `MessageContext` | Runtime message context: reply, failure, and completion event publishers |
-| `MessageContextBase` | Abstract context implementation with event handling |
-| `HandlerContext` | Handler-level context contract |
-| `RoutedMessage` | Message envelope: payload, IDs, correlation ID, metadata, and headers |
-| `MessageEnvelope` | Lightweight message wrapper for transport |
-| `MessageMetadata` | Message metadata: type, correlation, conversation IDs |
-| `MessageHeaders` | Key-value message header collection |
-| `MessageBusOptions` | Bus configuration options |
-| `Dispatcher` | Dispatch contract for resolving transport names |
-| `MessageRegistration` | Handler registration record |
-| `MessageConvention` / `DefaultMessageConvention` / `AnnotationMessageConvention` | Convention system for classifying messages (unicast/multicast/request) |
-| `BaseMessageConvention` / `MessageConventionBuilder` | Convention aggregator and builder |
-| `TransportStrategy` / `BaseTransportStrategy` / `AnnotationTransportStrategy` | Transport selection strategies |
-| `LocalMessageTransportStrategy` / `DistributedMessageTransportStrategy` | Local vs. distributed transport selection |
-| `@Command` / `@Event` / `@Request` | Message type marker annotations |
-| `Queue` / `Topic` / `Request` | Contract-based message type marker interfaces |
-| `Transport` | Transport contract interface |
-| `MessageSubscribedEvent` / `MessageProcessedEvent` | Lifecycle event DTOs |
+| `MessageContextBase` | Thread-safe context implementation with event publishing and close-time completion |
+| `HandlerContext` | Handler-level context contract for subscription and dispatch |
+| `RoutedMessage` | Abstract message envelope: payload, IDs, correlation ID, channel, metadata, headers |
+| `MessageEnvelope` | Minimal routed envelope contract (messageId, correlationId, conversationId, channel) |
+| `MessageMetadata` | Typed metadata map implementing `Map<String,Object>` with `get(key, type)` accessor |
+| `MessageHeaders` | Header name constants: `MESSAGE_ID`, `CORRELATION_ID`, `CONVERSATION_ID`, `CONTENT_TYPE`, `REQUEST_TRACE_ID`, `AUTHORIZATION` |
+| `MessageBusOptions` | Bus configuration: default transport, pipeline behavior toggle, convention & strategy access |
+| `Dispatcher` | Dispatch contract: `List<String> determine(Class<?>)` |
+| `MessageRegistration` | Immutable record: channel, messageType, handlerType, method |
+| `MessageConventionType` | Enum: `NONE`, `UNICAST`, `MULTICAST`, `REQUEST` |
+
+**Conventions**
+
+| Class / Interface | Purpose |
+|-------------------|---------|
+| `MessageConvention` | Contract: `isUnicastType`, `isMulticastType`, `isRequestType` |
+| `DefaultMessageConvention` | Class-hierarchy convention using `Queue`/`Topic`/`Request` contract interfaces |
+| `AnnotationMessageConvention` | Annotation-based convention using `@Command`/`@Event`/`@Request` annotations |
+| `BaseMessageConvention` | Composite convention with caches, pluggable conventions, and per-kind overrides |
+| `OverridableMessageConvention` | Delegating convention with settable predicate overrides for each type |
+| `MessageConventionBuilder` | Fluent builder: `evaluateUnicast`, `evaluateMulticast`, `evaluateRequest`, `add(C)` |
+
+**Transport Strategies**
+
+| Class / Interface | Purpose |
+|-------------------|---------|
+| `TransportStrategy` | Contract: `outgoing(Class<?>)`, `incoming(Class<?>)` |
+| `BaseTransportStrategy` | Composite strategy with caching and pluggable strategy list |
+| `DefaultTransportStrategy` | No-op fallback (always returns `false`) |
+| `AnnotationTransportStrategy` | Matches `@DispatchIn`/`@ReceiveIn` annotation transport names |
+| `OverridableTransportStrategy` | Delegate with settable predicate overrides |
+| `LocalMessageTransportStrategy` | Matches `@LocalMessage`-annotated types |
+| `DistributedMessageTransportStrategy` | Matches `@DistributedMessage`-annotated types |
+
+**Annotations**
+
+| Annotation | Target | Purpose |
+|------------|--------|---------|
+| `@Subscribe` | Method | Declares a message handler method; `value` = channel, `group` = consumer group |
+| `@Command` | Type | Marks a type as a unicast command |
+| `@Event` | Type | Marks a type as a multicast event |
+| `@Request` | Type | Marks a request type with explicit `responseType` |
+| `@Channel` | Type | Overrides the default channel name (FQCN) |
+| `@Enqueue` | Type | Queue mapping with `value` (queue name) and `priority` |
+| `@LocalMessage` | Type | Marks a type for local transport only |
+| `@DistributedMessage` | Type | Marks a type for distributed transport only |
+| `@DispatchIn` | Type | Constrains outgoing dispatch to specified transports |
+| `@ReceiveIn` | Type | Constrains incoming receive to specified transports |
+
+**Contracts**
+
+| Interface | Purpose |
+|-----------|---------|
+| `Queue` | Marker: unicast point-to-point message |
+| `Topic` | Marker: publish-subscribe message |
+| `Request<R>` | Marker: request-response message with response type `R` |
+| `Transport` | Transport abstraction: `publishAsync`, `sendAsync`, `requestAsync` |
+
+**Recipients**
+
+| Interface | Purpose |
+|-----------|---------|
+| `Recipient` | Base contract: `getName()`; extends `AutoCloseable` |
+| `Executor` | Marker sub-interface of `Recipient` |
+| `Subscriber` | Marker sub-interface of `Recipient` |
+
+**Events**
+
+| Class | Purpose |
+|-------|---------|
+| `MessageSubscribedEvent` | Emitted when a handler is subscribed (channel, messageType, handlerType) |
+| `MessageReceivedEvent` | Emitted when a message is received by transport |
+| `MessageAcknowledgedEvent` | Emitted when a message is acknowledged (RECEIVED type) |
+| `MessageDeliveredEvent` | Emitted when a message is successfully delivered |
+| `MessageHandledEvent` | Emitted when a handler completes processing (message + handler type) |
+| `MessageRepliedEvent` | Emitted with response result |
+| `MessageProcessedEvent` | Base event: message + context + `MessageProcessType` |
+| `MessageProcessType` | Enum: `SEND`, `DELIVERED`, `RECEIVED` |
+
+**Exceptions**
+
+| Class | Purpose |
+|-------|---------|
+| `MessageTypeException` | Invalid or unsupported message type for routing |
+| `MessageProcessingException` | Handler or processing failure |
+| `MessageDeliverException` | Message delivery failure |
+| `MessageTransportException` | Transport-layer failure |
 
 ### Bus Core (`euonia-bus-core`)
 > Runtime orchestration layer: handler discovery, registration, dispatch, and bus API. Depends on `pipeline` and `bus-abstract`.
