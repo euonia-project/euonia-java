@@ -21,18 +21,18 @@ public class MessageBusConfiguration {
 
     @Bean
     @Scope(BeanScope.PROTOTYPE)
-    public Bus bus(ServiceProvider provider) {
-        return new MessageBus(provider, dispatcher(), messageBusOptions());
+    public Bus bus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
+        return new MessageBus(provider, dispatcher, options);
     }
 
     @Bean
-    public Dispatcher dispatcher() {
-        return new StrategicDispatcher(messageBusOptions());
+    public Dispatcher dispatcher(MessageBusOptions options) {
+        return new StrategicDispatcher(options);
     }
 
     @Bean
-    public MessageBusOptions messageBusOptions() {
-        var options = new MessageBusOptionsImpl();
+    public MessageBusOptions messageBusOptions(BusConfigurator configurator) {
+        var options = new MessageBusOptionsImpl(configurator);
         options.setDefaultTransport(defaultTransport);
         options.setEnablePipelineBehaviors(isEnablePipelineBehaviors);
         return options;
