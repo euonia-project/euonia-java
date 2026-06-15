@@ -3,12 +3,9 @@ package com.euonia.bus;
 import com.euonia.bus.options.MessageBusOptions;
 import com.euonia.bus.options.MessageBusOptionsImpl;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.spring.BeanScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-
 import java.lang.reflect.InvocationTargetException;
 
 @Configuration
@@ -20,7 +17,6 @@ public class MessageBusConfiguration {
     private boolean isEnablePipelineBehaviors;
 
     @Bean
-    @Scope(BeanScope.PROTOTYPE)
     public Bus bus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
         return new MessageBus(provider, dispatcher, options);
     }
