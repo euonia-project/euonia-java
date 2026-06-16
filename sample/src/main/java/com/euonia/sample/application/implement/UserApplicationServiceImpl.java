@@ -2,6 +2,7 @@ package com.euonia.sample.application.implement;
 
 import com.euonia.application.BaseApplicationService;
 import com.euonia.reflection.ServiceProvider;
+import com.euonia.sample.application.command.UserCreateCommand;
 import com.euonia.sample.application.contract.UserApplicationService;
 import com.euonia.sample.application.dto.UserCreateDto;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
 
     @Override
     public CompletableFuture<Void> createAsync(UserCreateDto data) {
-        return null;
+        var command = new UserCreateCommand();
+        return bus.sendAsync(command);
     }
 }

@@ -21,7 +21,7 @@ public class UserCreateCommandHandler implements Handler<UserCreateCommand, Void
 
     @Override
     public Void handle(UserCreateCommand message, MessageContext context) {
-        var user = factory.create(User.class, message.getName());
+        var user = factory.create(User.class, message.getName() == null ? "" : message.getName());
         try (user) {
             user.onSaved((args) -> {
                 System.out.println("User saved: " + ((User) args.getNewObject()).getEvents().size());

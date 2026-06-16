@@ -11,10 +11,14 @@ import com.euonia.reflection.PropertyInfo;
 import com.euonia.sample.domain.EditableObjectBase;
 import com.euonia.sample.domain.event.UserCreatedEvent;
 import com.euonia.sample.persistent.UserRepository;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+@Component
+@Scope("prototype")
 public class User extends EditableObjectBase<User, Long> {
 
     private final PropertyInfo<Long> id = registerProperty(Long.class, "id");
@@ -54,8 +58,8 @@ public class User extends EditableObjectBase<User, Long> {
     @Override
     protected void addRules() {
         super.addRules();
-        getRules().addRule(new UserNameRule(this.name));
-        getRules().addRule(new LambdaRule<>(this.age, (age, context) -> age != null && age >= 18, "Age must be at least 18"));
+        addRule(new UserNameRule(this.name));
+        addRule(this.age, (age, context) -> age != null && age >= 18, "Age must be at least 18");
     }
 
     @FactoryCreate
