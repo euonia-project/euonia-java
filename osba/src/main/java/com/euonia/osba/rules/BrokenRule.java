@@ -1,8 +1,10 @@
 package com.euonia.osba.rules;
 
 /**
- * Represents a broken rule that has been violated during rule checking.
- * It contains information about the property that violated the rule, a description of the violation, and the severity of the violation.
+ * 表示在规则检查过程中被违反的已破坏规则。
+ * 包含有关违反规则的属性、违规描述以及严重程度的信息。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class BrokenRule {
     private final String property;

@@ -1,73 +1,64 @@
 package com.euonia.osba.abstracts;
 
 /**
- * TrackableObject is an interface that defines methods for tracking the state
- * of an object in terms of its validity, changes, deletion status, and whether
- * it is new or can be saved. This interface is typically used in business
- * objects to manage their lifecycle and ensure that they are in a consistent
- * state before performing operations such as saving or deleting.
+ * TrackableObject 是一个接口，定义了用于跟踪对象状态的方法，包括其有效性、变更、删除状态以及是否为新建对象或是否可保存。
+ * 此接口通常用于业务对象中，以管理其生命周期，并确保在执行保存或删除等操作之前对象处于一致的状态。
  * <p>
- * The methods defined in this interface include:
+ * 此接口中定义的方法包括：
  * <p>
- * - isValid(): Indicates whether the object is in a valid state. This is used
- * to determine whether the object can be saved or not.
+ * - isValid()：指示对象是否处于有效状态。用于确定对象是否可以保存。
+ * - isChanged()：指示对象自上次保存以来是否已被更改。
+ * - isDeleted()：指示对象是否已被标记为删除。
+ * - isNew()：指示对象是否为新建对象且尚未保存。
+ * - isSavable()：指示对象是否可以保存。
+ * - isBusy()：指示对象当前是否处于忙碌状态，即正在执行不应被中断的操作，如保存或删除。
  * <p>
- * - isChanged(): Indicates whether the object has been changed since it was
- * last saved.
- * <p>
- * - isDeleted(): Indicates whether the object has been marked for deletion.
- * <p>
- * - isNew(): Indicates whether the object is new and has not been saved yet.
- * <p>
- * - isSavable(): Indicates whether the object can be saved.
- * <p>
- * Implementing this interface allows business objects to manage their state
- * effectively and ensure that operations are performed only when the object is
- * in an appropriate state. For example, an object that is not valid should
- * not be saved, and an object that is marked for deletion should not be updated.
+ * 实现此接口允许业务对象有效管理其状态，并确保仅在对象处于适当状态时才执行操作。
+ * 例如，无效的对象不应保存，已标记为删除的对象不应更新。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public interface TrackableObject {
 
     /**
-     * Indicates whether the object is in a valid state. This is used to determine
-     * whether the object can be saved or not.
+     * 指示对象是否处于有效状态。用于确定对象是否可以保存。
      *
-     * @return true if the object is valid, false otherwise
+     * @return 如果对象有效则返回 true，否则返回 false
      */
     boolean isValid();
 
     /**
-     * Indicates whether the object has been changed since it was last saved.
+     * 指示对象自上次保存以来是否已被更改。
      *
-     * @return true if the object has been changed, false otherwise
+     * @return 如果对象已被更改则返回 true，否则返回 false
      */
     boolean isChanged();
 
     /**
-     * Indicates whether the object has been marked for deletion.
+     * 指示对象是否已被标记为删除。
      *
-     * @return true if the object is marked for deletion, false otherwise
+     * @return 如果对象已被标记为删除则返回 true，否则返回 false
      */
     boolean isDeleted();
 
     /**
-     * Indicates whether the object is new and has not been saved yet.
+     * 指示对象是否为新建对象且尚未保存。
      *
-     * @return true if the object is new, false otherwise
+     * @return 如果对象是新建对象则返回 true，否则返回 false
      */
     boolean isNew();
 
     /**
-     * Indicates whether the object can be saved.
+     * 指示对象是否可以保存。
      *
-     * @return true if the object can be saved, false otherwise
+     * @return 如果对象可以保存则返回 true，否则返回 false
      */
     boolean isSavable();
 
     /**
-     * Indicates whether the object is currently busy, which means that it is performing an operation that should not be interrupted, such as saving or deleting.
+     * 指示对象当前是否处于忙碌状态，即正在执行不应被中断的操作，如保存或删除。
      *
-     * @return true if the object is busy, false otherwise
+     * @return 如果对象处于忙碌状态则返回 true，否则返回 false
      */
     boolean isBusy();
 }

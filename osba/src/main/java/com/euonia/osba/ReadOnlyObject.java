@@ -3,11 +3,12 @@ package com.euonia.osba;
 import com.euonia.reflection.PropertyInfo;
 
 /**
- * Represents a read-only business object.
- * This class extends the BusinessObject class and is intended for objects that should not be modified after creation.
- * It does not provide any additional methods or properties, but serves as a marker to indicate that the object is read-only.
+ * 表示一个只读的业务对象。
+ * 该类继承自 BusinessObject，适用于创建后不应被修改的对象。
+ * 它不提供任何额外的方法或属性，但作为一个标记，用于指示该对象是只读的。
  *
- * @param <T> the type of the business object, which must extend ReadOnlyObject
+ * @param <T> 业务对象的类型，必须继承自 ReadOnlyObject
+ * @author damon(zhaorong@outlook)
  */
 public abstract class ReadOnlyObject<T extends ReadOnlyObject<T>> extends BusinessObject<T> {
     @Override
@@ -15,6 +16,15 @@ public abstract class ReadOnlyObject<T extends ReadOnlyObject<T>> extends Busine
         return true;
     }
 
+    /**
+     * 获取属性的值。如果对象未绕过规则检查且属性不可读，则该方法将返回指定的默认值。
+     *
+     * @param propertyName 属性名称
+     * @param field        属性的当前值
+     * @param defaultValue 属性的默认值，如果对象未绕过规则检查且属性不可读，则返回该值
+     * @param <V>          属性值的类型
+     * @return 属性的值，如果对象未绕过规则检查且属性不可读，则返回 defaultValue
+     */
     protected <V> V getProperty(String propertyName, V field, V defaultValue) {
 
         var propertyInfo = getFieldManager().getRegisteredProperty(propertyName);
@@ -25,20 +35,37 @@ public abstract class ReadOnlyObject<T extends ReadOnlyObject<T>> extends Busine
         return defaultValue;
     }
 
+    /**
+     * 获取属性的值。如果对象未绕过规则检查且属性不可读，则该方法将返回属性的默认值。
+     *
+     * @param propertyInfo 属性信息
+     * @param field        属性的当前值
+     * @param <V>          属性值的类型
+     * @return 属性的值，如果对象未绕过规则检查且属性不可读，则返回属性的默认值
+     */
     protected <V> V getProperty(PropertyInfo<V> propertyInfo, V field) {
         return getProperty(propertyInfo.getName(), field, propertyInfo.getDefaultValue());
     }
 
+    /**
+     * 获取属性的值。如果对象未绕过规则检查且属性不可读，则该方法将返回指定的默认值。
+     *
+     * @param propertyInfo 属性信息
+     * @param field        属性的当前值
+     * @param defaultValue 属性的默认值，如果对象未绕过规则检查且属性不可读，则返回该值
+     * @param <V>          属性值的类型
+     * @return 属性的值，如果对象未绕过规则检查且属性不可读，则返回 defaultValue
+     */
     protected <V> V getProperty(PropertyInfo<V> propertyInfo, V field, V defaultValue) {
         return getProperty(propertyInfo.getName(), field, defaultValue);
     }
 
     /**
-     * Gets the value of a property. If the object is not bypassing rule checks and the property cannot be read, the method will return the default value for the property.
+     * 获取属性的值。如果对象未绕过规则检查且属性不可读，则该方法将返回属性的默认值。
      *
-     * @param propertyInfo the property information
-     * @param <V>          the type of the property value
-     * @return the value of the property
+     * @param propertyInfo 属性信息
+     * @param <V>          属性值的类型
+     * @return 属性的值
      */
     protected <V> V getProperty(PropertyInfo<V> propertyInfo) {
         V value;
@@ -51,11 +78,11 @@ public abstract class ReadOnlyObject<T extends ReadOnlyObject<T>> extends Busine
     }
 
     /**
-     * Sets the value of a property. If the object is not bypassing rule checks and the property cannot be written to, the method will return without making any changes.
+     * 设置属性的值。如果对象未绕过规则检查且属性不可写入，则该方法将直接返回而不做任何更改。
      *
-     * @param propertyInfo the property information
-     * @param newValue     the new value to set
-     * @param <V>          the type of the property value
+     * @param propertyInfo 属性信息
+     * @param newValue     要设置的新值
+     * @param <V>          属性值的类型
      */
     protected <V> void setProperty(PropertyInfo<V> propertyInfo, V newValue) {
         if (!isBypassingRuleCheck() && !canWriteProperty(propertyInfo, true)) {

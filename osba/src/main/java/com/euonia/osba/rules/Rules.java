@@ -36,7 +36,6 @@ public final class Rules {
      *
      * @return the RuleManager for the target object
      */
-    @SuppressWarnings("DoubleCheckedLocking")
     public RuleManager getRuleManager() {
         if (ruleManager == null) {
             synchronized (this) {

@@ -1,17 +1,24 @@
 package com.euonia.osba;
 
 /**
- * Represents a business object that can be executed. This class extends the BusinessObject class and provides default implementations for the execute and create methods, which can be overridden by subclasses to provide specific behavior.
+ * 表示可执行的业务对象。该类继承自 BusinessObject 类，为 execute 和 create 方法提供了默认实现，子类可以重写这些方法以提供特定的行为。
  *
- * @param <T> the type of the business object, which must extend ExecutableObject
+ * @param <T> 业务对象的类型，必须继承自 ExecutableObject
+ * @author damon(zhaorong@outlook)
  */
 public abstract class ExecutableObject<T extends ExecutableObject<T>> extends BusinessObject<T> {
 
+    /**
+     * 执行业务对象的操作。默认实现不执行任何操作，子类可以重写此方法以提供特定的行为。
+     */
     protected void execute() {
-        // Default implementation does nothing, can be overridden by subclasses
+        // 默认实现不执行任何操作，可由子类重写
     }
 
+    /**
+     * 创建业务对象的操作。默认实现不执行任何操作，子类可以重写此方法以提供特定的行为。
+     */
     protected void create() {
-        // Default implementation does nothing, can be overridden by subclasses
+        // 默认实现不执行任何操作，可由子类重写
     }
 }
