@@ -1,159 +1,108 @@
 package com.euonia.factory;
 
 /**
- * ObjectFactory is an interface that defines methods for business object
- * creation, retrieval, update, and deletion.
- * It provides a standardized way to manage the lifecycle of business objects in
- * an application. The methods include:
+ * ObjectFactory 是一个接口，定义了业务对象的创建、检索、更新和删除方法。
+ * 它提供了一种标准化的方式来管理应用程序中业务对象的生命周期。方法包括：
  * <p>
- * - create: Creates a new instance of the specified type with the given
- * arguments.
- * </P>
- * <p>
- * - fetch: Retrieves an existing instance of the specified type based on the
- * given arguments.
- * </P>
- * <p>
- * - insert: Inserts a new instance of the specified type into the data store
- * with the given arguments.
- * </P>
- * <p>
- * - update: Updates an existing instance of the specified type in the data
- * store with the given arguments.
- * </P>
- * <p>
- * - save: Saves the provided instance of the specified type to the data store,
- * either by inserting or updating it as necessary.
- * </P>
- * <p>
- * - execute: Executes a specific operation related to the specified type with
- * the given arguments, which may involve complex business logic.
- * </P>
- * <p>
- * - delete: Deletes an existing instance of the specified type from the data
- * store based on the given arguments.
- * </p>
+ * - create：使用给定的参数，创建指定类型的新实例。
+ * - fetch：根据给定的参数，检索指定类型的现有实例。
+ * - insert：使用给定的参数，将指定类型的新实例插入到数据存储中。
+ * - update：使用给定的参数，更新数据存储中指定类型的现有实例。
+ * - save：将提供的指定类型实例保存到数据存储中，根据需要执行插入或更新操作。
+ * - execute：使用给定的参数，执行与指定类型相关的特定操作，可能涉及复杂的业务逻辑。
+ * - delete：根据给定的参数，从数据存储中删除指定类型的现有实例。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public interface ObjectFactory {
     /**
-     * Creates a new instance of the specified type with the given arguments.
-     * The implementation of this method should handle the instantiation logic based
-     * on the type and arguments provided.
-     * This may involve using reflection, dependency injection, or other mechanisms
-     * to create the object.
-     * The method should return the newly created instance of the specified type.
+     * 使用给定的参数，创建指定类型的新实例。
+     * 此方法的实现应根据提供的类型和参数处理实例化逻辑。
+     * 这可能涉及使用反射、依赖注入或其他机制来创建对象。
+     * 该方法应返回新创建的指定类型实例。
      *
-     * @param <T>  The type of the object to be created.
-     * @param type The class of the object to be created.
-     * @param args The arguments to be used for creating the object.
-     * @return The newly created instance of the specified type.
+     * @param <T>  要创建的对象的类型。
+     * @param type 要创建的对象的类。
+     * @param args 用于创建对象的参数。
+     * @return 新创建的指定类型实例。
      */
     <T> T create(Class<T> type, Object... args);
 
     /**
-     * Retrieves an existing instance of the specified type based on the given
-     * arguments.
-     * The implementation of this method should handle the retrieval logic based on
-     * the type and arguments provided.
-     * This may involve querying a database, accessing a cache, or other mechanisms
-     * to find the object.
-     * The method should return the retrieved instance of the specified type, or
-     * null if no matching instance is found.
+     * 根据给定的参数，检索指定类型的现有实例。
+     * 此方法的实现应根据提供的类型和参数处理检索逻辑。
+     * 这可能涉及查询数据库、访问缓存或其他查找对象的机制。
+     * 该方法应返回检索到的指定类型实例，如果没有找到匹配的实例，则返回 null。
      *
-     * @param <T>  The type of the object to be retrieved.
-     * @param type The class of the object to be retrieved.
-     * @param args The arguments to be used for retrieving the object.
-     * @return The retrieved instance of the specified type, or null if no matching
-     *         instance is found.
+     * @param <T>  要检索的对象的类型。
+     * @param type 要检索的对象的类。
+     * @param args 用于检索对象的参数。
+     * @return 检索到的指定类型实例，如果没有找到匹配的实例，则返回 null。
      */
     <T> T fetch(Class<T> type, Object... args);
 
     /**
-     * Inserts a new instance of the specified type into the data store with the
-     * given arguments.
-     * The implementation of this method should handle the insertion logic based on
-     * the type and arguments provided.
-     * This may involve validating the input, preparing the data for insertion, and
-     * executing the necessary database operations to persist the object.
-     * The method should return the newly inserted instance of the specified type,
-     * which may include any generated identifiers or additional data from the
-     * data store.
+     * 使用给定的参数，将指定类型的新实例插入到数据存储中。
+     * 此方法的实现应根据提供的类型和参数处理插入逻辑。
+     * 这可能涉及验证输入、准备插入数据以及执行必要的数据库操作以持久化对象。
+     * 该方法应返回新插入的指定类型实例，其中可能包含数据存储生成的任何标识符或附加数据。
      *
-     * @param <T>  The type of the object to be inserted.
-     * @param type The class of the object to be inserted.
-     * @param args The arguments to be used for inserting the object.
-     * @return The newly inserted instance of the specified type, which may include
-     *         any generated identifiers or additional data from the data store.
+     * @param <T>  要插入的对象的类型。
+     * @param type 要插入的对象的类。
+     * @param args 用于插入对象的参数。
+     * @return 新插入的指定类型实例，其中可能包含数据存储生成的任何标识符或附加数据。
      */
     <T> T insert(Class<T> type, Object... args);
 
     /**
-     * Updates an existing instance of the specified type in the data store with the
-     * given arguments.
-     * The implementation of this method should handle the update logic based on the
-     * type and arguments provided.
-     * This may involve validating the input, preparing the data for update, and
-     * executing the necessary database operations to modify the existing object.
-     * The method should return the updated instance of the specified type, which
-     * may include any changes made during the update process.
+     * 使用给定的参数，更新数据存储中指定类型的现有实例。
+     * 此方法的实现应根据提供的类型和参数处理更新逻辑。
+     * 这可能涉及验证输入、准备更新数据以及执行必要的数据库操作以修改现有对象。
+     * 该方法应返回更新后的指定类型实例，其中可能包含更新过程中的任何更改。
      *
-     * @param <T>  The type of the object to be updated.
-     * @param type The class of the object to be updated.
-     * @param args The arguments to be used for updating the object.
-     * @return The updated instance of the specified type, which may include any
-     *         changes made during the update process.
+     * @param <T>  要更新的对象的类型。
+     * @param type 要更新的对象的类。
+     * @param args 用于更新对象的参数。
+     * @return 更新后的指定类型实例，其中可能包含更新过程中的任何更改。
      */
     <T> T update(Class<T> type, Object... args);
 
     /**
-     * Saves the provided instance of the specified type to the data store, either
-     * by inserting or updating it as necessary.
-     * The implementation of this method should determine whether to insert a new
-     * instance or update an existing one based on the state of the provided object
-     * and any relevant identifiers.
-     * This may involve validating the input, preparing the data for persistence, and
-     * executing the necessary database operations to save the object.
-     * The method should return the saved instance of the specified type, which may
-     * include any changes made during the save process, such as generated
-     * identifiers or updated fields.
+     * 将提供的指定类型实例保存到数据存储中，根据需要执行插入或更新操作。
+     * 此方法的实现应根据所提供对象的状态和任何相关标识符来确定是插入新实例还是更新现有实例。
+     * 这可能涉及验证输入、准备持久化数据以及执行必要的数据库操作以保存对象。
+     * 该方法应返回保存后的指定类型实例，其中可能包含保存过程中的任何更改，
+     * 例如生成的标识符或更新的字段。
      *
-     * @param <T>    The type of the object to be saved.
-     * @param type   The class of the object to be saved.
-     * @param target The instance of the object to be saved.
-     * @return The saved instance of the specified type, which may include any
-     *         changes made during the save process, such as generated identifiers
-     *         or updated fields.
+     * @param <T>    要保存的对象的类型。
+     * @param type   要保存的对象的类。
+     * @param target 要保存的对象实例。
+     * @return 保存后的指定类型实例，其中可能包含保存过程中的任何更改，
+     *         例如生成的标识符或更新的字段。
      */
     <T> T save(Class<T> type, T target);
 
     /**
-     * Executes a custom operation on the specified type with the given arguments.
-     * The implementation of this method should handle the execution logic based on
-     * the type and arguments provided.
-     * This may involve validating the input, preparing the data for execution, and
-     * executing the necessary operations.
-     * The method should return the result of the execution, which may include any
-     * changes made during the process.
+     * 使用给定的参数，对指定类型执行自定义操作。
+     * 此方法的实现应根据提供的类型和参数处理执行逻辑。
+     * 这可能涉及验证输入、准备执行数据以及执行必要的操作。
+     * 该方法应返回执行的结果，其中可能包含过程中的任何更改。
      *
-     * @param <T>  The type of the object to be executed.
-     * @param type The class of the object to be executed.
-     * @param args The arguments to be used for executing the object.
-     * @return The result of the execution, which may include any changes made during
-     *         the process.
+     * @param <T>  要执行的对象的类型。
+     * @param type 要执行的对象的类。
+     * @param args 用于执行对象的参数。
+     * @return 执行的结果，其中可能包含过程中的任何更改。
      */
     <T> T execute(Class<T> type, Object... args);
 
     /**
-     * Deletes an existing instance of the specified type from the data store with the
-     * given arguments.
-     * The implementation of this method should handle the deletion logic based on the
-     * type and arguments provided.
-     * This may involve validating the input, preparing the data for deletion, and
-     * executing the necessary database operations to remove the object.
+     * 使用给定的参数，从数据存储中删除指定类型的现有实例。
+     * 此方法的实现应根据提供的类型和参数处理删除逻辑。
+     * 这可能涉及验证输入、准备删除数据以及执行必要的数据库操作以移除对象。
      *
-     * @param <T>  The type of the object to be deleted.
-     * @param type The class of the object to be deleted.
-     * @param args The arguments to be used for deleting the object.
+     * @param <T>  要删除的对象的类型。
+     * @param type 要删除的对象的类。
+     * @param args 用于删除对象的参数。
      */
     <T> void delete(Class<T> type, Object... args);
 }

@@ -22,40 +22,34 @@ import com.euonia.reflection.ObjectReflector;
 import com.euonia.reflection.ServiceProvider;
 
 /**
- * BusinessObjectFactory is an implementation of the ObjectFactory interface that uses reflection to create, fetch, insert, update, save, execute, and delete business objects based on annotated factory methods.
- * It supports integration with a bean factory for object instantiation and handles different object states for saving operations.
+ * BusinessObjectFactory 是 ObjectFactory 接口的实现，
+ * 使用反射基于带注解的工厂方法来创建、检索、插入、更新、保存、执行和删除业务对象。
+ * 它支持与 bean 工厂集成以进行对象实例化，并根据保存操作处理不同的对象状态。
+ *
+ * @author damon(zhaorong@outlook)
  */
-@SuppressWarnings("UnusedReturnValue")
 public class BusinessObjectFactory implements ObjectFactory {
 
     private final ServiceProvider provider;
 
     /**
-     * Constructs a new BusinessObjectFactory with the specified ServiceProvider, which can be used for resolving dependencies during object creation and method invocation.
+     * 使用指定的 ServiceProvider 构造一个新的 BusinessObjectFactory，
+     * ServiceProvider 可用于在对象创建和方法调用期间解析依赖。
      *
-     * @param provider the ServiceProvider to be used for resolving services
+     * @param provider 用于解析服务的 ServiceProvider
      */
     public BusinessObjectFactory(ServiceProvider provider) {
         this.provider = provider;
     }
 
-    // /**
-    //  * Configures the BusinessObjectFactory to use the provided bean factory for object instantiation.
-    //  *
-    //  * @param resolver the ServiceProvider to be used for resolving services, including the bean factory
-    //  * @return the current instance of BusinessObjectFactory
-    //  */
-    // public BusinessObjectFactory use(ServiceProvider resolver) {
-    //     return new BusinessObjectFactory(resolver);
-    // }
-
     /**
-     * Creates an instance of the specified type by finding and invoking the appropriate factory method annotated with @FactoryCreate, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryCreate 的适当工厂方法，
+     * 使用提供的条件作为参数来创建指定类型的实例。
      *
-     * @param type     The class of the object to be created.
-     * @param criteria The arguments to be used for creating the object.
-     * @param <T>      The type of the object to be created.
-     * @return The created object.
+     * @param type     要创建的对象的类。
+     * @param criteria 用于创建对象的参数。
+     * @param <T>      要创建的对象的类型。
+     * @return 创建的对象。
      */
     @Override
     public <T> T create(Class<T> type, Object... criteria) {
@@ -70,12 +64,13 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Fetches an instance of the specified type by finding and invoking the appropriate factory method annotated with @FactoryFetch, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryFetch 的适当工厂方法，
+     * 使用提供的条件作为参数来检索指定类型的实例。
      *
-     * @param type     The class of the object to be retrieved.
-     * @param criteria The arguments to be used for retrieving the object.
-     * @param <T>      The type of the object to be retrieved.
-     * @return The retrieved object.
+     * @param type     要检索的对象的类。
+     * @param criteria 用于检索对象的参数。
+     * @param <T>      要检索的对象的类型。
+     * @return 检索到的对象。
      */
     @Override
     public <T> T fetch(Class<T> type, Object... criteria) {
@@ -86,12 +81,13 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Inserts a new instance of the specified type by finding and invoking the appropriate factory method annotated with @FactoryInsert, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryInsert 的适当工厂方法，
+     * 使用提供的条件作为参数来插入指定类型的新实例。
      *
-     * @param type     The class of the object to be inserted.
-     * @param criteria The arguments to be used for inserting the object.
-     * @param <T>      The type of the object to be inserted.
-     * @return The inserted object.
+     * @param type     要插入的对象的类。
+     * @param criteria 用于插入对象的参数。
+     * @param <T>      要插入的对象的类型。
+     * @return 插入的对象。
      */
     @Override
     public <T> T insert(Class<T> type, Object... criteria) {
@@ -102,12 +98,13 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Updates an existing instance of the specified type by finding and invoking the appropriate factory method annotated with @FactoryUpdate, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryUpdate 的适当工厂方法，
+     * 使用提供的条件作为参数来更新指定类型的现有实例。
      *
-     * @param type     The class of the object to be updated.
-     * @param criteria The arguments to be used for updating the object.
-     * @param <T>      The type of the object to be updated.
-     * @return The updated object.
+     * @param type     要更新的对象的类。
+     * @param criteria 用于更新对象的参数。
+     * @param <T>      要更新的对象的类型。
+     * @return 更新后的对象。
      */
     @Override
     public <T> T update(Class<T> type, Object... criteria) {
@@ -118,12 +115,12 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Saves the provided object by determining its state and invoking the appropriate factory method based on annotations.
+     * 通过判断对象的状态并根据注解调用相应的工厂方法来保存提供的对象。
      *
-     * @param type   The class of the object to be saved.
-     * @param target The instance of the object to be saved.
-     * @param <T>    The type of the object to be saved.
-     * @return The saved object.
+     * @param type   要保存的对象的类。
+     * @param target 要保存的对象实例。
+     * @param <T>    要保存的对象的类型。
+     * @return 保存后的对象。
      */
     @Override
     public <T> T save(Class<T> type, T target) {
@@ -150,12 +147,13 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Executes the provided object by finding and invoking the appropriate factory method annotated with @FactoryExecute, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryExecute 的适当工厂方法，
+     * 使用提供的条件作为参数来执行提供的对象。
      *
-     * @param type     The class of the object to be executed.
-     * @param criteria The arguments to be used for executing the object.
-     * @param <T>      The type of the object to be executed.
-     * @return The executed object.
+     * @param type     要执行的对象的类。
+     * @param criteria 用于执行对象的参数。
+     * @param <T>      要执行的对象的类型。
+     * @return 执行后的对象。
      */
     @Override
     public <T> T execute(Class<T> type, Object... criteria) {
@@ -166,11 +164,12 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Deletes the specified object by finding and invoking the appropriate factory method annotated with @FactoryDelete, using the provided criteria as arguments.
+     * 通过查找并调用标注了 @FactoryDelete 的适当工厂方法，
+     * 使用提供的条件作为参数来删除指定的对象。
      *
-     * @param type     The class of the object to be deleted.
-     * @param criteria The arguments to be used for deleting the object.
-     * @param <T>      The type of the object to be deleted.
+     * @param type     要删除的对象的类。
+     * @param criteria 用于删除对象的参数。
+     * @param <T>      要删除的对象的类型。
      */
     @Override
     public <T> void delete(Class<T> type, Object... criteria) {
@@ -180,12 +179,12 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Creates an instance of the specified type using the bean factory if available, or falls back to reflection-based instantiation.
-     * If the created object implements UseBusinessContext, it sets the business context for that object.
+     * 如果可用，使用 bean 工厂创建指定类型的实例，否则回退到基于反射的实例化。
+     * 如果创建的对象实现了 UseBusinessContext，则为其设置业务上下文。
      *
-     * @param type The class of the object to be created.
-     * @param <T>  The type of the object to be created.
-     * @return The created object instance.
+     * @param type 要创建的对象的类。
+     * @param <T>  要创建的对象的类型。
+     * @return 创建的对象实例。
      */
     @SuppressWarnings("unchecked")
     private <T> T getObjectInstance(Class<T> type) {
@@ -202,12 +201,12 @@ public class BusinessObjectFactory implements ObjectFactory {
             queue.add(() -> {
                 try {
                     var constructors = Arrays.stream(type.getDeclaredConstructors())
-                                             .sorted((a, b) -> Integer.compare(b.getParameterCount(), a.getParameterCount()))
-                                             .toList();
+                            .sorted((a, b) -> Integer.compare(b.getParameterCount(), a.getParameterCount()))
+                            .toList();
 
                     var ctor = constructors.stream().findFirst().orElse(null);
 
-                    if(ctor == null) {
+                    if (ctor == null) {
                         throw new RuntimeException("No constructor found for type: " + type.getName());
                     }
 
@@ -222,8 +221,8 @@ public class BusinessObjectFactory implements ObjectFactory {
                         }
                         return (T) ctor.newInstance(args);
                     }
-                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
-                         InvocationTargetException e) {
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                        | InvocationTargetException e) {
                     throw new RuntimeException("Failed to create instance of " + type.getName(), e);
                 }
             }, 2);
@@ -237,12 +236,12 @@ public class BusinessObjectFactory implements ObjectFactory {
     }
 
     /**
-     * Invokes the specified method on the target object with the given criteria as arguments, handling any exceptions that may occur during invocation.
+     * 使用给定的条件作为参数，在目标对象上调用指定的方法，处理调用过程中可能发生的任何异常。
      *
-     * @param method   The method to be invoked.
-     * @param target   The target object on which the method is to be invoked.
-     * @param criteria The arguments to be used for invoking the method.
-     * @param <T>      The type of the target object.
+     * @param method   要调用的方法。
+     * @param target   要调用方法的目标对象。
+     * @param criteria 用于调用方法的参数。
+     * @param <T>      目标对象的类型。
      */
     private <T> void invoke(Method method, T target, Object... criteria) {
         try {
@@ -250,7 +249,7 @@ public class BusinessObjectFactory implements ObjectFactory {
             method.invoke(target, criteria);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(
-                "Failed to invoke method: " + method.getName() + " on target: " + target.getClass().getName(), e);
+                    "Failed to invoke method: " + method.getName() + " on target: " + target.getClass().getName(), e);
         }
     }
 

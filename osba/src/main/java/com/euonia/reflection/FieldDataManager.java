@@ -8,7 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("unused")
+/**
+ * FieldDataManager 是一个管理业务对象字段数据的类。它维护一个字段数据的映射，并提供方法来获取、创建、设置和加载字段数据。
+ * 该类还提供了一个静态方法来初始化业务对象类型的静态字段，以确保所有静态属性都被注册。
+ *
+ * @author damon(zhaorong@outlook)
+ */
 public class FieldDataManager {
     private final Map<String, FieldData<?>> fieldData = new HashMap<>();
     private final List<PropertyInfo<?>> properties;
@@ -17,6 +22,12 @@ public class FieldDataManager {
         properties = createConsolidatedList(businessObjectType);
     }
 
+    /**
+     * 创建一个合并的属性列表，包含指定类型及其所有父类（直到 BusinessObject）的属性。
+     *
+     * @param type 要创建属性列表的类型
+     * @return 包含指定类型及其所有父类属性的列表
+     */
     private static List<PropertyInfo<?>> createConsolidatedList(Class<?> type) {
         var result = new ArrayList<PropertyInfo<?>>();
 
@@ -25,8 +36,7 @@ public class FieldDataManager {
         do {
             hierarchy.add(currentType);
             currentType = currentType.getSuperclass();
-        }
-        while (currentType != null && !(BusinessObject.class.isAssignableFrom(currentType)));
+        } while (currentType != null && !(BusinessObject.class.isAssignableFrom(currentType)));
 
         for (var index = hierarchy.size() - 1; index >= 0; index--) {
             var source = PropertyInfoManager.getPropertyListCache(hierarchy.get(index));
@@ -37,35 +47,55 @@ public class FieldDataManager {
         return result;
     }
 
+    /**
+     * 获取已注册的属性列表。
+     *
+     * @return 已注册的属性列表
+     */
     public List<PropertyInfo<?>> getRegisteredProperties() {
         return properties;
     }
 
+    /**
+     * 获取指定名称的已注册属性。
+     *
+     * @param propertyName 属性名称
+     * @return 已注册的属性
+     * @throws IllegalArgumentException 如果属性未注册
+     */
     public PropertyInfo<?> getRegisteredProperty(String propertyName) {
         return getRegisteredProperties().stream()
-                                        .filter(p -> p.getName().equals(propertyName))
-                                        .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException("Property '" + propertyName + "' is not registered."));
+                .filter(p -> p.getName().equals(propertyName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Property '" + propertyName + "' is not registered."));
     }
 
     public FieldData<?> getFieldData(String fieldName) {
-//        if (!fieldData.containsKey(fieldName)) {
-//            throw new IllegalArgumentException(String.format("Field '%s' is not registered.", fieldName));
-//        }
+        // if (!fieldData.containsKey(fieldName)) {
+        // throw new IllegalArgumentException(String.format("Field '%s' is not
+        // registered.", fieldName));
+        // }
 
         return fieldData.getOrDefault(fieldName, null);
     }
 
+    /**
+     * 获取指定属性的字段数据。
+     *
+     * @param <T>      属性的类型
+     * @param property 属性信息
+     * @return 指定属性的字段数据
+     */
     public <T> FieldData<T> getFieldData(PropertyInfo<T> property) {
         return (FieldData<T>) getFieldData(property.getName());
     }
 
     /**
-     * Retrieves the field data for the specified property, creating it if it does not already exist. This method is synchronized to ensure thread safety when accessing and modifying the field data map.
+     * 检索指定属性的字段数据，如果尚不存在则创建。此方法是同步的，以确保在访问和修改字段数据映射时的线程安全。
      *
-     * @param <T> the type of the property
-     * @param property the property for which to retrieve or create the field data
-     * @return the field data for the specified property
+     * @param <T>      属性的类型
+     * @param property 要检索或创建字段数据的属性
+     * @return 指定属性的字段数据
      */
     public synchronized <T> FieldData<T> getOrCreateFieldData(PropertyInfo<T> property) {
         if (!fieldData.containsKey(property.getName())) {
@@ -76,11 +106,11 @@ public class FieldDataManager {
     }
 
     /**
-     * Sets the field data for the specified property and value, creating the field data if it does not already exist. This method is synchronized to ensure thread safety when accessing and modifying the field data map.
+     * 为指定的属性和值设置字段数据，如果字段数据尚不存在则创建。此方法是同步的，以确保在访问和修改字段数据映射时的线程安全。
      *
-     * @param <T> the type of the property
-     * @param property the property for which to set the field data
-     * @param value the value to set for the field data
+     * @param <T>      属性的类型
+     * @param property 要设置字段数据的属性
+     * @param value    要为字段数据设置的值
      */
     public <T> void setFieldData(PropertyInfo<T> property, T value) {
         FieldData<T> field = getOrCreateFieldData(property);
@@ -88,12 +118,12 @@ public class FieldDataManager {
     }
 
     /**
-     * Loads the field data for the specified property and value, marking it as unchanged.
+     * 加载指定属性和值的字段数据，并将其标记为未更改。
      *
-     * @param property the property for which to load the field data
-     * @param value    the value to set for the field data
-     * @param <T>      the type of the property
-     * @return the loaded field data
+     * @param property 要加载字段数据的属性
+     * @param value    要为字段数据设置的值
+     * @param <T>      属性的类型
+     * @return 已加载的字段数据
      */
     @SuppressWarnings("UnusedReturnValue")
     public <T> FieldData<T> loadFieldData(PropertyInfo<T> property, T value) {
@@ -104,38 +134,38 @@ public class FieldDataManager {
     }
 
     /**
-     * Removes the field data associated with the specified property, if it exists.
+     * 移除与指定属性关联的字段数据（如果存在）。
      *
-     * @param property the property for which to remove the field data
+     * @param property 要移除字段数据的属性
      */
     public void removeFieldData(PropertyInfo<?> property) {
         fieldData.remove(property.getName());
     }
 
     /**
-     * Checks if field data exists for the specified field name.
+     * 检查指定字段名称的字段数据是否存在。
      *
-     * @param fieldName the name of the field to check
-     * @return true if field data exists for the specified field name, false otherwise
+     * @param fieldName 要检查的字段名称
+     * @return 如果指定字段名称的字段数据存在则返回 true，否则返回 false
      */
     public boolean fieldExists(String fieldName) {
         return fieldData.containsKey(fieldName);
     }
 
     /**
-     * Checks if field data exists for the specified property.
+     * 检查指定属性的字段数据是否存在。
      *
-     * @param property the property to check
-     * @return true if field data exists for the specified property, false otherwise
+     * @param property 要检查的属性
+     * @return 如果指定属性的字段数据存在则返回 true，否则返回 false
      */
     public boolean fieldExists(PropertyInfo<?> property) {
         return fieldExists(property.getName());
     }
 
     /**
-     * Initializes the static fields of the specified business object type to ensure that all static properties are registered.
+     * 初始化指定业务对象类型的静态字段，以确保所有静态属性都被注册。
      *
-     * @param businessObjectType the business object type for which to initialize static fields
+     * @param businessObjectType 要为其初始化静态字段的业务对象类型
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public synchronized static void initStaticFields(Class<?> businessObjectType) {
@@ -152,6 +182,11 @@ public class FieldDataManager {
         }
     }
 
+    /**
+     * 检查是否有任何字段数据处于忙碌状态。
+     *
+     * @return 如果有任何字段数据处于忙碌状态则返回 true，否则返回 false
+     */
     public boolean isBusy() {
         return fieldData.values().stream().anyMatch(FieldData::isBusy);
     }

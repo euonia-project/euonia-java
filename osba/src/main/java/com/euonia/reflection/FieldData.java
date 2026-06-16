@@ -8,10 +8,11 @@ import java.util.concurrent.SubmissionPublisher;
 import com.euonia.osba.abstracts.TrackableObject;
 
 /**
- * Represents a field of an object that can be tracked for changes.
- * This class provides methods to get and set the value of the field, as well as to mark it as unchanged or undo changes.
+ * 表示对象的一个字段，可以跟踪其变化。
+ * 此类提供了获取和设置字段值的方法，以及将其标记为未更改或撤销更改的方法。
  *
- * @param <T> the type of the field value.
+ * @param <T> 字段值的类型。
+ * @author damon(zhaorong@outlook)
  */
 public class FieldData<T> implements TrackableObject {
     private final Stack<T> history = new Stack<>();
@@ -20,6 +21,9 @@ public class FieldData<T> implements TrackableObject {
     private String name;
     private T value;
 
+    /**
+     * 创建一个新的 FieldData 实例。
+     */
     public FieldData() {
         Flow.Subscriber<T> subscriber = new Flow.Subscriber<>() {
             @Override
@@ -45,19 +49,39 @@ public class FieldData<T> implements TrackableObject {
         publisher.subscribe(subscriber);
     }
 
+    /**
+     * 使用指定的名称创建一个新的 FieldData 实例。
+     *
+     * @param name 字段的名称。
+     */
     public FieldData(String name) {
         this();
         this.name = name;
     }
 
+    /**
+     * 获取字段的名称。
+     *
+     * @return 字段的名称。
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 获取字段的当前值。
+     *
+     * @return 字段的当前值。
+     */
     public T getValue() {
         return value;
     }
 
+    /**
+     * 设置字段的值，并将其添加到历史记录中。
+     *
+     * @param value 要设置的新值。
+     */
     public void setValue(T value) {
         if (this.value == null && value == null) {
             return;
@@ -70,21 +94,37 @@ public class FieldData<T> implements TrackableObject {
         ((SubmissionPublisher<T>) publisher).submit(this.value);
     }
 
+    /**
+     * 将字段标记为未更改，清除历史记录。
+     */
     public void markAsUnchanged() {
         history.clear();
     }
 
+    /**
+     * 撤销字段的最后一次更改。
+     */
     public void undo() {
         if (!history.isEmpty()) {
             this.value = history.pop();
         }
     }
 
+    /**
+     * 检查字段是否已更改。
+     *
+     * @return 如果字段已更改，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isChanged() {
         return !history.isEmpty();
     }
 
+    /**
+     * 检查字段是否已删除。
+     *
+     * @return 如果字段已删除，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isDeleted() {
         if (value instanceof TrackableObject trackableObject) {
@@ -93,6 +133,11 @@ public class FieldData<T> implements TrackableObject {
         return false;
     }
 
+    /**
+     * 检查字段是否为新创建的对象。
+     *
+     * @return 如果字段为新创建的对象，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isNew() {
         if (value instanceof TrackableObject trackableObject) {
@@ -101,6 +146,11 @@ public class FieldData<T> implements TrackableObject {
         return false;
     }
 
+    /**
+     * 检查字段是否可保存。
+     *
+     * @return 如果字段可保存，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isSavable() {
         if (value instanceof TrackableObject trackableObject) {
@@ -109,6 +159,11 @@ public class FieldData<T> implements TrackableObject {
         return false;
     }
 
+    /**
+     * 检查字段是否有效。
+     *
+     * @return 如果字段有效，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isValid() {
         if (value instanceof TrackableObject trackableObject) {
@@ -117,7 +172,11 @@ public class FieldData<T> implements TrackableObject {
         return false;
     }
 
-
+    /**
+     * 检查字段是否忙碌。
+     *
+     * @return 如果字段忙碌，则返回 true；否则返回 false。
+     */
     @Override
     public boolean isBusy() {
         if (value instanceof TrackableObject trackableObject) {
