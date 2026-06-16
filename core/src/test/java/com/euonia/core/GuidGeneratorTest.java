@@ -25,7 +25,7 @@ class GuidGeneratorTest {
     @Test
     @DisplayName("Given simple type when generating then non-empty UUID is returned")
     void givenSimpleTypeWhenGeneratingThenReturnNonEmptyUuid() {
-        UUID guid = GuidGenerator.generate(GuidType.SIMPLE);
+        UUID guid = GuidGenerator.generate(GuidType.DEFAULT);
 
         assertNotEquals(new UUID(0L, 0L), guid);
     }

@@ -3,7 +3,9 @@ package com.euonia.core;
 import java.util.Random;
 
 /**
- * Tool to generate random IDs based on a seed value.
+ * 基于种子值生成随机 ID 的工具。
+ *
+ * @author damon(zhaorong@outlook)
  */
 final class RandomId {
 
@@ -16,7 +18,7 @@ final class RandomId {
     };
 
     private RandomId() {
-        // utility class
+        // 工具类
     }
 
     private static String[] copyChars() {
@@ -40,10 +42,10 @@ final class RandomId {
     }
 
     /**
-     * Generates a random ID based on the provided seed.
+     * 基于提供的种子生成随机 ID。
      *
-     * @param seed the seed value
-     * @return a random ID string
+     * @param seed 种子值
+     * @return 随机 ID 字符串
      */
     public static String generate(long seed) {
         var key = generateKey();

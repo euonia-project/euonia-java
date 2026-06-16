@@ -5,8 +5,9 @@ import java.security.SecureRandom;
 import java.util.UUID;
 
 /**
- * Generates UUID values using layouts that match the framework's .NET GUID
- * generation modes.
+ * 使用与框架 .NET GUID 生成模式相匹配的布局生成 UUID 值。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class GuidGenerator {
 
@@ -14,21 +15,21 @@ public final class GuidGenerator {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private GuidGenerator() {
-        // utility class
+        // 工具类
     }
 
     /**
-     * Creates a UUID using the specified GUID generation mode.
+     * 使用指定的 GUID 生成模式创建 UUID。
      *
-     * @param type the requested GUID type
-     * @return generated UUID
+     * @param type 请求的 GUID 类型
+     * @return 生成的 UUID
      */
     public static UUID generate(GuidType type) {
         if (type == GuidType.EMPTY) {
             return new UUID(0L, 0L);
         }
 
-        if (type == GuidType.SIMPLE) {
+        if (type == GuidType.DEFAULT) {
             return UUID.randomUUID();
         }
 
@@ -56,7 +57,7 @@ public final class GuidGenerator {
                 break;
 
             default:
-                throw new IllegalArgumentException("Unsupported GuidType: " + type);
+                throw new IllegalArgumentException("不支持的 GuidType: " + type);
         }
 
         return fromDotNetBytes(guidBytes);

@@ -10,24 +10,24 @@ import java.util.List;
 import java.util.jar.JarFile;
 
 /**
- * Scans the classpath for classes in a given package.
+ * 扫描 classpath 中给定包下的类。
  * <p>
- * Supports both directory-based classpaths (typical in IDE / development)
- * and JAR-based classpaths (typical in packaged deployments).
- * Uses only standard Java APIs — no third-party dependencies.
+ * 支持基于目录的 classpath（典型于 IDE/开发环境）和基于 JAR 的 classpath（典型于打包部署环境）。
+ * 仅使用标准 Java API —— 无第三方依赖。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class ClassScanner {
 
     private ClassScanner() {
-        // utility class
+        // 工具类
     }
 
     /**
-     * Scans the specified package and returns all non-anonymous, non-synthetic
-     * classes found within it.
+     * 扫描指定的包，并返回其中找到的所有非匿名、非合成的类。
      *
-     * @param packageName the fully qualified package name (e.g. {@code com.euonia.bus})
-     * @return a list of {@link Class} objects found in the package
+     * @param packageName 完全限定包名（例如 {@code com.euonia.bus}）
+     * @return 包中找到的 {@link Class} 对象列表
      */
     public static List<Class<?>> scan(String packageName) {
         var classes = new ArrayList<Class<?>>();
@@ -50,14 +50,14 @@ public final class ClassScanner {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to scan package: " + packageName, e);
+            throw new RuntimeException("扫描包失败: " + packageName, e);
         }
 
         return classes;
     }
 
     /**
-     * Recursively scans a directory for {@code .class} files.
+     * 递归扫描目录中的 {@code .class} 文件。
      */
     private static void scanDirectory(File directory, String packageName, List<Class<?>> classes) {
         if (!directory.exists()) {
@@ -80,23 +80,23 @@ public final class ClassScanner {
                         classes.add(cls);
                     }
                 } catch (ClassNotFoundException | NoClassDefFoundError ignored) {
-                    // class cannot be loaded — skip it
+                    // 类无法加载 —— 跳过
                 }
             }
         }
     }
 
     /**
-     * Scans a JAR file for classes in the given package.
+     * 扫描 JAR 文件中给定包下的类。
      */
     private static void scanJar(URL resource, String packagePath, List<Class<?>> classes) {
         var jarPath = resource.getPath();
-        // Strip the "file:" prefix and "!/..." suffix to get the JAR file path
+        // 去除 "file:" 前缀和 "!/..." 后缀以获取 JAR 文件路径
         var separatorIndex = jarPath.indexOf("!/");
         if (separatorIndex >= 0) {
             jarPath = jarPath.substring(0, separatorIndex);
         }
-        // Remove leading "file:" if present
+        // 如果存在则去除开头的 "file:"
         if (jarPath.startsWith("file:")) {
             jarPath = jarPath.substring("file:".length());
         }
@@ -109,7 +109,7 @@ public final class ClassScanner {
                 var entryName = entry.getName();
                 if (entryName.startsWith(packagePath + "/") && entryName.endsWith(".class")
                         && entryName.indexOf('/', packagePath.length() + 1) < 0) {
-                    // Only direct children of the package (not sub-packages)
+                    // 仅处理包的直接子类（不包含子包）
                     var className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
                     try {
                         var cls = Class.forName(className);
@@ -117,12 +117,12 @@ public final class ClassScanner {
                             classes.add(cls);
                         }
                     } catch (ClassNotFoundException | NoClassDefFoundError ignored) {
-                        // class cannot be loaded — skip it
+                        // 类无法加载 —— 跳过
                     }
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to scan JAR: " + jarPath, e);
+            throw new RuntimeException("扫描 JAR 失败: " + jarPath, e);
         }
     }
 }

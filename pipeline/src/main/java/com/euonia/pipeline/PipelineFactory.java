@@ -1,18 +1,19 @@
 package com.euonia.pipeline;
 
 /**
- * PipelineFactory is responsible for creating instances of Pipeline.
- * It abstracts the creation logic and allows for different implementations of
- * Pipeline to be used without changing the client code that depends on it.
+ * PipelineFactory 负责创建 Pipeline 的实例。
+ * 它抽象了创建逻辑，允许使用不同的 Pipeline 实现，
+ * 而无需更改依赖它的客户端代码。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public interface PipelineFactory {
     /**
-     * Creates a new instance of Pipeline with the specified context and response
-     * types.
+     * 创建一个新的 Pipeline 实例，并指定上下文和响应类型。
      *
-     * @param <C> the type of the context
-     * @param <R> the type of the response
-     * @return a new instance of Pipeline
+     * @param <C> 上下文的类型
+     * @param <R> 响应的类型
+     * @return 一个新的 Pipeline 实例
      */
     <C, R> Pipeline<C, R> create();
 }

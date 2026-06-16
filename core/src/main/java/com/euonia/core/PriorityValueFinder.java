@@ -5,30 +5,32 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Utility class for finding a value in a priority queue based on a filter predicate.
- * This class provides a method to search through a priority queue and return the first value that matches the given filter.
- * If no matching value is found, it returns a specified default value.
+ * 用于在优先级队列中根据过滤谓词查找值的工具类。
+ * 该类提供方法在优先级队列中搜索并返回第一个匹配给定过滤条件的值。
+ * 如果未找到匹配值，则返回指定的默认值。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class PriorityValueFinder {
 
     /**
-     * Finds the first value in the priority queue that matches the given filter.
-     * If no matching value is found, returns the default value.
+     * 在优先级队列中查找第一个匹配给定过滤条件的值。
+     * 如果未找到匹配值，则返回默认值。
      *
-     * @param values       the priority queue to search
-     * @param filter       the filter predicate to apply to each value
-     * @param defaultValue the value to return if no matching value is found
-     * @param <T>          the type of values in the priority queue
-     * @return the first matching value or the default value if none is found
+     * @param values       要搜索的优先级队列
+     * @param filter       应用于每个值的过滤谓词
+     * @param defaultValue 未找到匹配值时返回的默认值
+     * @param <T>          优先级队列中值的类型
+     * @return 第一个匹配的值，如果未找到则返回默认值
      */
     public static <T> T find(PriorityQueue<Supplier<T>, Integer> values, Predicate<T> filter, T defaultValue) {
 
         if (values == null) {
-            throw new IllegalArgumentException("Values queue cannot be null  or empty");
+            throw new IllegalArgumentException("Values 队列不能为 null 或空");
         }
 
         if (filter == null) {
-            throw new IllegalArgumentException("Filter queue cannot be null");
+            throw new IllegalArgumentException("Filter 不能为 null");
         }
 
         if (values.isEmpty()) {
@@ -45,18 +47,19 @@ public final class PriorityValueFinder {
     }
 
     /**
-     * Finds the first value in the priority queue provided by the consumer that matches the given filter.
-     * If no matching value is found, returns the default value.
+     * 在由 consumer 提供的优先级队列中查找第一个匹配给定过滤条件的值。
+     * 如果未找到匹配值，则返回默认值。
      *
-     * @param queueConsumer the consumer that provides the priority queue to search
-     * @param filter        the filter predicate to apply to each value
-     * @param defaultValue  the value to return if no matching value is found
-     * @param <T>           the type of values in the priority queue
-     * @return the first matching value or the default value if none is found
+     * @param queueConsumer 提供要搜索的优先级队列的 consumer
+     * @param filter        应用于每个值的过滤谓词
+     * @param defaultValue  未找到匹配值时返回的默认值
+     * @param <T>           优先级队列中值的类型
+     * @return 第一个匹配的值，如果未找到则返回默认值
      */
-    public static <T> T find(Consumer<PriorityQueue<Supplier<T>, Integer>> queueConsumer, Predicate<T> filter, T defaultValue) {
+    public static <T> T find(Consumer<PriorityQueue<Supplier<T>, Integer>> queueConsumer, Predicate<T> filter,
+            T defaultValue) {
         if (queueConsumer == null) {
-            throw new IllegalArgumentException("Queue consumer cannot be null");
+            throw new IllegalArgumentException("Queue consumer 不能为 null");
         }
 
         var queue = new PriorityQueue<Supplier<T>, Integer>();
@@ -64,4 +67,3 @@ public final class PriorityValueFinder {
         return find(queue, filter, defaultValue);
     }
 }
-

@@ -1,44 +1,105 @@
 package com.euonia.bus.options;
 
+import com.euonia.bus.Configurator;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.strategy.TransportStrategy;
 
 import java.util.List;
 
-public interface MessageBusOptions {
-    /**
-     * Gets the name of the default transport that will be used when no specific transport is assigned to a message type by strategy.
-     *
-     * @return The name of the default transport.
-     */
-    String getDefaultTransport();
+/**
+ * Defines the options for configuring the message bus, including transport
+ * strategies, message conventions, and pipeline behaviors.
+ * This class is immutable and can be used to create a message bus instance with
+ * the specified options.
+ *
+ * @author damon(zhaorong@outlook)
+ */
+public final class MessageBusOptions {
+    private final Configurator configurator;
+    private String defaultTransport;
+
+    private boolean isEnablePipelineBehaviors = true;
 
     /**
-     * Indicates whether pipeline behaviors are enabled for the message bus.
+     * Creates a new instance of MessageBusOptions with the specified configurator.
      *
-     * @return true if pipeline behaviors are enabled, false otherwise.
+     * @param configurator the configurator used to configure the message bus
      */
-    boolean isEnablePipelineBehaviors();
+    public MessageBusOptions(Configurator configurator) {
+        this.configurator = configurator;
+    }
 
     /**
-     * Gets the message convention used by the message bus.
+     * Gets the default transport strategy name, which can be used for message
+     * routing and categorization.
      *
-     * @return The message convention used by the message bus.
+     * @return the default transport strategy name
      */
-    MessageConvention getConvention();
+    public String getDefaultTransport() {
+        return defaultTransport;
+    }
 
     /**
-     * Gets the list of types for which a transport strategy has been assigned.
+     * Sets the default transport strategy name, which can be used for message
+     * routing and categorization.
      *
-     * @return The list of types for which a transport strategy has been assigned.
+     * @param defaultTransport the default transport strategy name
      */
-    List<String> getStrategyAssignedTypes();
+    public void setDefaultTransport(String defaultTransport) {
+        this.defaultTransport = defaultTransport;
+    }
 
     /**
-     * Gets the transport strategy for the specified transport name.
+     * Gets whether to enable pipeline behaviors, which can be used for message
+     * processing and handling.
      *
-     * @param transport The name of the transport.
-     * @return The transport strategy associated with the specified transport name.
+     * @return true if pipeline behaviors are enabled, false otherwise
      */
-    TransportStrategy getStrategy(String transport);
+    public boolean isEnablePipelineBehaviors() {
+        return isEnablePipelineBehaviors;
+    }
+
+    /**
+     * Sets whether to enable pipeline behaviors, which can be used for message
+     * processing and handling.
+     *
+     * @param enablePipelineBehaviors true to enable pipeline behaviors, false
+     *                                otherwise
+     */
+    public void setEnablePipelineBehaviors(boolean enablePipelineBehaviors) {
+        isEnablePipelineBehaviors = enablePipelineBehaviors;
+    }
+
+    /**
+     * Gets the message convention, which can be used for message formatting and
+     * validation.
+     *
+     * @return the message convention
+     */
+    public MessageConvention getConvention() {
+        return configurator.getConventionBuilder().getConvention();
+    }
+
+    /**
+     * Gets the list of transport strategy names, which can be used for message
+     * routing and categorization.
+     *
+     * @return the list of transport strategy names
+     */
+    public List<String> getStrategyAssignedTypes() {
+        return configurator.getStrategyBuilders().keySet().stream().toList();
+    }
+
+    /**
+     * Gets the transport strategy for the specified transport name, which can be
+     * used for message routing and categorization.
+     *
+     * @param transport the transport name
+     * @return the transport strategy for the specified transport name, or null if
+     *         not found
+     */
+    public TransportStrategy getStrategy(String transport) {
+        var builder = configurator.getStrategyBuilders().get(transport);
+        return builder == null ? null : builder.getStrategy();
+    }
 }

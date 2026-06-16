@@ -1,6 +1,7 @@
 package com.euonia.reflection;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -21,19 +22,27 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * TypeHelper is a utility class that provides methods for coercing values to a
- * desired type, handling primitive types, enums, date/time conversions,
- * collections, and more.
- * It is designed to simplify type conversions and ensure type safety in various
- * scenarios.
+ * TypeHelper 是一个工具类，提供将值强制转换为目标类型的方法，支持原始类型、枚举、日期/时间转换、集合等。
+ * 旨在简化类型转换并确保各种场景下的类型安全。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class TypeHelper {
     private TypeHelper() {
     }
 
+    /**
+     * 将给定的值强制转换为指定的目标类型。
+     *
+     * @param desiredType 目标类型
+     * @param valueType   值的实际类型（可选，如果为 null 则使用 value 的运行时类型）
+     * @param value       要转换的值
+     * @return 转换后的值
+     * @throws IllegalArgumentException 如果无法转换为目标类型
+     */
     public static Object coerceValue(Class<?> desiredType, Class<?> valueType, Object value) {
         if (desiredType == null)
-            throw new IllegalArgumentException("desiredType is null");
+            throw new IllegalArgumentException("desiredType 为 null");
 
         if (value == null) {
             if (desiredType.isPrimitive()) {
@@ -52,33 +61,33 @@ public final class TypeHelper {
         Class<?> boxedDesired = boxIfPrimitive(desiredType);
         Class<?> boxedValue = boxIfPrimitive(valueType);
 
-        // Enums
+        // 枚举
         if (boxedDesired.isEnum()) {
             return convertToEnum(boxedDesired, value);
         }
 
-        // Date/time targets
+        // 日期/时间目标类型
         if (isDateTimeTarget(boxedDesired)) {
             return convertToDateTime(boxedDesired, value);
         }
 
-        // Collections/Map/JSON
+        // 集合/Map/JSON
         if (Collection.class.isAssignableFrom(boxedDesired) || boxedDesired.isArray()
                 || Map.class.isAssignableFrom(boxedDesired)) {
             return convertToCollectionOrMap(boxedDesired, value);
         }
 
-        // String target
+        // String 目标类型
         if (boxedDesired == String.class) {
             return value.toString();
         }
 
-        // Boolean target
+        // Boolean 目标类型
         if (boxedDesired == Boolean.class) {
             return convertToBoolean(value);
         }
 
-        // Numeric
+        // 数字
         if (Number.class.isAssignableFrom(boxedDesired) || isPrimitiveNumber(desiredType)) {
             return convertToNumber(boxedDesired, value);
         }
@@ -95,26 +104,32 @@ public final class TypeHelper {
             return value;
         }
 
-        // As a last attempt, try Jackson convert if present
+        // 最后尝试使用 Jackson 转换（如果可用）
         Object conv = tryJacksonConvert(value, desiredType);
         if (conv != null)
             return conv;
 
-        throw new IllegalArgumentException(String.format("Cannot convert value of type %s to %s (value=%s)",
+        throw new IllegalArgumentException(String.format("无法将 %s 类型的值转换为 %s（value=%s）",
                 value.getClass().getName(), desiredType.getName(), value));
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * 重载方法：当 valueType 不可用时，直接使用 value 的运行时类型进行转换。
+     *
+     * @param <T>         目标类型
+     * @param desiredType 目标类型
+     * @param value       要转换的值
+     * @return 转换后的值
+     */
     public static <T> T coerceValue(Class<T> desiredType, Object value) {
         return (T) coerceValue(desiredType, (value == null ? null : value.getClass()), value);
     }
 
     /**
-     * If the given class is a primitive type, returns its boxed type. Otherwise,
-     * returns the class itself.
+     * 如果给定的类是原始类型，则返回其包装类型；否则返回该类本身。
      *
-     * @param type the class to check
-     * @return the boxed type if the class is primitive, otherwise the class itself
+     * @param type 要检查的类
+     * @return 如果是原始类型则返回包装类型，否则返回该类本身
      */
     public static Class<?> boxIfPrimitive(Class<?> type) {
         if (!type.isPrimitive()) {
@@ -147,11 +162,23 @@ public final class TypeHelper {
         return type;
     }
 
+    /**
+     * 检查给定的类是否是原始数字类型。
+     *
+     * @param type 要检查的类
+     * @return 如果是原始数字类型则返回 true，否则返回 false
+     */
     public static boolean isPrimitiveNumber(Class<?> type) {
         return type == int.class || type == long.class || type == short.class || type == byte.class
                 || type == float.class || type == double.class;
     }
 
+    /**
+     * 获取原始类型的默认值。
+     *
+     * @param primitiveType 原始类型
+     * @return 原始类型的默认值
+     */
     public static Object defaultPrimitiveValue(Class<?> primitiveType) {
         if (primitiveType == boolean.class)
             return false;
@@ -172,7 +199,7 @@ public final class TypeHelper {
         return null;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked", "IfCanBeSwitch" })
+    @SuppressWarnings({ "rawtypes", "IfCanBeSwitch" })
     private static Object convertToEnum(Class<?> enumType, Object value) {
 
         if (value == null) {
@@ -191,7 +218,7 @@ public final class TypeHelper {
             try {
                 return Enum.valueOf((Class<? extends Enum>) enumType, string);
             } catch (IllegalArgumentException ex) {
-                // Try ordinal
+                // 尝试按序号匹配
                 try {
                     int ord = Integer.parseInt(string);
                     Enum[] constants = (Enum[]) enumType.getEnumConstants();
@@ -209,33 +236,43 @@ public final class TypeHelper {
             if (ord >= 0 && ord < constants.length) {
                 return constants[ord];
             }
-            throw new IllegalArgumentException("Enum ordinal out of range: " + ord);
+            throw new IllegalArgumentException("枚举序号超出范围：" + ord);
         }
 
         String vs = value.toString();
         if (vs != null && !vs.isEmpty()) {
             return convertToEnum(enumType, vs);
         }
-        throw new IllegalArgumentException("Cannot convert to enum: " + value);
+        throw new IllegalArgumentException("无法转换为枚举：" + value);
     }
 
     private static Object convertToBoolean(Object value) {
+
+        if (value == null) {
+            return false;
+        }
+
         if (value instanceof Boolean)
             return value;
-        if (value instanceof Number) {
-            return ((Number) value).intValue() != 0;
+        if (value instanceof Number number) {
+            return number.intValue() != 0;
         }
         String s = value.toString().trim().toLowerCase(Locale.ROOT);
         return switch (s) {
             case "", "false", "0", "no", "n" -> false;
             case "true", "1", "yes", "y" -> true;
-            default -> throw new IllegalArgumentException("Cannot convert to boolean: " + value);
+            default -> throw new IllegalArgumentException("无法转换为布尔值：" + value);
         };
     }
 
     private static Object convertToNumber(Class<?> targetNumberClass, Object value) {
-        if (value instanceof Number) {
-            return castNumber((Number) value, targetNumberClass);
+
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Number number) {
+            return castNumber(number, targetNumberClass);
         }
         String s = value.toString().trim();
         if (s.isEmpty()) {
@@ -245,7 +282,7 @@ public final class TypeHelper {
             BigDecimal bd = new BigDecimal(s);
             return castNumber(bd, targetNumberClass);
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Cannot convert to number: " + value, ex);
+            throw new IllegalArgumentException("无法转换为数字：" + value, ex);
         }
     }
 
@@ -269,7 +306,7 @@ public final class TypeHelper {
         }
         if (targetNumberClass.isInstance(number))
             return number;
-        throw new IllegalArgumentException("Unsupported target numeric type: " + targetNumberClass.getName());
+        throw new IllegalArgumentException("不支持的目标数字类型：" + targetNumberClass.getName());
     }
 
     private static Object convertToUUID(Object value) {
@@ -296,8 +333,9 @@ public final class TypeHelper {
         return s.charAt(0);
     }
 
-    // Extended conversions: date/time, collections, maps, JSON (when Jackson is
-    // available)
+    /**
+     * 扩展转换：日期/时间、集合、Map、JSON（当 Jackson 可用时）
+     */
     private static boolean isDateTimeTarget(Class<?> boxedDesired) {
         return boxedDesired == Date.class || boxedDesired == Instant.class || boxedDesired == LocalDateTime.class
                 || boxedDesired == LocalDate.class || boxedDesired == LocalTime.class
@@ -330,7 +368,7 @@ public final class TypeHelper {
                 return new Date(l);
             } catch (NumberFormatException ignored) {
             }
-            throw new IllegalArgumentException("Cannot convert to Date: " + value);
+            throw new IllegalArgumentException("无法转换为 Date：" + value);
         }
 
         if (Temporal.class.isAssignableFrom(target) || target == LocalDate.class || target == LocalDateTime.class
@@ -379,10 +417,10 @@ public final class TypeHelper {
             } catch (NumberFormatException ignored) {
             }
 
-            throw new IllegalArgumentException("Cannot parse date/time value: " + value);
+            throw new IllegalArgumentException("无法解析日期/时间值：" + value);
         }
 
-        throw new IllegalArgumentException("Unsupported date/time target: " + target.getName());
+        throw new IllegalArgumentException("不支持的日期/时间目标类型：" + target.getName());
     }
 
     private static Object convertInstantToTarget(Class<?> target, Instant inst) {
@@ -403,7 +441,6 @@ public final class TypeHelper {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     private static Object convertToCollectionOrMap(Class<?> desiredType, Object value) {
         if (value == null)
             return null;
@@ -443,7 +480,8 @@ public final class TypeHelper {
                     Collection<Object> coll = (Collection<Object>) desiredType.getDeclaredConstructor().newInstance();
                     coll.addAll(src);
                     return coll;
-                } catch (Exception ex) {
+                } catch (IllegalAccessException | IllegalArgumentException | InstantiationException
+                        | NoSuchMethodException | InvocationTargetException ex) {
                     return src;
                 }
             }
@@ -469,18 +507,20 @@ public final class TypeHelper {
                 return parsed;
         }
 
-        throw new IllegalArgumentException("Cannot convert to collection/map target: " + desiredType.getName());
+        throw new IllegalArgumentException("无法转换为集合/Map 目标类型：" + desiredType.getName());
     }
 
-    // Reflection-based optional Jackson integration: parse JSON string to Object
-    // using ObjectMapper
+    /**
+     * 基于反射的可选 Jackson 集成：使用 ObjectMapper 将 JSON 字符串解析为对象
+     */
     private static Object tryJacksonParse(String json) {
         try {
             Class<?> mapperClass = Class.forName("com.fasterxml.jackson.databind.ObjectMapper");
             Object mapper = mapperClass.getDeclaredConstructor().newInstance();
             java.lang.reflect.Method read = mapperClass.getMethod("readValue", String.class, Class.class);
             return read.invoke(mapper, json, Object.class);
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InstantiationException
+                | NoSuchMethodException | InvocationTargetException ex) {
             return null;
         }
     }
@@ -491,7 +531,8 @@ public final class TypeHelper {
             Object mapper = mapperClass.getDeclaredConstructor().newInstance();
             java.lang.reflect.Method convert = mapperClass.getMethod("convertValue", Object.class, Class.class);
             return convert.invoke(mapper, value, desiredType);
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InstantiationException
+                | NoSuchMethodException | InvocationTargetException ex) {
             return null;
         }
     }
