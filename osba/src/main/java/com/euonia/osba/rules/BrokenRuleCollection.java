@@ -25,8 +25,8 @@ public final class BrokenRuleCollection {
      */
     public synchronized void clearRules(String propertyName) {
         rules.removeIf(rule -> propertyName == null
-            ? rule.getProperty() == null
-            : propertyName.equals(rule.getProperty()));
+            ? rule.property() == null
+            : propertyName.equals(rule.property()));
     }
 
     /**
@@ -50,7 +50,7 @@ public final class BrokenRuleCollection {
      * @return the count of broken rules with severity ERROR
      */
     public synchronized int getErrorCount() {
-        return (int) rules.stream().filter(rule -> rule.getSeverity() == RuleSeverity.ERROR).count();
+        return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.ERROR).count();
     }
 
     /**
@@ -59,7 +59,7 @@ public final class BrokenRuleCollection {
      * @return the count of broken rules with severity WARNING
      */
     public synchronized int getWarningCount() {
-        return (int) rules.stream().filter(rule -> rule.getSeverity() == RuleSeverity.WARNING).count();
+        return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.WARNING).count();
     }
 
     /**
@@ -68,7 +68,7 @@ public final class BrokenRuleCollection {
      * @return the count of broken rules with severity INFORMATION
      */
     public synchronized int getInformationCount() {
-        return (int) rules.stream().filter(rule -> rule.getSeverity() == RuleSeverity.INFORMATION).count();
+        return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.INFORMATION).count();
     }
 
     /**

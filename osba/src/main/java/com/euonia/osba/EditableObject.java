@@ -95,7 +95,7 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
             if (!isValid() && (!isDeleted() || isCheckObjectRulesOnDelete())) {
                 var errors = getRules().getBrokenRules()
                                        .stream()
-                                       .collect(Collectors.groupingBy(BrokenRule::getProperty, Collectors.mapping(BrokenRule::getDescription, Collectors.toList())));
+                                       .collect(Collectors.groupingBy(BrokenRule::property, Collectors.mapping(BrokenRule::description, Collectors.toList())));
                 return CompletableFuture.failedFuture(new RuleCheckException(errors));
             }
 
