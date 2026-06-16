@@ -60,7 +60,7 @@ public final class MessageBus implements Bus {
         }
 
         var messageType = message.getClass();
-        if (options.getConvention().isMulticastType(messageType)) {
+        if (!options.getConvention().isMulticastType(messageType)) {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not multicast");
         }
 
@@ -198,8 +198,8 @@ public final class MessageBus implements Bus {
 
         var messageType = request.getClass();
 
-        if (options.getConvention().isRequestType(messageType)) {
-            throw new MessageTypeException("The message type " + messageType.getName() + " is not unicast");
+        if (!options.getConvention().isRequestType(messageType)) {
+            throw new MessageTypeException("The message type " + messageType.getName() + " is not request");
         }
 
         var context = requestAccessor.getContext();
