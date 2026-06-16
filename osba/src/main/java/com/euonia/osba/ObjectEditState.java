@@ -1,25 +1,27 @@
 package com.euonia.osba;
 
 /**
- * Represents the edit state of an object, indicating whether it is new, changed, deleted, or unchanged.
- * This enum is used to track the state of an object during its lifecycle, allowing for proper handling of changes and deletions in the context of business rules and data persistence.
+ * 表示对象的编辑状态，指示对象是新建、已更改、已删除还是未更改。
+ * 该枚举用于在对象的生命周期中跟踪其状态，以便在业务规则和数据持久化的上下文中正确处理更改和删除。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public enum ObjectEditState {
 
     /**
-     * Indicates that the object is unchanged, meaning it has not been modified since it was last saved to the database.
+     * 表示对象未更改，即自上次保存到数据库以来未被修改。
      */
     NONE,
     /**
-     * Indicates that the object is new, meaning it has been created but not yet saved to the database. This state is used to track newly created objects that need to be saved.
+     * 表示对象是新建的，即已创建但尚未保存到数据库。此状态用于跟踪需要保存的新创建对象。
      */
     NEW,
     /**
-     * Indicates that the object has been changed, meaning it has been modified since it was last saved to the database. This state is used to track modified objects that need to be saved.
+     * 表示对象已更改，即自上次保存到数据库以来已被修改。此状态用于跟踪需要保存的已修改对象。
      */
     CHANGED,
     /**
-     * Indicates that the object has been marked as deleted, meaning it has been flagged for deletion but not yet removed from the database. This state is used to track objects that need to be deleted.
+     * 表示对象已标记为删除，即已被标记为待删除但尚未从数据库中移除。此状态用于跟踪需要删除的对象。
      */
     DELETED
 }

@@ -1,29 +1,13 @@
 package com.euonia.osba.rules;
 
 /**
- * Represents a broken rule that has been violated during rule checking.
- * It contains information about the property that violated the rule, a description of the violation, and the severity of the violation.
+ * 表示在规则检查过程中被违反的已破坏规则。
+ * 包含有关违反规则的属性、违规描述以及严重程度的信息。
+ *
+ * @param property    违反规则的属性名称。
+ * @param description 违反规则的描述，提供有关违规的详细信息。
+ * @param severity    违反规则的严重程度，指示违规的严重性级别
+ * @author damon(zhaorong@outlook)
  */
-public final class BrokenRule {
-    private final String property;
-    private final String description;
-    private final RuleSeverity severity;
-
-    public BrokenRule(String property, String description, RuleSeverity severity) {
-        this.property = property;
-        this.description = description;
-        this.severity = severity;
-    }
-
-    public String getProperty() {
-        return property;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public RuleSeverity getSeverity() {
-        return severity;
-    }
+public record BrokenRule(String property, String description, RuleSeverity severity) {
 }

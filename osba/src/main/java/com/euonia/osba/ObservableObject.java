@@ -10,11 +10,12 @@ import com.euonia.osba.abstracts.TrackableObject;
 import com.euonia.reflection.PropertyInfo;
 
 /**
- * Represents an observable business object that can track its edit state (new, changed, deleted) and manage its busy state.
- * This class provides methods to mark the object as new, changed, or deleted, and to check whether the object is busy or savable.
- * It also implements property access methods that respect the object's rules and permissions.
+ * 表示一个可观察的业务对象，能够跟踪其编辑状态（新建、已修改、已删除）并管理其忙碌状态。
+ * 该类提供方法来标记对象为新建、已修改或已删除，以及检查对象是否忙碌或可保存。
+ * 它还实现了遵循对象规则和权限的属性访问方法。
  *
- * @param <T> the type of the observable object
+ * @param <T> 可观察对象的类型
+ * @author damon(zhaorong@outlook)
  */
 @SuppressWarnings("unused")
 public abstract class ObservableObject<T extends ObservableObject<T>> extends BusinessObject<T> implements TrackableObject, OperableProperty {
@@ -25,9 +26,9 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     private final List<Consumer<Boolean>> busyListeners = new CopyOnWriteArrayList<>();
 
     /**
-     * Gets the current edit state of the object, which indicates whether the object is new, changed, or deleted.
+     * 获取对象的当前编辑状态，指示对象是新建、已修改还是已删除。
      *
-     * @return the current edit state of the object
+     * @return 对象的当前编辑状态
      */
     public final ObjectEditState getState() {
         return state;
@@ -38,9 +39,9 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether the object is new, which means it has been created but not yet saved to the database.
+     * 检查对象是否为新建状态，即已创建但尚未保存到数据库。
      *
-     * @return true if the object is new, false otherwise
+     * @return 如果对象为新建则返回 true，否则返回 false
      */
     @Override
     public final boolean isNew() {
@@ -48,9 +49,9 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether the object has been changed, which means it has been modified since it was last saved to the database.
+     * 检查对象是否已被修改，即自上次保存到数据库以来已被修改。
      *
-     * @return true if the object has been changed, false otherwise
+     * @return 如果对象已被修改则返回 true，否则返回 false
      */
     @Override
     public final boolean isChanged() {
@@ -58,9 +59,9 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether the object has been marked as deleted, which means it has been flagged for deletion but not yet removed from the database.
+     * 检查对象是否已被标记为删除，即已被标记待删除但尚未从数据库中移除。
      *
-     * @return true if the object has been marked as deleted, false otherwise
+     * @return 如果对象已被标记为删除则返回 true，否则返回 false
      */
     @Override
     public final boolean isDeleted() {
@@ -68,44 +69,44 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether object rules should be checked when the object is marked as deleted.
-     * This flag can be set when marking the object as deleted to indicate whether any business rules should be evaluated before allowing the deletion to proceed.
+     * 返回一个值用于判断当对象被标记为删除时是否应检查对象规则。
+     * 此标志可在标记对象为删除时设置，以指示在允许删除操作继续之前是否应评估任何业务规则。
      *
-     * @return true if object rules should be checked on delete, false otherwise
+     * @return 如果删除时应检查对象规则则返回 true，否则返回 false
      */
     public final boolean isCheckObjectRulesOnDelete() {
         return checkObjectRulesOnDelete;
     }
 
     /**
-     * Marks the object as new, indicating that it has been created but not yet saved to the database.
-     * This method sets the object's edit state to NEW, which can be used to track changes and determine whether the object needs to be saved.
+     * 将对象标记为新建，表示该对象已创建但尚未保存到数据库。
+     * 此方法将对象的编辑状态设置为 NEW，可用于跟踪变更并判断对象是否需要保存。
      */
     public final void markAsNew() {
         setState(ObjectEditState.NEW);
     }
 
     /**
-     * Marks the object as changed, indicating that it has been modified since it was last saved to the database.
-     * This method sets the object's edit state to CHANGED, which can be used to track changes and determine whether the object needs to be saved.
+     * 将对象标记为已修改，表示该对象自上次保存到数据库以来已被修改。
+     * 此方法将对象的编辑状态设置为 CHANGED，可用于跟踪变更并判断对象是否需要保存。
      */
     public final void markAsChanged() {
         setState(ObjectEditState.CHANGED);
     }
 
     /**
-     * Marks the object as deleted, indicating that it has been flagged for deletion but not yet removed from the database.
-     * This method sets the object's edit state to DELETED, which can be used to track changes and determine whether the object needs to be deleted.
+     * 将对象标记为删除，表示该对象已被标记待删除但尚未从数据库中移除。
+     * 此方法将对象的编辑状态设置为 DELETED，可用于跟踪变更并判断对象是否需要删除。
      */
     public final void markAsDeleted() {
         markAsDeleted(false);
     }
 
     /**
-     * Marks the object as deleted, indicating that it has been flagged for deletion but not yet removed from the database.
-     * This method sets the object's edit state to DELETED, which can be used to track changes and determine whether the object needs to be deleted.
+     * 将对象标记为删除，表示该对象已被标记待删除但尚未从数据库中移除。
+     * 此方法将对象的编辑状态设置为 DELETED，可用于跟踪变更并判断对象是否需要删除。
      *
-     * @param checkObjectRules whether to check object rules before allowing the deletion to proceed
+     * @param checkObjectRules 在允许删除操作继续之前是否检查对象规则
      */
     public final void markAsDeleted(boolean checkObjectRules) {
         setState(ObjectEditState.DELETED);
@@ -113,10 +114,10 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether the object is currently busy, which means it is performing an operation that prevents it from being saved or modified.
-     * This method checks both the object's own busy state and the busy state of any related fields or rules to determine whether the object is currently busy.
+     * 检查对象当前是否忙碌，即是否正在执行阻止其被保存或修改的操作。
+     * 此方法同时检查对象自身的忙碌状态以及任何关联字段或规则的忙碌状态，以判断对象当前是否忙碌。
      *
-     * @return true if the object is busy, false otherwise
+     * @return 如果对象忙碌则返回 true，否则返回 false
      */
     @Override
     public boolean isBusy() {
@@ -124,20 +125,20 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Checks whether the object itself is busy, which means it is performing an operation that prevents it from being saved or modified.
-     * This method checks the object's own busy state and the busy state of any running rules to determine whether the object is currently busy.
+     * 检查对象自身是否忙碌，即是否正在执行阻止其被保存或修改的操作。
+     * 此方法检查对象自身的忙碌状态以及正在运行的规则的忙碌状态，以判断对象当前是否忙碌。
      *
-     * @return true if the object itself is busy, false otherwise
+     * @return 如果对象自身忙碌则返回 true，否则返回 false
      */
     public boolean isSelfBusy() {
         return busyCounter.get() > 0 || getRules().hasRunningRules();
     }
 
     /**
-     * Checks whether the object is savable, which means it is valid, has changes, and is not busy.
-     * This method can be used to determine whether the object can be saved to the database.
+     * 检查对象是否可保存，即对象是否有效、有变更且不忙碌。
+     * 此方法可用于判断对象是否可以保存到数据库。
      *
-     * @return true if the object is savable, false otherwise
+     * @return 如果对象可保存则返回 true，否则返回 false
      */
     @Override
     public boolean isSavable() {
@@ -145,8 +146,8 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Marks the object as busy, indicating that it is performing an operation that prevents it from being saved or modified.
-     * This method increments the busy counter and notifies any listeners if the object becomes busy.
+     * 将对象标记为忙碌，表示该对象正在执行阻止其被保存或修改的操作。
+     * 此方法递增忙碌计数器，并在对象变为忙碌时通知所有监听器。
      */
     protected void markAsBusy() {
         var updateValue = busyCounter.incrementAndGet();
@@ -157,8 +158,8 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Marks the object as idle, indicating that it is no longer performing an operation that prevents it from being saved or modified.
-     * This method decrements the busy counter and notifies any listeners if the object becomes idle.
+     * 将对象标记为空闲，表示该对象不再执行阻止其被保存或修改的操作。
+     * 此方法递减忙碌计数器，并在对象变为空闲时通知所有监听器。
      */
     protected void markAsIdle() {
         var updateValue = busyCounter.decrementAndGet();
@@ -169,14 +170,19 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
     }
 
     /**
-     * Subscribes a listener to be notified when the busy state of the object changes.
+     * 订阅一个监听器，当对象的忙碌状态发生变化时接收通知。
      *
-     * @param listener the listener to be notified
+     * @param listener 要通知的监听器
      */
     public final void onBusyChanged(Consumer<Boolean> listener) {
         addBusyChangedListener(listener);
     }
 
+    /**
+     * 添加一个监听器，当对象的忙碌状态发生变化时接收通知。
+     *
+     * @param listener 要通知的监听器
+     */
     public final void addBusyChangedListener(Consumer<Boolean> listener) {
         if (listener == null) {
             return;
@@ -184,6 +190,11 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
         busyListeners.add(listener);
     }
 
+    /**
+     * 移除一个监听器，不再接收对象忙碌状态变化的通知。
+     *
+     * @param listener 要移除的监听器
+     */
     public final void removeBusyChangedListener(Consumer<Boolean> listener) {
         if (listener == null) {
             return;
@@ -191,13 +202,28 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
         busyListeners.remove(listener);
     }
 
+    /**
+     * 通知所有监听器对象的忙碌状态已发生变化。
+     *
+     * @param busy 对象当前的忙碌状态
+     */
     private void notifyBusyChanged(boolean busy) {
         for (Consumer<Boolean> listener : busyListeners) {
             listener.accept(busy);
         }
     }
 
-    // region Get/Set Properties
+    // region 获取/设置属性
+
+    /**
+     * 获取属性值，遵循对象规则和权限。
+     *
+     * @param propertyName 属性名称
+     * @param field        当前字段值
+     * @param defaultValue 默认值
+     * @param <V>          属性值的类型
+     * @return 属性值，如果无法读取属性则返回默认值
+     */
     protected <V> V getProperty(String propertyName, V field, V defaultValue) {
         var propertyInfo = getFieldManager().getRegisteredProperty(propertyName);
         if (isBypassingRuleCheck() || canReadProperty(propertyInfo, true)) {
@@ -206,41 +232,72 @@ public abstract class ObservableObject<T extends ObservableObject<T>> extends Bu
         return defaultValue;
     }
 
+    /**
+     * 获取属性值，遵循对象规则和权限。
+     *
+     * @param propertyInfo 属性信息
+     * @param field        当前字段值
+     * @param <V>          属性值的类型
+     * @return 属性值，如果无法读取属性则返回默认值
+     */
     protected <V> V getProperty(PropertyInfo<V> propertyInfo, V field) {
         return getProperty(propertyInfo, field, propertyInfo.getDefaultValue());
     }
 
+    /**
+     * 获取属性值，遵循对象规则和权限。
+     *
+     * @param propertyInfo 属性信息
+     * @param field        当前字段值
+     * @param defaultValue 默认值
+     * @param <V>          属性值的类型
+     * @return 属性值，如果无法读取属性则返回默认值
+     */
     protected <V> V getProperty(PropertyInfo<V> propertyInfo, V field, V defaultValue) {
         return getProperty(propertyInfo.getName(), field, defaultValue);
     }
 
+    /**
+     * 获取属性值，遵循对象规则和权限。
+     *
+     * @param property 要获取值的属性信息。
+     * @param <V>      属性值的类型。
+     * @return 属性值，如果无法读取属性则返回属性的默认值。
+     */
     @Override
-    public <V> V getProperty(PropertyInfo<V> propertyInfo) {
+    public <V> V getProperty(PropertyInfo<V> property) {
         V value;
-        if (isBypassingRuleCheck() || canReadProperty(propertyInfo, true)) {
-            value = readProperty(propertyInfo);
+        if (isBypassingRuleCheck() || canReadProperty(property, true)) {
+            value = readProperty(property);
         } else {
-            value = propertyInfo.getDefaultValue();
+            value = property.getDefaultValue();
         }
         return value;
     }
 
+    /**
+     * 设置属性值，遵循对象规则和权限。
+     *
+     * @param property 要设置值的属性信息。
+     * @param newValue 要设置的新值。
+     * @param <V>      属性值的类型。
+     */
     @Override
-    public <V> void setProperty(PropertyInfo<V> propertyInfo, V newValue) {
-        if (!isBypassingRuleCheck() && !canWriteProperty(propertyInfo, true)) {
+    public <V> void setProperty(PropertyInfo<V> property, V newValue) {
+        if (!isBypassingRuleCheck() && !canWriteProperty(property, true)) {
             return;
         }
 
         V oldValue;
-        var fieldData = getFieldManager().getFieldData(propertyInfo);
+        var fieldData = getFieldManager().getFieldData(property);
         if (fieldData == null) {
-            oldValue = propertyInfo.getDefaultValue();
-            getFieldManager().loadFieldData(propertyInfo, newValue);
+            oldValue = property.getDefaultValue();
+            getFieldManager().loadFieldData(property, newValue);
         } else {
             oldValue = fieldData.getValue();
         }
 
-        loadPropertyValue(propertyInfo, oldValue, newValue, !isBypassingRuleCheck());
+        loadPropertyValue(property, oldValue, newValue, !isBypassingRuleCheck());
     }
     // endregion
 

@@ -1,12 +1,11 @@
 package com.euonia.reflection;
 
 /**
- * MissingMethodException is a custom exception that is thrown when a method
- * with a specific name or annotation is not found in a given class.
- * It extends RuntimeException and provides additional information about the
- * type and method that were not found.
- * The exception message includes the type name and the method name or
- * annotation that was expected but not found.
+ * MissingMethodException 是一个自定义异常，当在给定类中找不到具有特定名称或注解的方法时抛出。
+ * 它继承自 RuntimeException，并提供有关未找到的类型和方法的相关信息。
+ * 异常消息包含类型名称以及预期但未找到的方法名称或注解。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public class MissingMethodException extends RuntimeException {
 
@@ -14,13 +13,10 @@ public class MissingMethodException extends RuntimeException {
     private final String methodName;
 
     /**
-     * Constructs a new MissingMethodException with the specified type name and
-     * method name.
+     * 使用指定的类型名称和方法名称构造一个新的 MissingMethodException。
      *
-     * @param typeName   The name of the class where the method was expected to be
-     *                   found.
-     * @param methodName The name of the method or annotation that was expected but
-     *                   not found.
+     * @param typeName   预期找到该方法的类名称。
+     * @param methodName 预期但未找到的方法名称或注解。
      */
     public MissingMethodException(String typeName, String methodName) {
         super("No method named " + methodName + " or annotated with convention found in " + typeName);
@@ -29,18 +25,18 @@ public class MissingMethodException extends RuntimeException {
     }
 
     /**
-     * Returns the name of the class where the method was expected to be found.
+     * 返回预期找到该方法的类名称。
      *
-     * @return The name of the class.
+     * @return 类名称。
      */
     public String getTypeName() {
         return typeName;
     }
 
     /**
-     * Returns the name of the method or annotation that was expected but not found.
+     * 返回预期但未找到的方法名称或注解。
      *
-     * @return The name of the method or annotation.
+     * @return 方法名称或注解。
      */
     public String getMethodName() {
         return methodName;

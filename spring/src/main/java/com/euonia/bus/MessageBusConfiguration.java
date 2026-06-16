@@ -1,10 +1,12 @@
 package com.euonia.bus;
 
 import com.euonia.bus.options.MessageBusOptions;
+import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.reflection.ServiceProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import java.lang.reflect.InvocationTargetException;
 
 @Configuration
@@ -17,6 +19,14 @@ public class MessageBusConfiguration {
 
     @Bean
     public Bus bus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
+        var configurator = provider.getService(Configurator.class)
+                                   .orElse(null);
+        if (configurator != null && configurator.getRegistrations() != null) {
+            var registrars = provider.getServices(RecipientRegistrar.class);
+            for (var registrar : registrars) {
+                registrar.register(configurator.getRegistrations(), options.getDefaultTransport());
+            }
+        }
         return new MessageBus(provider, dispatcher, options);
     }
 

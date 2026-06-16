@@ -2,6 +2,11 @@ package com.euonia.osba;
 
 import java.beans.PropertyChangeEvent;
 
+/**
+ * 表示业务对象属性更改或集合更改事件的参数。该类包含有关更改的对象、属性更改事件、集合更改类型和集合索引的信息。
+ *
+ * @author damon(zhaorong@outlook)
+ */
 public class ObjectChangedEventArgs {
     private final Object changedObject;
     private final PropertyChangeEvent propertyChangedEvent;

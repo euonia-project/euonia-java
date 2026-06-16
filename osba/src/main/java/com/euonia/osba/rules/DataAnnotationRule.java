@@ -10,15 +10,12 @@ import com.euonia.reflection.PropertyInfo;
 import com.euonia.tuple.Duet;
 
 /**
- * Represents a rule that is based on a specific annotation applied to a
- * property.
- * This class is designed to execute validation logic defined by the annotation
- * on the value of the property it is associated with.
- * The rule checks if the target object is a business object, retrieves the
- * value of the property, and then uses a validator specified by the annotation
- * to validate the value.
- * If the validation fails, an error result is added to the context with the
- * appropriate message.
+ * 表示一个基于应用于属性的特定注解的规则。
+ * 此类的目的是对其关联的属性值执行注解定义的验证逻辑。
+ * 该规则检查目标对象是否为业务对象，检索属性的值，然后使用注解指定的验证器来验证该值。
+ * 如果验证失败，则将带有适当消息的错误结果添加到上下文中。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public class DataAnnotationRule<A extends Annotation> extends RuleBase {
 
@@ -26,24 +23,27 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
     private final Class<?> validatorType;
 
     /**
-     * Creates a new instance of the DataAnnotationRule class with the specified
-     * property and annotation.
+     * 使用指定的属性和注解创建 DataAnnotationRule 类的新实例。
      *
-     * @param property      the property associated with the rule
-     * @param annotation    the annotation defining the validation logic to be
-     *                      applied
-     * @param validatorType the class of the validator that will be used to validate
-     *                      the value of the property against the annotation
-     *                      to the property
+     * @param property      与规则关联的属性
+     * @param annotation    定义要应用的验证逻辑的注解
+     * @param validatorType 将用于根据注解验证属性值的验证器类
      */
     public DataAnnotationRule(PropertyInfo<?> property, A annotation, Class<?> validatorType) {
         super(property, annotation.annotationType().getSimpleName());
-        assert annotation != null : "Annotation cannot be null.";
         assert validatorType != null : "Validator type cannot be null.";
         this.annotation = annotation;
         this.validatorType = validatorType;
     }
 
+    /**
+     * 执行规则的验证逻辑，检查目标对象是否为业务对象，检索属性值，并使用注解指定的验证器来验证该值。
+     * 如果验证失败，则将带有适当消息的错误结果添加到上下文中。
+     *
+     * @param context 规则上下文，包含有关规则执行环境的信息，如目标对象和属性值。
+     * @return 一个表示异步操作的 CompletableFuture 对象
+     */
+    @SuppressWarnings("unchecked")
     @Override
     public CompletableFuture<Void> executeAsync(RuleContext context) {
         try {
@@ -53,15 +53,15 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
 
                 var field = getProperty().getField();
                 if (field != null) {
-                    var validator = validatorType.getDeclaredConstructor().newInstance();
-                    Duet<Boolean, String> validate = ((Validator<A>) validator).validate(annotation, value);
+                    Validator<A> validator = (Validator<A>) validatorType.getDeclaredConstructor().newInstance();
+                    Duet<Boolean, String> validate = validator.validate(annotation, value);
                     if (!validate.value1()) {
                         context.addErrorResult(validate.value2());
                     }
                 }
             }
         } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException
-                | InvocationTargetException exception) {
+                 | InvocationTargetException exception) {
             context.addErrorResult(exception.getMessage());
         }
         return CompletableFuture.completedFuture(null);

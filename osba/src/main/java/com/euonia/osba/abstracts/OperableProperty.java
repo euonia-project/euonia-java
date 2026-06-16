@@ -3,24 +3,26 @@ package com.euonia.osba.abstracts;
 import com.euonia.reflection.PropertyInfo;
 
 /**
- * Represents a contract for an object that can get and set properties.
+ * 表示一个可以获取和设置属性的对象的契约。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public interface OperableProperty {
     /**
-     * Gets the value of a property based on the provided PropertyInfo.
+     * 根据提供的 PropertyInfo 获取属性的值。
      *
-     * @param propertyInfo The PropertyInfo object representing the property to retrieve.
-     * @param <V>          The type of the property value.
-     * @return The value of the property.
+     * @param propertyInfo 表示要获取的属性的 PropertyInfo 对象。
+     * @param <V>          属性值的类型。
+     * @return 属性的值。
      */
     <V> V getProperty(PropertyInfo<V> propertyInfo);
 
     /**
-     * Sets the value of a property based on the provided PropertyInfo and value.
+     * 根据提供的 PropertyInfo 和值设置属性的值。
      *
-     * @param propertyInfo The PropertyInfo object representing the property to set.
-     * @param value        The value to set for the property.
-     * @param <V>          The type of the property value.
+     * @param propertyInfo 表示要设置的属性的 PropertyInfo 对象。
+     * @param value        要为属性设置的值。
+     * @param <V>          属性值的类型。
      */
     <V> void setProperty(PropertyInfo<V> propertyInfo, V value);
 }

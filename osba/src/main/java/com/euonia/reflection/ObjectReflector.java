@@ -6,27 +6,68 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
-public class ObjectReflector {
+/**
+ * ObjectReflector 是一个工具类，提供了反射相关的方法，用于在运行时查找和匹配带有特定注解的方法。
+ * 主要功能包括：
+ * <p>
+ * - findFactoryMethod：根据目标类型、注解类型和可选的参数，查找匹配的方法。
+ * - calculateParameterMatchScore：计算方法参数与给定参数之间的匹配度得分。
+ * - getCandidateMethods：获取所有符合条件的候选方法。
+ * - getParameterTypeName：生成参数类型名称的字符串表示。
+ * - getConventionMethodNames：根据注解类型生成符合命名约定的方法名称列表。
+ *
+ * @author damon(zhaorong@outlook)
+ */
+public final class ObjectReflector {
 
     private static final ConcurrentMap<String, Method> factoryMethodCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /**
+     * 查找带有特定注解的方法，并根据参数匹配度进行排序。
+     *
+     * @param targetType     目标类型。
+     * @param annotationType 注解类型。
+     * @param criteria       匹配条件。
+     * @param <T>            目标类型的泛型。
+     * @param <A>            注解类型的泛型。
+     * @return 匹配的方法。
+     */
     public static <T, A extends Annotation> Method findFactoryMethod(Class<T> targetType, Class<A> annotationType,
-                                                                     Object[] criteria) {
+            Object[] criteria) {
         var name = getMethodName(targetType, annotationType, criteria);
         return factoryMethodCache.computeIfAbsent(name, s -> findMatchedMethod(targetType, annotationType, criteria));
     }
 
+    /**
+     * 生成方法名称，用于缓存和查找工厂方法。
+     *
+     * @param targetType     目标类型。
+     * @param annotationType 注解类型。
+     * @param criteria       匹配条件。
+     * @param <T>            目标类型的泛型。
+     * @param <A>            注解类型的泛型。
+     * @return 方法名称。
+     */
     private static <T> String getMethodName(Class<T> targetType, Class<? extends Annotation> annotationType,
-                                            Object[] criteria) {
+            Object[] criteria) {
         var typeName = targetType.getName();
         var annotationName = annotationType.getSimpleName();
         var parameterNames = getParameterTypeName(criteria);
         return typeName + "." + annotationName + "(" + parameterNames + ")";
     }
 
+    /**
+     * 查找与给定注解类型和参数匹配的方法。
+     *
+     * @param targetType     目标类型。
+     * @param annotationType 注解类型。
+     * @param criteria       匹配条件。
+     * @param <T>            目标类型的泛型。
+     * @return 匹配的方法。
+     */
     @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     private static <T> Method findMatchedMethod(Class<T> targetType, Class<? extends Annotation> annotationType,
-                                                Object[] criteria) {
+            Object[] criteria) {
         var candidates = getCandidateMethods(targetType, annotationType, 0);
         if (candidates.isEmpty()) {
             var names = getConventionMethodNames(annotationType);
@@ -96,14 +137,14 @@ public class ObjectReflector {
             var names = getConventionMethodNames(annotationType);
             var parameterNames = getParameterTypeName(criteria);
             throw new MissingMethodException(targetType.getTypeName(),
-                String.join("/", names) + "(" + parameterNames + ")");
+                    String.join("/", names) + "(" + parameterNames + ")");
         }
 
         if (matches.size() > 1) {
 
             var maxScore = matches.stream().map(Map.Entry::getValue)
-                                  .max(Integer::compareTo)
-                                  .orElse(0);
+                    .max(Integer::compareTo)
+                    .orElse(0);
             var topMatches = matches.stream().filter(m -> Objects.equals(m.getValue(), maxScore)).toList();
             if (topMatches.size() > 1) {
                 throw new AmbiguousMethodException("Multiple methods were found for the specified operation");
@@ -115,6 +156,13 @@ public class ObjectReflector {
         }
     }
 
+    /**
+     * 计算方法参数与给定参数之间的匹配度得分。
+     *
+     * @param parameter 方法参数。
+     * @param criteria  给定参数。
+     * @return 匹配度得分，数值越高表示匹配度越高。
+     */
     private static int calculateParameterMatchScore(Parameter parameter, Object criteria) {
         if (criteria == null) {
 
@@ -179,26 +227,40 @@ public class ObjectReflector {
         return 0;
     }
 
+    /**
+     * 获取候选方法及其匹配度。
+     *
+     * @param targetType     目标类型。
+     * @param annotationType 注解类型。
+     * @param level          匹配级别。
+     * @return 候选方法及其匹配度。
+     */
     private static Map<Method, Integer> getCandidateMethods(Class<?> targetType,
-                                                            Class<? extends Annotation> annotationType, int level) {
+            Class<? extends Annotation> annotationType, int level) {
         var validNames = getConventionMethodNames(annotationType);
         var result = new HashMap<Method, Integer>();
 
         var methods = Arrays.stream(targetType.getDeclaredMethods())
-                            .filter(method -> method.isAnnotationPresent(annotationType) || validNames.contains(method.getName()))
-                            .toList();
+                .filter(method -> method.isAnnotationPresent(annotationType) || validNames.contains(method.getName()))
+                .toList();
 
         for (var method : methods) {
             result.put(method, level);
         }
 
         if (result.isEmpty() && targetType.getSuperclass() != Object.class
-            && !targetType.getSuperclass().isInterface()) {
+                && !targetType.getSuperclass().isInterface()) {
             result.putAll(getCandidateMethods(targetType.getSuperclass(), annotationType, level - 1));
         }
         return result;
     }
 
+    /**
+     * 生成参数类型名称的字符串表示。
+     *
+     * @param criteria 参数数组。
+     * @return 参数类型名称的字符串表示。
+     */
     private static String getParameterTypeName(Object[] criteria) {
         if (criteria == null) {
             return "";
@@ -215,6 +277,12 @@ public class ObjectReflector {
         return String.join(", ", parameterTypeNames);
     }
 
+    /**
+     * 获取约定的工厂方法名称。
+     *
+     * @param annotationType 注解类型。
+     * @return 约定的工厂方法名称列表。
+     */
     private static List<String> getConventionMethodNames(Class<? extends Annotation> annotationType) {
         var names = new ArrayList<String>();
 

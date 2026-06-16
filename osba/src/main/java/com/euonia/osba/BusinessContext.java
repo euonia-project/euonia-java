@@ -1,23 +1,24 @@
 package com.euonia.osba;
 
-import com.euonia.factory.ObjectFactory;
-
 import java.util.Objects;
 import java.util.function.Function;
 
+import com.euonia.factory.ObjectFactory;
+
 /**
- * BusinessContext provides a small service-resolution and instance-creation
- * gateway for business objects created by OSBA factories.
+ * 业务上下文，为 OSBA 工厂创建的业务对象提供轻量级的服务解析和实例创建网关。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class BusinessContext {
     private final Function<Class<?>, ?> instanceCreator;
     private final ObjectFactory objectFactory;
 
     /**
-     * Creates a new instance of BusinessContext with the specified instance creator function and ObjectFactory.
+     * 使用指定的实例创建函数和 ObjectFactory 创建 BusinessContext 的新实例。
      *
-     * @param instanceCreator A function that creates instances of the specified type.
-     * @param objectFactory   The ObjectFactory to be used by this BusinessContext.
+     * @param instanceCreator 用于创建指定类型实例的函数。
+     * @param objectFactory   此 BusinessContext 使用的 ObjectFactory。
      */
     public BusinessContext(Function<Class<?>, ?> instanceCreator, ObjectFactory objectFactory) {
         this.instanceCreator = instanceCreator;
@@ -25,25 +26,24 @@ public final class BusinessContext {
     }
 
     /**
-     * Gets an instance of the specified type from the context, creating it if necessary.
+     * 从上下文中获取指定类型的实例，如果不存在则创建。
      *
-     * @param objectType The type of the object to retrieve or create.
-     * @param <T>        The type of the object.
-     * @return An instance of the specified type.
+     * @param objectType 要获取或创建的对象的类型。
+     * @param <T>        对象的类型。
+     * @return 指定类型的实例。
      */
-    @SuppressWarnings("unchecked")
     public <T> T getOrCreateObject(Class<T> objectType) {
         Objects.requireNonNull(objectType, "objectType");
         if (instanceCreator == null) {
-            throw new IllegalStateException("BusinessContext does not support instance creation.");
+            throw new IllegalStateException("BusinessContext 不支持实例创建。");
         }
         return (T) instanceCreator.apply(objectType);
     }
 
     /**
-     * Gets the ObjectFactory associated with this BusinessContext, which can be used to create, fetch, insert, update, save, execute, and delete business objects based on annotated factory methods.
+     * 获取与此 BusinessContext 关联的 ObjectFactory，该工厂可用于基于注解的工厂方法创建、获取、插入、更新、保存、执行和删除业务对象。
      *
-     * @return The ObjectFactory associated with this BusinessContext.
+     * @return 与此 BusinessContext 关联的 ObjectFactory。
      */
     public ObjectFactory getObjectFactory() {
         return objectFactory;

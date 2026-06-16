@@ -13,8 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
-@Component
-@Scope("prototype")
 public abstract class EditableObjectBase<T extends EditableObjectBase<T, ID>, ID extends Comparable<ID>> extends EditableObject<T> implements Aggregate<ID>, HasDomainEvents {
     private final List<DomainEvent> events = new ArrayList<>();
     private final ConcurrentMap<Class<? extends DomainEvent>, List<Consumer<DomainEvent>>> eventHandlers = new ConcurrentHashMap<>();

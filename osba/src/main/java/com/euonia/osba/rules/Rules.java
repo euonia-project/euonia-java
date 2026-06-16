@@ -13,30 +13,62 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * Rules manages the execution of validation rules for a business object,
- * tracking broken rules and notifying listeners when validation is complete.
+ * 规则管理器，负责管理业务对象的验证规则执行，
+ * 跟踪已违反的规则并在验证完成时通知监听器。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class Rules {
+
+    /**
+     * 待验证的目标对象
+     */
     private final RuleCheckable target;
+
+    /**
+     * 验证完成监听器列表，线程安全
+     */
     private final List<Consumer<BrokenRuleCollection>> validationCompleteListeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * 已违反规则的集合
+     */
     private final BrokenRuleCollection brokenRules = new BrokenRuleCollection();
+
+    /**
+     * 当前正在执行的规则列表，线程安全
+     */
     private final List<Rule> runningRules = new CopyOnWriteArrayList<>();
 
+    /**
+     * 是否抑制规则检查
+     */
     private volatile boolean suppressRuleChecking;
+
+    /**
+     * 是否有正在运行的规则
+     */
     private volatile boolean hasRunningRules;
 
+    /**
+     * 构造方法，创建指定目标对象的规则管理器。
+     *
+     * @param target 待验证的目标对象
+     */
     public Rules(RuleCheckable target) {
         this.target = target;
     }
 
+    /**
+     * 规则管理器，采用双重检查锁定实现延迟初始化
+     */
     private volatile RuleManager ruleManager;
 
     /**
-     * Gets the RuleManager for the target object, initializing it if necessary.
+     * 获取目标对象的规则管理器，必要时进行初始化。
      *
-     * @return the RuleManager for the target object
+     * @return 目标对象对应的规则管理器
      */
-    @SuppressWarnings("DoubleCheckedLocking")
     public RuleManager getRuleManager() {
         if (ruleManager == null) {
             synchronized (this) {
@@ -49,9 +81,9 @@ public final class Rules {
     }
 
     /**
-     * Adds a validation rule to the target object's RuleManager.
+     * 向目标对象的规则管理器中添加验证规则。
      *
-     * @param rule the validation rule to add
+     * @param rule 要添加的验证规则
      */
     public void addRule(Rule rule) {
         if (rule != null) {
@@ -60,62 +92,57 @@ public final class Rules {
     }
 
     /**
-     * Gets the collection of broken rules that have been identified during rule
-     * checking.
+     * 获取规则检查过程中已识别的违反规则集合。
      *
-     * @return the collection of broken rules
+     * @return 已违反规则的集合
      */
     public BrokenRuleCollection getBrokenRules() {
         return brokenRules;
     }
 
     /**
-     * Determines whether the target object is valid based on the current collection
-     * of broken rules.
+     * 基于当前的已违反规则集合判断目标对象是否有效。
      *
-     * @return true if the target object is valid, false otherwise
+     * @return 若目标对象有效返回 true，否则返回 false
      */
     public boolean isValid() {
         return brokenRules.getErrorCount() == 0;
     }
 
     /**
-     * Checks whether there are currently any rules running for the target object.
+     * 检查当前是否有正在为目标对象运行的规则。
      *
-     * @return true if there are rules running, false otherwise
+     * @return 若有规则正在运行返回 true，否则返回 false
      */
     public boolean hasRunningRules() {
         return hasRunningRules;
     }
 
     /**
-     * Gets whether rule checking is currently suppressed for the target object.
-     * When rule checking is suppressed, no rules will be executed and the object
-     * will be considered valid.
+     * 获取目标对象的规则检查当前是否被抑制。
+     * 当规则检查被抑制时，不会执行任何规则，对象将被视为有效。
      *
-     * @return true if rule checking is suppressed, false otherwise
+     * @return 若规则检查被抑制返回 true，否则返回 false
      */
     public boolean isSuppressRuleChecking() {
         return suppressRuleChecking;
     }
 
     /**
-     * Sets whether rule checking is currently suppressed for the target object.
-     * When rule checking is suppressed, no rules will be executed and the object
-     * will be considered valid.
+     * 设置目标对象的规则检查当前是否被抑制。
+     * 当规则检查被抑制时，不会执行任何规则，对象将被视为有效。
      *
-     * @param suppressRuleChecking true to suppress rule checking, false to enable
-     *                             it
+     * @param suppressRuleChecking true 表示抑制规则检查，false 表示启用规则检查
      */
     public void setSuppressRuleChecking(boolean suppressRuleChecking) {
         this.suppressRuleChecking = suppressRuleChecking;
     }
 
     /**
-     * Adds a listener to be notified when validation is complete.
-     * The listener will receive the collection of broken rules as an argument.
+     * 添加验证完成时的通知监听器。
+     * 监听器将接收已违反规则的集合作为参数。
      *
-     * @param listener the listener to be added
+     * @param listener 要添加的监听器
      */
     public void addValidationCompleteListener(Consumer<BrokenRuleCollection> listener) {
         if (listener != null) {
@@ -124,22 +151,20 @@ public final class Rules {
     }
 
     /**
-     * Removes a listener from being notified when validation is complete.
+     * 移除验证完成时的通知监听器。
      *
-     * @param listener the listener to be removed
+     * @param listener 要移除的监听器
      */
     public void removeValidationCompleteListener(Consumer<BrokenRuleCollection> listener) {
         validationCompleteListeners.remove(listener);
     }
 
     /**
-     * Asynchronously checks all validation rules for the target object and updates
-     * the collection of broken rules accordingly.
-     * The method returns a CompletableFuture that completes when all rules have
-     * been checked, providing a list of affected property names.
+     * 异步检查目标对象的所有验证规则，并相应更新已违反规则的集合。
+     * 该方法返回一个 CompletableFuture，当所有规则检查完毕后完成，
+     * 并提供受影响的属性名称列表。
      *
-     * @return a CompletableFuture that completes with a list of affected property
-     *         names
+     * @return 完成时提供受影响属性名称列表的 CompletableFuture
      */
     public CompletableFuture<List<String>> checkObjectRulesAsync() {
         if (suppressRuleChecking || getRuleManager().getRules().isEmpty()) {
@@ -150,16 +175,16 @@ public final class Rules {
         brokenRules.clearRules();
         List<String> affectedProperties = new ArrayList<>();
         List<CompletableFuture<Void>> tasks = getRuleManager().getRules().stream()
-                .sorted(Comparator.comparingInt(Rule::getPriority))
-                .map(rule -> runRule(rule, affectedProperties))
-                .toList();
+                                                              .sorted(Comparator.comparingInt(Rule::getPriority))
+                                                              .map(rule -> runRule(rule, affectedProperties))
+                                                              .toList();
 
         return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
-                .thenApply(ignored -> affectedProperties.stream().distinct().toList())
-                .whenComplete((ignored, error) -> {
-                    hasRunningRules = false;
-                    notifyValidationComplete();
-                });
+                                .thenApply(ignored -> affectedProperties.stream().distinct().toList())
+                                .whenComplete((ignored, error) -> {
+                                    hasRunningRules = false;
+                                    notifyValidationComplete();
+                                });
     }
 
     private CompletableFuture<Void> runRule(Rule rule, List<String> affectedProperties) {
@@ -207,7 +232,7 @@ public final class Rules {
 
         runningRules.add(rule);
         return rule.executeAsync(context)
-                .thenRun(context::complete);
+                   .thenRun(context::complete);
     }
 
     private void notifyValidationComplete() {
@@ -238,9 +263,9 @@ public final class Rules {
                 var validation = annotation.annotationType().getAnnotation(Validation.class);
                 if (validation != null) {
                     var propertyInfo = registeredProperties.stream()
-                            .filter(p -> p.getField() != null && p.getField().getName().equals(property.getName()))
-                            .findFirst()
-                            .orElse(null);
+                                                           .filter(p -> p.getField() != null && p.getField().getName().equals(property.getName()))
+                                                           .findFirst()
+                                                           .orElse(null);
                     if (propertyInfo == null) {
                         continue;
                     }
