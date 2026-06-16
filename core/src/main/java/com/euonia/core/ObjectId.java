@@ -3,163 +3,161 @@ package com.euonia.core;
 import java.util.UUID;
 
 /**
- * ObjectId is a class that represents a unique identifier for an object.
- * It can be generated using different algorithms such as Snowflake, GUID,
- * Random, and ULID.
- * The value of the ObjectId can be of type long, String, UUID, or Integer.
- * The class provides methods to generate ObjectIds using different algorithms
- * and overrides the hashCode, equals, and toString methods for proper
- * functionality.
- * The ObjectId class is immutable, meaning that once an ObjectId is created,
- * its value cannot be changed.
- * This ensures that the uniqueness of the identifier is maintained throughout
- * its lifecycle.
+ * ObjectId 是一个表示对象唯一标识符的类。
+ * 可以使用不同的算法生成，如 Snowflake、GUID、Random 和 ULID。
+ * ObjectId 的值可以是 long、String、UUID 或 Integer 类型。
+ * 该类提供了使用不同算法生成 ObjectId 的方法，
+ * 并重写了 hashCode、equals 和 toString 方法以确保正确的功能。
+ * ObjectId 类是不可变的，这意味着一旦创建，其值就不能更改。
+ * 这确保了标识符的唯一性在其整个生命周期中得到维护。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class ObjectId {
     private final Object value;
 
     /**
-     * Gets the value of the ObjectId.
+     * 获取 ObjectId 的值。
      *
-     * @return the value of the ObjectId
+     * @return ObjectId 的值
      */
     public Object getValue() {
         return value;
     }
 
     /**
-     * Constructs an ObjectId with the specified value.
+     * 使用指定的值构造 ObjectId。
      *
-     * @param value the value of the ObjectId
+     * @param value ObjectId 的值
      */
     public ObjectId(long value) {
         this.value = value;
     }
 
     /**
-     * Constructs an ObjectId with the specified value.
+     * 使用指定的值构造 ObjectId。
      *
-     * @param value the value of the ObjectId
+     * @param value ObjectId 的值
      */
     public ObjectId(String value) {
         this.value = value;
     }
 
     /**
-     * Constructs an ObjectId with the specified value.
+     * 使用指定的值构造 ObjectId。
      *
-     * @param value the value of the ObjectId
+     * @param value ObjectId 的值
      */
     public ObjectId(UUID value) {
         this.value = value;
     }
 
     /**
-     * Constructs an ObjectId with the specified value.
+     * 使用指定的值构造 ObjectId。
      *
-     * @param value the value of the ObjectId
+     * @param value ObjectId 的值
      */
     public ObjectId(Integer value) {
         this.value = value;
     }
 
     /**
-     * Generates a new ObjectId using the Snowflake algorithm.
+     * 使用 Snowflake 算法生成新的 ObjectId。
      *
-     * @return a new ObjectId
+     * @return 新的 ObjectId
      */
     public static ObjectId snowflake() {
         return new ObjectId(SnowflakeId.getInstance().nextId());
     }
 
     /**
-     * Generates a new ObjectId using the GUID algorithm.
+     * 使用 GUID 算法生成新的 ObjectId。
      *
-     * @return a new ObjectId
+     * @return 新的 ObjectId
      */
     public static ObjectId guid() {
-        return guid(GuidType.SIMPLE);
+        return guid(GuidType.DEFAULT);
     }
 
     /**
-     * Generates a new ObjectId using the GUID algorithm.
+     * 使用 GUID 算法生成新的 ObjectId。
      *
-     * @param type the GUID generation strategy
-     * @return a new ObjectId
+     * @param type GUID 生成策略
+     * @return 新的 ObjectId
      */
     public static ObjectId guid(GuidType type) {
         return new ObjectId(GuidGenerator.generate(type));
     }
 
     /**
-     * Generates a new ObjectId using the Random algorithm.
+     * 使用 Random 算法生成新的 ObjectId。
      *
-     * @return a new ObjectId
+     * @return 新的 ObjectId
      */
     public static ObjectId random() {
         return new ObjectId(RandomId.generate(System.currentTimeMillis()));
     }
 
     /**
-     * Generates a new ObjectId using the ULID algorithm.
+     * 使用 ULID 算法生成新的 ObjectId。
      *
-     * @return a new ObjectId
+     * @return 新的 ObjectId
      */
     public static ObjectId ulid() {
         return new ObjectId(ULID.generate());
     }
 
     /**
-     * Generate a new random string id.
+     * 生成新的随机字符串 ID。
      *
-     * @param seed the seed value
-     * @return a new random string id
+     * @param seed 种子值
+     * @return 新的随机字符串 ID
      */
     public static String newRandomId(long seed) {
         return RandomId.generate(seed);
     }
 
     /**
-     * Generate a new random string id using the current time as the seed.
+     * 使用当前时间作为种子生成新的随机字符串 ID。
      *
-     * @return a new random string id
+     * @return 新的随机字符串 ID
      */
     public static String newRandomId() {
         return newRandomId(System.currentTimeMillis());
     }
 
     /**
-     * Generates a new Snowflake ID.
+     * 生成新的 Snowflake ID。
      *
-     * @return a new Snowflake ID
+     * @return 新的 Snowflake ID
      */
     public static long newSnowflakeId() {
         return SnowflakeId.getInstance().nextId();
     }
 
     /**
-     * Generates a new GUID using the default generation strategy (SIMPLE).
+     * 使用默认生成策略（SIMPLE）生成新的 GUID。
      *
-     * @return a new GUID
+     * @return 新的 GUID
      */
     public static UUID newGuid() {
-        return GuidGenerator.generate(GuidType.SIMPLE);
+        return GuidGenerator.generate(GuidType.DEFAULT);
     }
 
     /**
-     * Generates a new GUID based on the specified type.
+     * 根据指定的类型生成新的 GUID。
      *
-     * @param type the GUID generation strategy
-     * @return a new GUID
+     * @param type GUID 生成策略
+     * @return 新的 GUID
      */
     public static UUID newGuid(GuidType type) {
         return GuidGenerator.generate(type);
     }
 
     /**
-     * Generates a new ULID string.
+     * 生成新的 ULID 字符串。
      *
-     * @return a new ULID string
+     * @return 新的 ULID 字符串
      */
     public static String newUlid() {
         return ULID.generate();

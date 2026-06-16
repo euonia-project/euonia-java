@@ -1,18 +1,19 @@
 package com.euonia.core;
 
 /**
- * SnowflakeId is a distributed unique ID generator inspired by Twitter's Snowflake algorithm.
- * It generates 64-bit unique IDs based on the current timestamp, a worker ID, a datacenter ID, and a sequence number.
- * The generated IDs are sortable by time and can be generated in a distributed environment without coordination between nodes.
- * The structure of the generated ID is as follows:
- * - 41 bits for the timestamp (in milliseconds since a custom epoch)
- * - 5 bits for the datacenter ID
- * - 5 bits for the worker ID
- * - 12 bits for the sequence number
- * This implementation allows for up to 1024 unique IDs per millisecond per worker and supports up to 32 datacenters and 32 workers per datacenter.
- * The custom epoch is set to January 1, 2021, which allows for a long lifespan of the ID generation without running out of bits for the timestamp.
+ * SnowflakeId 是一个分布式唯一 ID 生成器，灵感来源于 Twitter 的 Snowflake 算法。
+ * 它基于当前时间戳、工作节点 ID、数据中心 ID 和序列号生成 64 位唯一 ID。
+ * 生成的 ID 可按时间排序，且可在分布式环境中生成，无需节点间协调。
+ * 生成的 ID 结构如下：
+ * - 41 位用于时间戳（自自定义纪元以来的毫秒数）
+ * - 5 位用于数据中心 ID
+ * - 5 位用于工作节点 ID
+ * - 12 位用于序列号
+ * 此实现允许每个工作节点每毫秒生成最多 1024 个唯一 ID，并支持最多 32 个数据中心，每个数据中心最多 32 个工作节点。
+ * 自定义纪元设置为 2021 年 1 月 1 日，这使得 ID 生成具有较长的使用寿命，而不会耗尽时间戳的位数。
+ *
+ * @author damon(zhaorong@outlook)
  */
-@SuppressWarnings("unused")
 public final class SnowflakeId {
     private static final long EPOCH = 1609459200000L; // 2021-01-01 00:00:00 UTC
     private static final long WORKER_ID_BITS = 5L;
@@ -34,10 +35,10 @@ public final class SnowflakeId {
 
     private SnowflakeId(long workerId, long datacenterId) {
         if (workerId > MAX_WORKER_ID || workerId < 0) {
-            throw new IllegalArgumentException(String.format("Worker ID must be between 0 and %d", MAX_WORKER_ID));
+            throw new IllegalArgumentException(String.format("工作节点 ID 必须在 0 到 %d 之间", MAX_WORKER_ID));
         }
         if (datacenterId > MAX_DATACENTER_ID || datacenterId < 0) {
-            throw new IllegalArgumentException(String.format("Datacenter ID must be between 0 and %d", MAX_DATACENTER_ID));
+            throw new IllegalArgumentException(String.format("数据中心 ID 必须在 0 到 %d 之间", MAX_DATACENTER_ID));
         }
         this.workerId = workerId;
         this.datacenterId = datacenterId;
@@ -55,7 +56,7 @@ public final class SnowflakeId {
         long timestamp = timeGen();
 
         if (timestamp < lastTimestamp) {
-            throw new RuntimeException(String.format("Clock moved backwards. Refusing to generate id for %d milliseconds", lastTimestamp - timestamp));
+            throw new RuntimeException(String.format("时钟回拨。拒绝生成 ID，回拨时长为 %d 毫秒", lastTimestamp - timestamp));
         }
 
         if (lastTimestamp == timestamp) {
@@ -70,9 +71,9 @@ public final class SnowflakeId {
         lastTimestamp = timestamp;
 
         return ((timestamp - EPOCH) << TIMESTAMP_LEFT_SHIFT)
-            | (datacenterId << DATACENTER_ID_SHIFT)
-            | (workerId << WORKER_ID_SHIFT)
-            | sequence;
+                | (datacenterId << DATACENTER_ID_SHIFT)
+                | (workerId << WORKER_ID_SHIFT)
+                | sequence;
     }
 
     private long tilNextMillis(long lastTimestamp) {
@@ -87,4 +88,3 @@ public final class SnowflakeId {
         return System.currentTimeMillis();
     }
 }
-

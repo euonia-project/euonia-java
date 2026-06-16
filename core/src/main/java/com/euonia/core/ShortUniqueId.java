@@ -1,14 +1,20 @@
 package com.euonia.core;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ShortUniqueId is a utility class for generating short, unique string IDs from integers or long integers.
- * It provides methods to encode and decode integers, long integers, and hexadecimal strings into short unique IDs.
- * The class allows customization of the alphabet, separators, guards, and salt used in the encoding process to ensure uniqueness and security.
- * The implementation is based on the Hashids algorithm, which is designed to create short, non-sequential, and URL-friendly IDs.
+ * ShortUniqueId 是一个工具类，用于从整数或长整数生成短且唯一的字符串 ID。
+ * 它提供了将整数、长整数和十六进制字符串编码为短唯一 ID 以及反向解码的方法。
+ * 该类允许自定义编码过程中使用的字母表、分隔符、守卫字符和盐值，以确保唯一性和安全性。
+ * 该实现基于 Hashids 算法，该算法旨在创建短小、非连续且 URL 友好的 ID。
+ *
+ * @author damon(zhaorong@outlook)
  */
 @SuppressWarnings("unused")
 public final class ShortUniqueId {
@@ -40,17 +46,23 @@ public final class ShortUniqueId {
     }
 
     public ShortUniqueId(String salt, int minHashLength, String alphabet, String seps) {
-        if (salt == null) throw new IllegalArgumentException("salt");
-        if (minHashLength < 0) throw new IllegalArgumentException("minHashLength must be >= 0");
-        if (alphabet == null || alphabet.isBlank()) throw new IllegalArgumentException("alphabet");
-        if (seps == null || seps.isBlank()) throw new IllegalArgumentException("seps");
+        if (salt == null)
+            throw new IllegalArgumentException("salt");
+        if (minHashLength < 0)
+            throw new IllegalArgumentException("minHashLength must be >= 0");
+        if (alphabet == null || alphabet.isBlank())
+            throw new IllegalArgumentException("alphabet");
+        if (seps == null || seps.isBlank())
+            throw new IllegalArgumentException("seps");
 
         this.salt = salt.trim().toCharArray();
         this.minHashLength = minHashLength;
 
-        // unique alphabet chars
+        // 字母表去重
         StringBuilder alphaBuilder = new StringBuilder();
-        for (char c : alphabet.toCharArray()) if (alphaBuilder.indexOf(String.valueOf(c)) == -1) alphaBuilder.append(c);
+        for (char c : alphabet.toCharArray())
+            if (alphaBuilder.indexOf(String.valueOf(c)) == -1)
+                alphaBuilder.append(c);
         char[] alpha = toCharArray(alphaBuilder.toString());
 
         char[] sepsArr = toCharArray(seps);
@@ -58,9 +70,10 @@ public final class ShortUniqueId {
         this.minBufferSize = Math.max(20, minHashLength);
 
         if (alpha.length < MIN_ALPHABET_LENGTH)
-            throw new IllegalArgumentException("Alphabet must contain at least " + MIN_ALPHABET_LENGTH + " unique characters.");
+            throw new IllegalArgumentException(
+                    "Alphabet must contain at least " + MIN_ALPHABET_LENGTH + " unique characters.");
 
-        // seps must be from alphabet
+        // 分隔符必须来自字母表
         if (sepsArr.length > 0) {
             List<Character> tmp = new ArrayList<>();
             for (char c : sepsArr) {
@@ -73,7 +86,7 @@ public final class ShortUniqueId {
             sepsArr = toCharArray(listToString(tmp));
         }
 
-        // remove seps from alphabet
+        // 从字母表中移除分隔符
         if (sepsArr.length > 0) {
             List<Character> newAlpha = new ArrayList<>();
             for (char a : alpha) {
@@ -83,20 +96,23 @@ public final class ShortUniqueId {
                         ok = false;
                         break;
                     }
-                if (ok) newAlpha.add(a);
+                if (ok)
+                    newAlpha.add(a);
             }
             alpha = listToCharArray(newAlpha);
         }
 
         if (alpha.length < (MIN_ALPHABET_LENGTH - 6))
-            throw new IllegalArgumentException("Alphabet must contain at least " + (MIN_ALPHABET_LENGTH - 6) + " unique characters not present in seps.");
+            throw new IllegalArgumentException("Alphabet must contain at least " + (MIN_ALPHABET_LENGTH - 6)
+                    + " unique characters not present in seps.");
 
-        // consistent shuffle seps with salt
+        // 使用盐值对分隔符进行一致性洗牌
         consistentShuffle(sepsArr, this.salt);
 
         if (sepsArr.length == 0 || ((float) alpha.length / sepsArr.length) > SEP_DIV) {
             int sepsLength = (int) Math.ceil((float) alpha.length / SEP_DIV);
-            if (sepsLength == 1) sepsLength = 2;
+            if (sepsLength == 1)
+                sepsLength = 2;
             if (sepsLength > sepsArr.length) {
                 int diff = sepsLength - sepsArr.length;
                 sepsArr = append(sepsArr, alpha, diff);
@@ -123,35 +139,36 @@ public final class ShortUniqueId {
         this.guards = guardsArr;
     }
 
-    // Public encode/decode methods
+    // 公共编码/解码方法
 
     /**
-     * Encode a single integer into a short unique string ID.
+     * 将单个整数编码为短唯一字符串 ID。
      *
-     * @param number the integer to encode
-     * @return a short unique string ID representing the input integer
+     * @param number 要编码的整数
+     * @return 表示输入整数的短唯一字符串 ID
      */
     public String encode(int number) {
-        return encode(new long[]{number});
+        return encode(new long[] { number });
     }
 
     /**
-     * Encode one or more integers into a short unique string ID.
+     * 将一个或多个整数编码为短唯一字符串 ID。
      *
-     * @param numbers the integers to encode
-     * @return a short unique string ID representing the input integers
+     * @param numbers 要编码的整数
+     * @return 表示输入整数的短唯一字符串 ID
      */
     public String encode(int... numbers) {
         long[] arr = new long[numbers.length];
-        for (int i = 0; i < numbers.length; i++) arr[i] = numbers[i];
+        for (int i = 0; i < numbers.length; i++)
+            arr[i] = numbers[i];
         return encode(arr);
     }
 
     /**
-     * Encode a collection of integers into a short unique string ID.
+     * 将整数集合编码为短唯一字符串 ID。
      *
-     * @param numbers the collection of integers to encode
-     * @return a short unique string ID representing the input integers
+     * @param numbers 要编码的整数集合
+     * @return 表示输入整数的短唯一字符串 ID
      */
     public String encode(Collection<Integer> numbers) {
         long[] arr = numbers.stream().mapToLong(Integer::longValue).toArray();
@@ -159,27 +176,31 @@ public final class ShortUniqueId {
     }
 
     /**
-     * Encode a single long integer into a short unique string ID.
+     * 将单个长整数编码为短唯一字符串 ID。
      *
-     * @param number the long integer to encode
-     * @return a short unique string ID representing the input long integer
+     * @param number 要编码的长整数
+     * @return 表示输入长整数的短唯一字符串 ID
      */
     public String encode(long number) {
-        return encode(new long[]{number});
+        return encode(new long[] { number });
     }
 
     /**
-     * Encode one or more long integers into a short unique string ID.
+     * 将一个或多个长整数编码为短唯一字符串 ID。
      *
-     * @param numbers the long integers to encode
-     * @return a short unique string ID representing the input long integers
+     * @param numbers 要编码的长整数
+     * @return 表示输入长整数的短唯一字符串 ID
      */
     public String encode(long... numbers) {
-        if (numbers == null || numbers.length == 0) return "";
-        for (long n : numbers) if (n < 0) return "";
+        if (numbers == null || numbers.length == 0)
+            return "";
+        for (long n : numbers)
+            if (n < 0)
+                return "";
 
         long numbersHashInt = 0;
-        for (int i = 0; i < numbers.length; i++) numbersHashInt += numbers[i] % (i + 100);
+        for (int i = 0; i < numbers.length; i++)
+            numbersHashInt += numbers[i] % (i + 100);
 
         StringBuilder sb = new StringBuilder();
 
@@ -198,14 +219,16 @@ public final class ShortUniqueId {
         for (int i = 0; i < numbers.length; i++) {
             long number = numbers[i];
 
-            if (length > 0) System.arraycopy(alphabetCopy, 0, buffer, startIndex, length);
+            if (length > 0)
+                System.arraycopy(alphabetCopy, 0, buffer, startIndex, length);
 
             consistentShuffle(alphabetCopy, buffer);
             char[] hashBuffer = new char[this.minBufferSize];
             int hashLength = buildReversedHash(number, alphabetCopy, hashBuffer);
 
-            // append reversed
-            for (int j = hashLength - 1; j >= 0; j--) sb.append(hashBuffer[j]);
+            // 反向追加
+            for (int j = hashLength - 1; j >= 0; j--)
+                sb.append(hashBuffer[j]);
 
             if (i + 1 < numbers.length) {
                 number %= hashBuffer[Math.max(0, hashLength - 1)] + i;
@@ -235,7 +258,8 @@ public final class ShortUniqueId {
             int excess = sb.length() - this.minHashLength;
             if (excess > 0) {
                 sb.delete(0, excess / 2);
-                if (sb.length() > this.minHashLength) sb.delete(this.minHashLength, sb.length());
+                if (sb.length() > this.minHashLength)
+                    sb.delete(this.minHashLength, sb.length());
             }
         }
 
@@ -243,10 +267,10 @@ public final class ShortUniqueId {
     }
 
     /**
-     * Decode a short unique string ID back into the original integer(s).
+     * 将短唯一字符串 ID 解码回原始整数。
      *
-     * @param hash the short unique string ID to decode
-     * @return an array of integers representing the original values
+     * @param hash 要解码的短唯一字符串 ID
+     * @return 表示原始值的整数数组
      */
     public int[] decode(String hash) {
         long[] longs = decodeLong(hash);
@@ -258,10 +282,10 @@ public final class ShortUniqueId {
     }
 
     /**
-     * Decode a short unique string ID back into the original long integer(s).
+     * 将短唯一字符串 ID 解码回原始长整数。
      *
-     * @param hash the short unique string ID to decode
-     * @return an array of long integers representing the original values
+     * @param hash 要解码的短唯一字符串 ID
+     * @return 表示原始值的长整数数组
      */
     public long[] decodeLong(String hash) {
         if (hash == null || hash.isBlank()) {
@@ -271,13 +295,15 @@ public final class ShortUniqueId {
     }
 
     /**
-     * Encode a hexadecimal string into a short unique string ID. The input hex string is split into 12-character chunks, each chunk is prefixed with '1' to ensure it can be parsed as a valid long integer, and then encoded using the standard encoding method.
+     * 将十六进制字符串编码为短唯一字符串 ID。输入的十六进制字符串被分割为每 12 个字符一块，
+     * 每块前缀添加 '1' 以确保其可以被解析为有效的长整数，然后使用标准编码方法进行编码。
      *
-     * @param hex the hexadecimal string to encode
-     * @return a short unique string ID representing the input hexadecimal string, or an empty string if the input is invalid
+     * @param hex 要编码的十六进制字符串
+     * @return 表示输入十六进制字符串的短唯一字符串 ID，如果输入无效则返回空字符串
      */
     public String encodeHex(String hex) {
-        if (hex == null || hex.isBlank() || !HEX_VALIDATOR.matcher(hex).matches()) return "";
+        if (hex == null || hex.isBlank() || !HEX_VALIDATOR.matcher(hex).matches())
+            return "";
         Matcher m = HEX_SPLITTER.matcher(hex);
         List<Long> numbers = new ArrayList<>();
         while (m.find()) {
@@ -291,22 +317,24 @@ public final class ShortUniqueId {
     }
 
     /**
-     * Decode a short unique string ID back into the original hexadecimal string. The decoded long integers are converted back to hexadecimal strings, concatenated together, and returned as the final result.
+     * 将短唯一字符串 ID 解码回原始十六进制字符串。解码后的长整数被转换回十六进制字符串，
+     * 拼接在一起后作为最终结果返回。
      *
-     * @param hash the short unique string ID to decode
-     * @return the original hexadecimal string represented by the input ID, or an empty string if the input is invalid
+     * @param hash 要解码的短唯一字符串 ID
+     * @return 输入 ID 所表示的原始十六进制字符串，如果输入无效则返回空字符串
      */
     public String decodeHex(String hash) {
         long[] numbers = decodeLong(hash);
         StringBuilder sb = new StringBuilder();
         for (long number : numbers) {
             String s = Long.toHexString(number).toUpperCase(Locale.ROOT);
-            for (int i = 1; i < s.length(); i++) sb.append(s.charAt(i));
+            for (int i = 1; i < s.length(); i++)
+                sb.append(s.charAt(i));
         }
         return sb.toString();
     }
 
-    // Internal helpers
+    // 内部辅助方法
     private int buildReversedHash(long input, char[] alphabet, char[] hashBuffer) {
         int length = 0;
         do {
@@ -327,14 +355,16 @@ public final class ShortUniqueId {
     }
 
     private long getNumberFrom(String hash) {
-        if (hash == null || hash.isBlank()) return -1;
-        // split guards
+        if (hash == null || hash.isBlank())
+            return -1;
+        // 分割守卫字符
         SplitResult guarded = split(hash, this.guards);
         int unguardedIndex = (guarded.count == 3 || guarded.count == 2) ? 1 : 0;
         Range r = guarded.ranges[unguardedIndex];
         String hashBreakdown = hash.substring(r.start, r.start + r.length);
         char lottery = hashBreakdown.charAt(0);
-        if (lottery == '\0') return -1;
+        if (lottery == '\0')
+            return -1;
 
         String hashBuffer = hashBreakdown.substring(1);
         char[] alphabetCopy = Arrays.copyOf(this.alphabet, this.alphabet.length);
@@ -354,25 +384,30 @@ public final class ShortUniqueId {
         consistentShuffle(alphabetCopy, buffer);
         long result = unhash(hashBuffer.toCharArray(), alphabetCopy);
 
-        // regenerate and compare
+        // 重新生成并比对
         String rehash = encode(result);
-        if (hash.equals(rehash)) return result;
+        if (hash.equals(rehash))
+            return result;
         return -1;
     }
 
     private long[] numbersFrom(String hash) {
-        if (hash == null || hash.isBlank()) return new long[0];
+        if (hash == null || hash.isBlank())
+            return new long[0];
 
         SplitResult guarded = split(hash, this.guards);
-        if (guarded.count == 0) return new long[0];
+        if (guarded.count == 0)
+            return new long[0];
         int unguardedIndex = (guarded.count == 3 || guarded.count == 2) ? 1 : 0;
         Range rg = guarded.ranges[unguardedIndex];
         String hashBreakdown = hash.substring(rg.start, rg.start + rg.length);
 
-        if (hashBreakdown.isEmpty()) return new long[0];
+        if (hashBreakdown.isEmpty())
+            return new long[0];
 
         char lottery = hashBreakdown.charAt(0);
-        if (lottery == '\0') return new long[0];
+        if (lottery == '\0')
+            return new long[0];
 
         String hashBuffer = hashBreakdown.substring(1);
         SplitResult split = split(hashBuffer, this.seps);
@@ -400,42 +435,48 @@ public final class ShortUniqueId {
             result[index] = unhash(subHash.toCharArray(), alphabetCopy);
         }
 
-        // validate
+        // 校验
         String rehash = encode(result);
-        if (hash.equals(rehash)) return result;
+        if (hash.equals(rehash))
+            return result;
         return new long[0];
     }
 
-    // util functions
+    // 工具函数
     private static char[] toCharArray(String s) {
         return s == null ? new char[0] : s.toCharArray();
     }
 
     private static String listToString(List<Character> list) {
         StringBuilder sb = new StringBuilder();
-        for (char c : list) sb.append(c);
+        for (char c : list)
+            sb.append(c);
         return sb.toString();
     }
 
     private static char[] listToCharArray(List<Character> list) {
         char[] a = new char[list.size()];
-        for (int i = 0; i < list.size(); i++) a[i] = list.get(i);
+        for (int i = 0; i < list.size(); i++)
+            a[i] = list.get(i);
         return a;
     }
 
     private static int indexOf(char[] arr, char c) {
-        for (int i = 0; i < arr.length; i++) if (arr[i] == c) return i;
+        for (int i = 0; i < arr.length; i++)
+            if (arr[i] == c)
+                return i;
         return -1;
     }
 
     private static void consistentShuffle(char[] alphabet, char[] salt) {
-        if (salt == null || salt.length == 0) return;
+        if (salt == null || salt.length == 0)
+            return;
         for (int i = alphabet.length - 1, v = 0, p = 0; i > 0; i--, v++) {
             v %= salt.length;
             int saltNum = salt[v];
             p += saltNum;
             int j = (saltNum + v + p) % i;
-            // swap
+            // 交换
             char tmp = alphabet[i];
             alphabet[i] = alphabet[j];
             alphabet[j] = tmp;
@@ -447,7 +488,8 @@ public final class ShortUniqueId {
     }
 
     private static char[] subArray(char[] array, int index, int length) {
-        if (length == 0) return new char[0];
+        if (length == 0)
+            return new char[0];
         char[] sub = new char[length];
         System.arraycopy(array, index, sub, 0, length);
         return sub;
@@ -467,7 +509,7 @@ public final class ShortUniqueId {
         return newArr;
     }
 
-    // Splitting by separators: return ranges of substrings between any of separators chars
+    // 按分隔符分割：返回任意分隔符之间的子串范围
     private static class Range {
         int start;
         int length;
@@ -502,9 +544,11 @@ public final class ShortUniqueId {
                 nextSeparatorIndex = indexOfAny(line, indexStart, separators);
             }
             isLastLoop = nextSeparatorIndex == -1;
-            if (isLastLoop) nextSeparatorIndex = line.length() - indexStart;
+            if (isLastLoop)
+                nextSeparatorIndex = line.length() - indexStart;
             String slice = line.substring(indexStart, indexStart + nextSeparatorIndex);
-            if (slice.isEmpty()) continue;
+            if (slice.isEmpty())
+                continue;
             ranges[count++] = new Range(indexStart, nextSeparatorIndex);
         }
         return new SplitResult(count, Arrays.copyOf(ranges, count));
@@ -513,9 +557,10 @@ public final class ShortUniqueId {
     private int indexOfAny(String s, int from, char[] any) {
         for (int i = from; i < s.length(); i++) {
             char c = s.charAt(i);
-            for (char sep : any) if (c == sep) return i - from;
+            for (char sep : any)
+                if (c == sep)
+                    return i - from;
         }
         return -1;
     }
 }
-

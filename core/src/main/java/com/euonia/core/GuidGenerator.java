@@ -28,7 +28,7 @@ public final class GuidGenerator {
             return new UUID(0L, 0L);
         }
 
-        if (type == GuidType.SIMPLE) {
+        if (type == GuidType.DEFAULT) {
             return UUID.randomUUID();
         }
 
