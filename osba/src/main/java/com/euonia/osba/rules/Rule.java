@@ -6,66 +6,51 @@ import java.util.concurrent.CompletableFuture;
 import com.euonia.reflection.PropertyInfo;
 
 /**
- * Represents a rule that is based on a specific data annotation. This rule can
- * be used to enforce validation or other logic based on the presence and
- * configuration of the specified annotation on a property.
+ * 表示一个基于特定数据注解的规则。该规则可用于根据属性上指定注解的存在和配置来强制执行验证或其他逻辑。
  *
- * @param <A> the type of the annotation that this rule is based on
+ * @author damon(zhaorong@outlook)
  */
 public interface Rule {
     /**
-     * Gets the name of the rule, which is a unique identifier for the rule. The
-     * name can be used to reference the rule in various contexts, such as when
-     * applying the rule to a business object or when logging rule execution.
+     * 获取规则的名称，该名称是规则的唯一标识符。该名称可用于在各种上下文中引用规则，
+     * 例如在将规则应用于业务对象时或记录规则执行时。
      *
-     * @return the name of the rule, which is a unique identifier for the rule
+     * @return 规则的名称，即规则的唯一标识符
      */
     String getName();
 
     /**
-     * Gets the property associated with this rule, which is the primary property
-     * that the rule is designed to evaluate or enforce.
-     * This property serves as the main focus of the rule's logic and can be used to
-     * determine when the rule should be applied and how it should be evaluated.
+     * 获取与此规则关联的属性，该属性是规则设计用于评估或强制执行的主要属性。
+     * 此属性是规则逻辑的主要焦点，可用于确定何时应用规则以及如何评估规则。
      *
-     * @return the property associated with this rule, which is the primary property
-     *         that the rule is designed to evaluate or enforce
+     * @return 与此规则关联的属性，即规则设计用于评估或强制执行的主要属性
      */
     PropertyInfo<?> getProperty();
 
     /**
-     * Gets a list of related properties that are associated with this rule. This
-     * can be used to identify additional properties that may be relevant when
-     * evaluating the rule, allowing for more complex and interconnected rule logic.
+     * 获取与此规则关联的相关属性列表。可用于识别在评估规则时可能相关的其他属性，
+     * 从而实现更复杂和相互关联的规则逻辑。
      *
-     * @return a list of related properties that are associated with this rule,
-     *         which may be used in the evaluation of the rule's logic
+     * @return 与此规则关联的相关属性列表，可用于规则逻辑的评估
      */
     default List<PropertyInfo<?>> getRelatedProperties() {
         return List.of();
     }
 
     /**
-     * Gets the priority of the rule, which can be used to determine the order of
-     * execution when multiple rules are applied. Higher priority rules will be
-     * executed before lower priority ones.
+     * 获取规则的优先级，可用于确定多个规则应用时的执行顺序。
+     * 优先级较高的规则将在优先级较低的规则之前执行。
      *
-     * @return the priority of the rule, with higher values indicating higher
-     *         priority
+     * @return 规则的优先级，值越高表示优先级越高
      */
     int getPriority();
 
     /**
-     * Executes the rule asynchronously, performing the necessary checks or actions
-     * based on the provided context. The implementation of this method should
-     * contain the logic for evaluating the rule and potentially modifying the
-     * context or throwing exceptions if the rule is violated.
+     * 异步执行规则，根据提供的上下文执行必要的检查或操作。此方法的实现应包含评估规则的逻辑，
+     * 并在规则被违反时可能修改上下文或抛出异常。
      *
-     * @param context the context in which the rule is being executed, containing
-     *                relevant information and state for the rule evaluation
-     * @return a CompletableFuture that completes when the rule execution is
-     *         finished, allowing for asynchronous processing and handling of the
-     *         rule's effects on the context
+     * @param context 执行规则的上下文，包含规则评估的相关信息和状态
+     * @return 一个在规则执行完成时完成的 CompletableFuture，允许异步处理以及处理规则对上下文的影响
      */
     CompletableFuture<Void> executeAsync(RuleContext context);
 }

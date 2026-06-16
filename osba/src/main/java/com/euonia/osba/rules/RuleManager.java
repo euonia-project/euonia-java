@@ -5,36 +5,55 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Manages the rules associated with a specific type. It provides methods to retrieve and manage the rules for that type.
- * The RuleManager is designed to be thread-safe, allowing concurrent access and modifications to the rules without the need for external synchronization.
- * It uses a ConcurrentMap to store RuleManager instances for different types, and a CopyOnWriteArrayList to store the rules for each type, ensuring that modifications to the rules do not affect concurrent reads.
+ * 管理与特定类型关联的规则，提供获取和管理该类型规则的方法。
+ * <p>
+ * RuleManager 设计为线程安全，允许并发访问和修改规则而无需外部同步。
+ * 内部使用 {@link ConcurrentMap} 存储不同类型对应的 RuleManager 实例，
+ * 使用 {@link CopyOnWriteArrayList} 存储每个类型的规则列表，确保修改规则时不影响并发读取。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class RuleManager {
+
+    /**
+     * 按类型存储 RuleManager 实例的线程安全映射。
+     */
     private static final ConcurrentMap<Class<?>, RuleManager> ruleSets = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /**
+     * 当前类型对应的规则列表，使用写时复制策略保证线程安全。
+     */
     private final List<Rule> rules = new CopyOnWriteArrayList<>();
 
+    /**
+     * 私有构造函数，防止外部直接实例化。
+     */
     private RuleManager() {
     }
 
+    /**
+     * 获取当前类型对应的规则列表。
+     *
+     * @return 规则列表
+     */
     public List<Rule> getRules() {
         return rules;
     }
 
     /**
-     * Retrieves the RuleManager instance associated with the specified type. If no RuleManager exists for the type, a new instance is created and stored in the ruleSets map.
+     * 获取与指定类型关联的 RuleManager 实例。若该类型尚无对应的 RuleManager，则创建新实例并存入映射。
      *
-     * @param type the class type whose RuleManager is to be retrieved
-     * @return the RuleManager instance associated with the specified type
+     * @param type 要获取其 RuleManager 的类类型
+     * @return 与指定类型关联的 RuleManager 实例
      */
     public static RuleManager getRules(Class<?> type) {
         return ruleSets.computeIfAbsent(type, c -> new RuleManager());
     }
 
     /**
-     * Removes the RuleManager associated with the specified type from the ruleSets map, effectively clearing all rules for that type.
+     * 移除与指定类型关联的 RuleManager，相当于清除该类型的所有规则。
      *
-     * @param type the class type whose rules are to be cleared
+     * @param type 要清除规则的类类型
      */
     public static void cleanRules(Class<?> type) {
         synchronized (ruleSets) {
@@ -42,23 +61,26 @@ public final class RuleManager {
         }
     }
 
+    /**
+     * 标记该 RuleManager 是否已完成初始化（已为其关联类型添加了规则）。
+     */
     private boolean initialized = false;
 
     /**
-     * Indicates whether the RuleManager has been initialized with rules for the associated type.
-     * This property can be used to determine if the rules have been set up and are ready for use.
+     * 判断当前 RuleManager 是否已完成初始化。
+     * 此属性可用于确定规则是否已设置完毕并准备就绪。
      *
-     * @return true if the RuleManager has been initialized, false otherwise
+     * @return 若已初始化则返回 {@code true}，否则返回 {@code false}
      */
     public boolean isInitialized() {
         return initialized;
     }
 
     /**
-     * Sets the initialized state of the RuleManager.
-     * This method can be used to mark the RuleManager as initialized after rules have been added for the associated type.
+     * 设置当前 RuleManager 的初始化状态。
+     * 可在为关联类型添加完规则后调用此方法将 RuleManager 标记为已初始化。
      *
-     * @param initialized true to mark the RuleManager as initialized, false otherwise
+     * @param initialized {@code true} 表示已初始化，{@code false} 表示未初始化
      */
     public void setInitialized(boolean initialized) {
         this.initialized = initialized;

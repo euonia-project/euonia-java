@@ -5,23 +5,25 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Represents a collection of broken rules that have been violated during rule checking.
- * It provides methods to manage the collection of broken rules, including adding new broken rules, clearing existing rules, and retrieving counts of broken rules based on their severity.
+ * 表示在规则检查过程中被违反的已破坏规则的集合。
+ * 提供管理已破坏规则集合的方法，包括添加新的已破坏规则、清除现有规则以及根据严重程度检索已破坏规则的数量。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public final class BrokenRuleCollection {
     private final List<BrokenRule> rules = new ArrayList<>();
 
     /**
-     * Clears all broken rules from the collection, regardless of their associated property.
+     * 清除集合中的所有已破坏规则，无论其关联的属性如何。
      */
     public synchronized void clearRules() {
         rules.clear();
     }
 
     /**
-     * Clears broken rules from the collection that are associated with the specified property name.
+     * 清除集合中与指定属性名称关联的已破坏规则。
      *
-     * @param propertyName the name of the property whose associated broken rules should be cleared
+     * @param propertyName 应清除其关联已破坏规则的属性名称
      */
     public synchronized void clearRules(String propertyName) {
         rules.removeIf(rule -> propertyName == null
@@ -30,10 +32,10 @@ public final class BrokenRuleCollection {
     }
 
     /**
-     * Adds new broken rules to the collection based on the provided list of rule results and the associated property name.
+     * 根据提供的规则结果列表和关联的属性名称，向集合中添加新的已破坏规则。
      *
-     * @param results      the list of rule results to be added as broken rules
-     * @param propertyName the name of the property associated with the broken rules
+     * @param results      要添加为已破坏规则的规则结果列表
+     * @param propertyName 与已破坏规则关联的属性名称
      */
     public synchronized void add(List<RuleResult> results, String propertyName) {
         for (var result : results) {
@@ -45,54 +47,54 @@ public final class BrokenRuleCollection {
     }
 
     /**
-     * Retrieves the count of broken rules in the collection that have a severity level of ERROR.
+     * 检索集合中严重级别为 ERROR 的已破坏规则数量。
      *
-     * @return the count of broken rules with severity ERROR
+     * @return 严重级别为 ERROR 的已破坏规则数量
      */
     public synchronized int getErrorCount() {
         return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.ERROR).count();
     }
 
     /**
-     * Retrieves the count of broken rules in the collection that have a severity level of WARNING.
+     * 检索集合中严重级别为 WARNING 的已破坏规则数量。
      *
-     * @return the count of broken rules with severity WARNING
+     * @return 严重级别为 WARNING 的已破坏规则数量
      */
     public synchronized int getWarningCount() {
         return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.WARNING).count();
     }
 
     /**
-     * Retrieves the count of broken rules in the collection that have a severity level of INFORMATION.
+     * 检索集合中严重级别为 INFORMATION 的已破坏规则数量。
      *
-     * @return the count of broken rules with severity INFORMATION
+     * @return 严重级别为 INFORMATION 的已破坏规则数量
      */
     public synchronized int getInformationCount() {
         return (int) rules.stream().filter(rule -> rule.severity() == RuleSeverity.INFORMATION).count();
     }
 
     /**
-     * Checks if the collection of broken rules is empty.
+     * 检查已破坏规则集合是否为空。
      *
-     * @return true if the collection is empty, false otherwise
+     * @return 如果集合为空则返回 true，否则返回 false
      */
     public synchronized boolean isEmpty() {
         return rules.isEmpty();
     }
 
     /**
-     * Returns an unmodifiable list of broken rules in the collection.
+     * 返回集合中已破坏规则的不可修改列表。
      *
-     * @return an unmodifiable list of broken rules
+     * @return 已破坏规则的不可修改列表
      */
     public synchronized List<BrokenRule> list() {
         return List.copyOf(rules);
     }
 
     /**
-     * Returns a stream of broken rules in the collection.
+     * 返回集合中已破坏规则的流。
      *
-     * @return a stream of broken rules
+     * @return 已破坏规则的流
      */
     public synchronized Stream<BrokenRule> stream() {
         return new ArrayList<>(rules).stream();
