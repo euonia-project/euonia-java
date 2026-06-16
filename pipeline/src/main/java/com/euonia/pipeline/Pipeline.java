@@ -5,92 +5,82 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * Pipeline interface defines the contract for building and executing a pipeline
- * of components that can process a request and produce a response.
- * It allows adding components to the pipeline, building the pipeline, and
- * running it asynchronously with a given request.
- * The components can be added in a specific order or based on their type, and
- * the pipeline can be executed with an optional accumulation function to
- * combine results from multiple components.
+ * Pipeline 接口定义了构建和执行组件管道的契约，这些组件可以处理请求并生成响应。
+ * 它允许向管道添加组件、构建管道以及使用给定的请求异步运行管道。
+ * 组件可以按特定顺序或根据其类型添加，管道可以使用可选的累积函数来执行，以合并多个组件的结果。
  *
- * @param <C> the type of the request/context object
- * @param <R> the type of the response object
+ * @param <C> 请求/上下文对象的类型
+ * @param <R> 响应对象的类型
+ * @author damon(zhaorong@outlook)
  */
 public interface Pipeline<C, R> {
     /**
-     * Adds a component to the pipeline. The component is defined as a function that
-     * takes a PipelineDelegate and returns a PipelineDelegate.
+     * 向管道添加组件。该组件定义为一个函数，
+     * 接收 PipelineDelegate 并返回 PipelineDelegate。
      *
-     * @param component The component to add to the pipeline.
-     * @return The current pipeline instance.
+     * @param component 要添加到管道的组件
+     * @return 当前管道实例
      */
     Pipeline<C, R> use(Function<PipelineDelegate<C, R>, PipelineDelegate<C, R>> component);
 
     /**
-     * Adds a component to the pipeline at a specific index. The component is
-     * defined as a function that
-     * takes a PipelineDelegate and returns a PipelineDelegate.
+     * 在指定索引位置向管道添加组件。该组件定义为一个函数，
+     * 接收 PipelineDelegate 并返回 PipelineDelegate。
      *
-     * @param component The component to add to the pipeline.
-     * @param index     The index at which to add the component.
-     * @return The current pipeline instance.
+     * @param component 要添加到管道的组件
+     * @param index     添加组件的索引位置
+     * @return 当前管道实例
      */
     Pipeline<C, R> use(Function<PipelineDelegate<C, R>, PipelineDelegate<C, R>> component, int index);
 
     /**
-     * Adds a component to the pipeline. The component is defined as a BiFunction
-     * that
-     * takes a request object and a PipelineDelegate, and returns a CompletionStage
-     * of the response.
+     * 向管道添加组件。该组件定义为一个 BiFunction，
+     * 接收请求对象和 PipelineDelegate，并返回响应的 CompletionStage。
      *
-     * @param handler The handler to add to the pipeline.
-     * @return The current pipeline instance.
+     * @param handler 要添加到管道的处理器
+     * @return 当前管道实例
      */
     Pipeline<C, R> use(BiFunction<C, PipelineDelegate<C, R>, CompletionStage<R>> handler);
 
     /**
-     * Adds a component to the pipeline based on its type. The component is defined
-     * as a class and optional arguments.
+     * 根据类型向管道添加组件。组件定义为一个类和可选的参数。
      *
-     * @param type The class type of the component to add.
-     * @param args Optional arguments for the component's constructor.
-     * @return The current pipeline instance.
+     * @param type 要添加的组件的类类型
+     * @param args 组件构造函数的可选参数
+     * @return 当前管道实例
      */
     Pipeline<C, R> use(Class<?> type, Object... args);
 
     /**
-     * Adds a component to the pipeline based on its context type. The component can
-     * be added ahead of others.
+     * 根据上下文类型向管道添加组件。组件可以添加在其他组件之前。
      *
-     * @param contextType      The context type of the component.
-     * @param useAheadOfOthers Whether to add the component ahead of others.
-     * @return The current pipeline instance.
+     * @param contextType      组件的上下文类型
+     * @param useAheadOfOthers 是否将组件添加在其他组件之前
+     * @return 当前管道实例
      */
     Pipeline<C, R> useOf(Class<?> contextType, boolean useAheadOfOthers);
 
     /**
-     * Builds the pipeline and returns a PipelineDelegate.
+     * 构建管道并返回 PipelineDelegate。
      *
-     * @return The built PipelineDelegate.
+     * @return 构建好的 PipelineDelegate
      */
     PipelineDelegate<C, R> build();
 
     /**
-     * Runs the pipeline asynchronously with the given request.
+     * 使用给定的请求异步运行管道。
      *
-     * @param request The request object to pass through the pipeline.
-     * @return A CompletionStage representing the asynchronous execution result.
+     * @param request 要通过管道传递的请求对象
+     * @return 表示异步执行结果的 CompletionStage
      */
     CompletionStage<R> runAsync(C request);
 
     /**
-     * Runs the pipeline asynchronously with the given request and an accumulation
-     * function.
+     * 使用给定的请求和累积函数异步运行管道。
      *
-     * @param request    The request object to pass through the pipeline.
-     * @param accumulate The function to accumulate results from multiple
-     *                   components.
-     * @return A CompletionStage representing the asynchronous execution result.
+     * @param request    要通过管道传递的请求对象
+     * @param accumulate 用于累积多个组件结果的函数
+     * @return 表示异步执行结果的 CompletionStage
      */
     CompletionStage<R> runAsync(C request, Function<C, CompletionStage<R>> accumulate);
 }

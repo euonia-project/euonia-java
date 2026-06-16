@@ -1,13 +1,15 @@
 package com.euonia.http;
 
 /**
- * Defines the interface of a request context accessor.
+ * 定义请求上下文访问器的接口。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public interface RequestContextAccessor {
     /**
-     * Get the current request context.
+     * 获取当前请求上下文。
      *
-     * @return the current request context
+     * @return 当前请求上下文
      */
     RequestContext getContext();
 }
