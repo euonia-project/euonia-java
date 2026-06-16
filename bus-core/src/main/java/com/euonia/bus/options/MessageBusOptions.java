@@ -1,44 +1,47 @@
 package com.euonia.bus.options;
 
+import com.euonia.bus.Configurator;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.strategy.TransportStrategy;
 
 import java.util.List;
 
-public interface MessageBusOptions {
-    /**
-     * Gets the name of the default transport that will be used when no specific transport is assigned to a message type by strategy.
-     *
-     * @return The name of the default transport.
-     */
-    String getDefaultTransport();
+public final class MessageBusOptions {
+    private final Configurator configurator;
+    private String defaultTransport;
 
-    /**
-     * Indicates whether pipeline behaviors are enabled for the message bus.
-     *
-     * @return true if pipeline behaviors are enabled, false otherwise.
-     */
-    boolean isEnablePipelineBehaviors();
+    private boolean isEnablePipelineBehaviors = true;
 
-    /**
-     * Gets the message convention used by the message bus.
-     *
-     * @return The message convention used by the message bus.
-     */
-    MessageConvention getConvention();
+    public MessageBusOptions(Configurator configurator) {
+        this.configurator = configurator;
+    }
 
-    /**
-     * Gets the list of types for which a transport strategy has been assigned.
-     *
-     * @return The list of types for which a transport strategy has been assigned.
-     */
-    List<String> getStrategyAssignedTypes();
+    public String getDefaultTransport() {
+        return defaultTransport;
+    }
 
-    /**
-     * Gets the transport strategy for the specified transport name.
-     *
-     * @param transport The name of the transport.
-     * @return The transport strategy associated with the specified transport name.
-     */
-    TransportStrategy getStrategy(String transport);
+    public void setDefaultTransport(String defaultTransport) {
+        this.defaultTransport = defaultTransport;
+    }
+
+    public boolean isEnablePipelineBehaviors() {
+        return isEnablePipelineBehaviors;
+    }
+
+    public MessageConvention getConvention() {
+        return configurator.getConventionBuilder().getConvention();
+    }
+
+    public List<String> getStrategyAssignedTypes() {
+        return configurator.getStrategyBuilders().keySet().stream().toList();
+    }
+
+    public TransportStrategy getStrategy(String transport) {
+        var builder = configurator.getStrategyBuilders().get(transport);
+        return builder == null ? null : builder.getStrategy();
+    }
+
+    public void setEnablePipelineBehaviors(boolean enablePipelineBehaviors) {
+        isEnablePipelineBehaviors = enablePipelineBehaviors;
+    }
 }

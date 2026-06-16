@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap;
  * It provides methods to configure message conventions, transport strategies, and handler registrations.
  * Implementations of this interface will be used to set up the bus before it is started.
  */
-public interface BusConfigurator {
+public interface Configurator {
     /**
      * Gets the MessageConventionBuilder that has been configured.
      *

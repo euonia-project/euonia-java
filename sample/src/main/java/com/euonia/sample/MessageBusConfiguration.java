@@ -1,7 +1,7 @@
 package com.euonia.sample;
 
-import com.euonia.bus.BusConfigurator;
-import com.euonia.bus.DefaultBusConfigurator;
+import com.euonia.bus.Configurator;
+import com.euonia.bus.DefaultConfigurator;
 import com.euonia.bus.convention.AnnotationMessageConvention;
 import com.euonia.bus.convention.DefaultMessageConvention;
 import com.euonia.bus.strategy.AnnotationTransportStrategy;
@@ -11,11 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MessageBusConfiguration {
     @Bean
-    public BusConfigurator busConfigurator() {
+    public Configurator configurator() {
 
         var packageName = this.getClass().getPackageName();
 
-        return new DefaultBusConfigurator()
+        return new DefaultConfigurator()
             .setConvention(c -> {
                 c.add(DefaultMessageConvention.class);
                 c.add(AnnotationMessageConvention.class);

@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import com.euonia.bus.options.MessageBusOptions;
-import com.euonia.bus.options.MessageBusOptionsImpl;
 import com.euonia.reflection.ServiceProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,8 +26,8 @@ public class MessageBusConfiguration {
     }
 
     @Bean
-    public MessageBusOptions messageBusOptions(BusConfigurator configurator) {
-        var options = new MessageBusOptionsImpl(configurator);
+    public MessageBusOptions messageBusOptions(Configurator configurator) {
+        var options = new MessageBusOptions(configurator);
         options.setDefaultTransport(defaultTransport);
         options.setEnablePipelineBehaviors(isEnablePipelineBehaviors);
         return options;
@@ -39,7 +38,7 @@ public class MessageBusConfiguration {
 
         var context = new DefaultHandlerContext(provider);
 
-        var configurator = provider.getService(BusConfigurator.class)
+        var configurator = provider.getService(Configurator.class)
                                    .orElse(null);
 
         try {
