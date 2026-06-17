@@ -1,5 +1,11 @@
 package com.euonia.bus;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.euonia.bus.contract.Request;
 import com.euonia.bus.contract.Transport;
 import com.euonia.bus.exception.MessageTransportException;
@@ -16,12 +22,6 @@ import com.euonia.http.RequestContextAccessor;
 import com.euonia.pipeline.PipelineFactory;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.utility.StringUtility;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
-import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class MessageBus implements Bus {
     private static final Logger LOGGER = Logger.getLogger(MessageBus.class.getName());
@@ -54,7 +54,7 @@ public final class MessageBus implements Bus {
 
     @Override
     public <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, PublishOptions publishOptions, Consumer<MessageMetadata> metadataSetter) {
-        LOGGER.fine("publishAsync called for message: " + message.getClass().getName());
+        LOGGER.log(Level.FINE, "publishAsync called for message: {0}", message.getClass().getName());
         if (publishOptions == null) {
             publishOptions = new PublishOptions();
         }
@@ -80,7 +80,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (publishOptions.isEnablePipelineBehaviors() == true || options.isEnablePipelineBehaviors()) {
+        if (publishOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, Void>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);
@@ -125,7 +125,7 @@ public final class MessageBus implements Bus {
 
         var messageType = message.getClass();
 
-        if (options.getConvention().isUnicastType(messageType)) {
+        if (!options.getConvention().isUnicastType(messageType)) {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not unicast");
         }
 
@@ -136,7 +136,7 @@ public final class MessageBus implements Bus {
             () -> MessageCache.getInstance().getOrAddChannel(messageType)
         );
 
-        RoutedMessage<T> pack = new RoutedMessage<T>(message, channelName);
+        RoutedMessage<T> pack = new RoutedMessage<>(message, channelName);
         pack.setMessageId(StringUtility.collapse(sendOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
@@ -146,9 +146,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (sendOptions.isEnablePipelineBehaviors() == true || options.isEnablePipelineBehaviors()) {
-//            var pipeline = provider.getService(Pipeline.class)
-//                                   .orElse(null);
+        if (sendOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);
@@ -209,7 +207,7 @@ public final class MessageBus implements Bus {
             () -> MessageCache.getInstance().getOrAddChannel(messageType)
         );
 
-        RoutedMessage<T> pack = new RoutedMessage<T>(request, channelName);
+        RoutedMessage<T> pack = new RoutedMessage<>(request, channelName);
         pack.setMessageId(StringUtility.collapse(callOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
@@ -219,7 +217,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (callOptions.isEnablePipelineBehaviors() == true || options.isEnablePipelineBehaviors()) {
+        if (callOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);

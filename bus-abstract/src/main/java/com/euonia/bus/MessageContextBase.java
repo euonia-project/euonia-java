@@ -1,8 +1,9 @@
 package com.euonia.bus;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 
@@ -11,29 +12,37 @@ import com.euonia.bus.event.MessageRepliedEvent;
 import com.euonia.security.UserPrincipal;
 
 /**
- * The built-in implementation of {@link MessageContext}.
+ * {@link MessageContext} 的内置实现。
  * <p>
- * Provides a thread-safe message handling context that supports event-based
- * notification for replied, completed, and failed states. On {@link #close()},
- * the context automatically invokes {@link #complete(Object)} with the original
- * message to signal the end of message processing.
+ * 提供线程安全的消息处理上下文，支持基于事件的已回复、已完成和失败状态
+ * 通知。在调用 {@link #close()} 时，上下文会自动调用 {@link #complete(Object)}
+ * 并传入原始消息，以标志消息处理结束。
  *
+ * @author damon(zhaorong@outlook)
  * @see MessageContext
  */
 public final class MessageContextBase implements MessageContext {
 
+    /** 消息负载。 */
     private final Object message;
+    /** 消息头字典。 */
     private final Map<String, String> headers = new java.util.HashMap<>();
+    /** 当前用户主体。 */
     private final UserPrincipal user;
+    /** 消息元数据。 */
     private MessageMetadata metadata;
+    /** 是否已释放。 */
     private boolean disposed;
 
-    private final ConcurrentHashMap<String, SubmissionPublisher<?>> publishers = new ConcurrentHashMap<>();
+    /** 消息已回复事件的发布者。 */
+    private final SubmissionPublisher<MessageRepliedEvent> publisher = new SubmissionPublisher<>();
+    /** 消息处理完成事件的消费者列表。 */
+    private final List<Consumer<MessageHandledEvent>> onCompletedConsumers = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     /**
-     * Initializes a new instance with the specified message.
+     * 使用指定的消息初始化新实例。
      *
-     * @param message the message payload
+     * @param message 消息负载
      */
     public MessageContextBase(Object message) {
         this.message = message;
@@ -41,10 +50,10 @@ public final class MessageContextBase implements MessageContext {
     }
 
     /**
-     * Initializes a new instance from a routed message envelope, copying all
-     * envelope metadata (IDs, authorization) into the context.
+     * 从路由消息信封初始化新实例，将所有信封元数据（ID、授权信息）复制到
+     * 上下文中。
      *
-     * @param pack the routed message envelope
+     * @param pack 路由消息信封
      */
     public MessageContextBase(RoutedMessage<?> pack) {
         this.message = pack.getPayload();
@@ -57,12 +66,34 @@ public final class MessageContextBase implements MessageContext {
         this.metadata = pack.getMetadata();
     }
 
-    // ---- Listener registration (used by bus infrastructure) ----
+    // ---- 监听器注册（供总线基础设施使用） ----
 
-    @SuppressWarnings({"unchecked", "resource"})
-    public <E> void addListener(String event, Consumer<E> listener) {
-        SubmissionPublisher<E> publisher = (SubmissionPublisher<E>) publishers.computeIfAbsent(event, e -> new SubmissionPublisher<>());
-        publisher.consume(listener);
+    /**
+     * 注册消息已回复事件的订阅者。
+     *
+     * @param <R>        响应类型
+     * @param subscriber 消息已回复事件的订阅者
+     */
+    public <R> void onReplied(Flow.Subscriber<? super MessageRepliedEvent> subscriber) {
+        publisher.subscribe(subscriber);
+    }
+
+    /**
+     * 添加消息处理完成事件的消费者。
+     *
+     * @param consumer 消息处理完成事件的消费者
+     */
+    public void addCompletedSubscriber(Consumer<MessageHandledEvent> consumer) {
+        onCompletedConsumers.add(consumer);
+    }
+
+    /**
+     * 移除消息处理完成事件的消费者。
+     *
+     * @param consumer 要移除的消费者
+     */
+    public void removeCompletedSubscriber(Consumer<MessageHandledEvent> consumer) {
+        onCompletedConsumers.remove(consumer);
     }
 
     // ---- MessageContext implementation ----
@@ -142,78 +173,61 @@ public final class MessageContextBase implements MessageContext {
         this.metadata = metadata;
     }
 
-    // ---- Lifecycle methods ----
+    // ---- 生命周期方法 ----
 
     /**
-     * Fires the replied event, notifying listeners that the message
-     * has been replied to with the given response.
+     * 触发已回复事件，通知监听器消息已使用给定的响应进行了回复。
      *
-     * @param message the response message
+     * @param message 响应消息
      */
-    @SuppressWarnings("unchecked")
     @Override
     public <R> void response(R message) {
-        MessageRepliedEvent args = new MessageRepliedEvent(message);
-        var publisher = (SubmissionPublisher<MessageRepliedEvent>) publishers.getOrDefault("Responded", null);
-        if (publisher != null) {
-            publisher.submit(args);
-        }
+        MessageRepliedEvent args = new MessageRepliedEvent(null, message);
+        publisher.submit(args);
     }
 
     /**
-     * Fires the failed event, notifying listeners that message handling
-     * encountered an error.
+     * 触发失败事件，通知监听器消息处理遇到错误。
      *
-     * @param throwable the exception that caused the failure
+     * @param throwable 导致失败的异常
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void failure(Throwable throwable) {
-        var publisher = (SubmissionPublisher<Throwable>) publishers.getOrDefault("Failed", null);
-        if (publisher != null) {
-            publisher.submit(throwable);
-        }
+        publisher.closeExceptionally(throwable);
     }
 
     /**
-     * Fires the completed event, notifying listeners that the message
-     * has been fully processed.
+     * 触发已完成事件，通知监听器消息已完全处理。
      *
-     * @param message the processed message
+     * @param message 已处理的消息
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void complete(Object message) {
-        MessageHandledEvent args = new MessageHandledEvent(message);
-        var publisher = (SubmissionPublisher<MessageHandledEvent>) publishers.getOrDefault("Completed", null);
-        if (publisher != null) {
-            publisher.submit(args);
-        }
+        complete(message, null);
     }
 
     /**
-     * Fires the completed event with the handler type information.
+     * 触发已完成事件，同时携带处理器类型信息。
      *
-     * @param message     the processed message
-     * @param handlerType the type of the handler that processed the message
+     * @param message     已处理的消息
+     * @param handlerType 处理该消息的处理器类型
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void complete(Object message, Class<?> handlerType) {
         MessageHandledEvent args = new MessageHandledEvent(message);
-        args.setHandlerType(handlerType);
-        var publisher = (SubmissionPublisher<MessageHandledEvent>) publishers.getOrDefault("Completed", null);
-        if (publisher != null) {
-            publisher.submit(args);
+        if (handlerType != null) {
+            args.setHandlerType(handlerType);
+        }
+        for (Consumer<MessageHandledEvent> consumer : onCompletedConsumers) {
+            consumer.accept(args);
         }
     }
 
     /**
-     * Disposes the context, firing the completed event with the original
-     * message and cleaning up all registered listeners.
+     * 释放上下文，使用原始消息触发已完成事件并清理所有已注册的监听器。
      * <p>
-     * This mirrors the .NET dispose pattern: on close, the context signals
-     * completion of message processing and releases all event handlers.
+     * 此方法对应 .NET 的 dispose 模式：关闭时，上下文发出消息处理完成的
+     * 信号并释放所有事件处理器。
      */
     @Override
     public void close() {
@@ -222,11 +236,7 @@ public final class MessageContextBase implements MessageContext {
         }
         disposed = true;
 
-        // Signal completion with the original message, matching .NET Dispose pattern
+        // Signal completion with the original message
         complete(message);
-
-        // Release all listeners to prevent memory leaks
-        publishers.values().forEach(SubmissionPublisher::close);
-        publishers.clear();
     }
 }
