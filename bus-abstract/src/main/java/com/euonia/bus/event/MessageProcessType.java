@@ -8,5 +8,8 @@ package com.euonia.bus.event;
 public enum MessageProcessType {
     SEND,
     DELIVERED,
-    RECEIVED
+    RECEIVED,
+    ACKNOWLEDGED,
+    REPLIED,
+    HANDLED
 }

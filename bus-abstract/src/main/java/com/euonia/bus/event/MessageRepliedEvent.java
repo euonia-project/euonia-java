@@ -3,7 +3,7 @@ package com.euonia.bus.event;
 /**
  * Represents the arguments for a message replied event.
  */
-public class MessageRepliedEvent {
+public class MessageRepliedEvent extends MessageProcessedEvent{
     private final Object result;
 
     /**
@@ -11,7 +11,8 @@ public class MessageRepliedEvent {
      *
      * @param result the result of the message reply
      */
-    public MessageRepliedEvent(Object result) {
+    public MessageRepliedEvent(Object message, Object result) {
+        super(message, null, MessageProcessType.REPLIED);
         this.result = result;
     }
 

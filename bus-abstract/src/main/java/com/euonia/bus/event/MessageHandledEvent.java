@@ -1,10 +1,11 @@
 package com.euonia.bus.event;
 
-public class MessageHandledEvent {
+public class MessageHandledEvent extends MessageProcessedEvent {
     private final Object message;
     private Class<?> handlerType;
 
     public MessageHandledEvent(Object message) {
+        super(message, null, MessageProcessType.HANDLED);
         this.message = message;
     }
 
@@ -16,6 +17,7 @@ public class MessageHandledEvent {
         this.handlerType = handlerType;
     }
 
+    @Override
     public Object getMessage() {
         return message;
     }
