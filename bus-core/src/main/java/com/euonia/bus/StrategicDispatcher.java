@@ -8,27 +8,29 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A dispatcher that determines the transport(s) for a message type based on configured strategies and conventions.
- * It uses a cache to store the transport determinations for message types to improve performance.
+ * 基于已配置的策略和约定为消息类型确定传输的分发器。
+ * 它使用缓存来存储消息类型的传输判定结果以提高性能。
+ *
+ * @author damon(zhaorong@outlook)
  */
 public class StrategicDispatcher implements Dispatcher {
     private final ConcurrentHashMap<Class<?>, List<String>> transportCache = new ConcurrentHashMap<>();
     private final MessageBusOptions options;
 
     /**
-     * Creates a new instance of StrategicDispatcher with the specified options.
+     * 使用指定的选项创建 {@link StrategicDispatcher} 的新实例。
      *
-     * @param options the message bus options
+     * @param options 消息总线选项
      */
     public StrategicDispatcher(MessageBusOptions options) {
         this.options = options;
     }
 
     /**
-     * Creates the transports for the specified message type.
+     * 为指定的消息类型创建传输列表。
      *
-     * @param messageType the type of the message
-     * @return a list of transport names to which the message should be dispatched
+     * @param messageType 消息的类型
+     * @return 消息应被分发到的传输名称列表
      */
     @Override
     public List<String> determine(Class<?> messageType) {
