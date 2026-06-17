@@ -101,7 +101,8 @@ final class DefaultHandlerContext implements HandlerContext {
                     method.setAccessible(true);
                     return method.invoke(handler, args);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException("Failed to invoke handler method '" + method.getName() + "'", e);
+                    var cause = unwrapCause(e);
+                    throw new RuntimeException(cause);
                 }
             };
         };
@@ -120,7 +121,7 @@ final class DefaultHandlerContext implements HandlerContext {
     @Override
     public CompletableFuture<Void> handleAsync(Object message, MessageContext context) {
         if (message == null) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.failedFuture(new IllegalArgumentException("message is null"));
         }
 
         var channel = MessageCache.getInstance().getOrAddChannel(message.getClass());
@@ -180,18 +181,14 @@ final class DefaultHandlerContext implements HandlerContext {
      * For request/unicast message types, exceptions are rethrown.
      * For multicast message types, exceptions are swallowed and returned as the result.
      */
-    private CompletableFuture<Object> executeHandler(MessageHandlerFactory factory,
-                                                     Object message,
-                                                     MessageContext context) {
+    private CompletableFuture<Object> executeHandler(MessageHandlerFactory factory, Object message, MessageContext context) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 var handler = factory.createHandler(provider);
                 return handler.handle(message, context);
             } catch (Exception exception) {
-                LOGGER.log(Level.SEVERE, exception,
-                    () -> "Error occurred while handling message " + context.getMessageId());
-                if (convention.isRequestType(message.getClass())
-                    || convention.isUnicastType(message.getClass())) {
+                LOGGER.log(Level.SEVERE, exception, () -> "Error occurred while handling message " + context.getMessageId());
+                if (!convention.isMulticastType(message.getClass())) {
                     // Swallow the exception for request/response and unicast messages
                     throw new RuntimeException(exception);
                 }
