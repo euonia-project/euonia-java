@@ -7,7 +7,6 @@ import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
 import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.MessageHandlerFactory;
-import com.euonia.http.InternalServerErrorException;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
@@ -69,7 +68,7 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param messageType the class of the message
      * @param handlerType the class of the handler
      */
-    <M, R, H extends Handler<M, R>> void register(Class<M> messageType, Class<H> handlerType) {
+    public <M, R, H extends Handler<M, R>> void register(Class<M> messageType, Class<H> handlerType) {
         var channel = MessageCache.getInstance().getOrAddChannel(messageType);
 
         MessageHandlerFactory factory = sp -> {
@@ -91,7 +90,7 @@ final class DefaultHandlerContext implements HandlerContext {
      *
      * @param registration the {@link HandlerRegistration} describing the handler to register
      */
-    void register(HandlerRegistration registration) {
+    public void register(HandlerRegistration registration) {
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getServiceOrCreate(registration.handlerType());
             return (message, context) -> {
