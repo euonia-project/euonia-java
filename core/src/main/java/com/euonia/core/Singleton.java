@@ -25,6 +25,7 @@ public final class Singleton {
      * @param <T>   实例的类型
      * @return 指定类型的单例实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T getInstance(Class<T> clazz) {
         return (T) instances.computeIfAbsent(clazz, Singleton::createInstance);
     }
@@ -54,6 +55,7 @@ public final class Singleton {
      * @param <T>      实例的类型
      * @return 指定类型的单例实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T get(Class<T> clazz, Supplier<T> supplier) {
         return (T) instances.computeIfAbsent(clazz, k -> supplier.get());
     }

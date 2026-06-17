@@ -6,5 +6,5 @@ import com.euonia.sample.application.dto.UserCreateDto;
 import java.util.concurrent.CompletableFuture;
 
 public interface UserApplicationService extends ApplicationService {
-    CompletableFuture<Void> createAsync(UserCreateDto data);
+    CompletableFuture<Long> createAsync(UserCreateDto data);
 }

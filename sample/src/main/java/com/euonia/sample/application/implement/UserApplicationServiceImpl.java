@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 
 /**
  * The UserApplicationServiceImpl class is a concrete implementation of the UserApplicationService interface.
@@ -24,8 +25,34 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
     }
 
     @Override
-    public CompletableFuture<Void> createAsync(UserCreateDto data) {
+    public CompletableFuture<Long> createAsync(UserCreateDto data) {
         var command = new UserCreateCommand();
-        return bus.sendAsync(command);
+        command.setName(data.getUsername());
+
+        CompletableFuture<Long> future = new CompletableFuture<>();
+
+        var subscribe = new Flow.Subscriber<Long>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(1);
+            }
+
+            @Override
+            public void onNext(Long item) {
+                future.complete(item);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                future.completeExceptionally(throwable);
+            }
+
+            @Override
+            public void onComplete() {
+                future.complete(0L);
+            }
+        };
+        return bus.sendAsync(command, Long.class, subscribe)
+                  .thenCompose(result -> future);
     }
 }
