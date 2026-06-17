@@ -41,22 +41,34 @@ import com.euonia.utility.StringUtility;
  */
 public final class MessageBus implements Bus {
 
-    /** 日志记录器。 */
+    /**
+     * 日志记录器。
+     */
     private static final Logger LOGGER = Logger.getLogger(MessageBus.class.getName());
 
-    /** 消息分发器，用于确定消息应路由到哪些传输实例。 */
+    /**
+     * 消息分发器，用于确定消息应路由到哪些传输实例。
+     */
     private final Dispatcher dispatcher;
 
-    /** 服务提供者，用于获取传输和其他依赖服务。 */
+    /**
+     * 服务提供者，用于获取传输和其他依赖服务。
+     */
     private final ServiceProvider provider;
 
-    /** 消息总线配置选项。 */
+    /**
+     * 消息总线配置选项。
+     */
     private final MessageBusOptions options;
 
-    /** HTTP 请求上下文访问器，用于获取当前请求上下文（如 traceId、authorization 等）。 */
+    /**
+     * HTTP 请求上下文访问器，用于获取当前请求上下文（如 traceId、authorization 等）。
+     */
     private final RequestContextAccessor requestAccessor;
 
-    /** 管道工厂，用于创建消息处理管道。 */
+    /**
+     * 管道工厂，用于创建消息处理管道。
+     */
     private final PipelineFactory pipelineFactory;
 
     /**
@@ -79,9 +91,9 @@ public final class MessageBus implements Bus {
     /**
      * 使用指定的参数创建消息总线实例。
      *
-     * @param provider    服务提供者
-     * @param dispatcher  消息分发器
-     * @param options     消息总线配置选项
+     * @param provider   服务提供者
+     * @param dispatcher 消息分发器
+     * @param options    消息总线配置选项
      */
     public MessageBus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
         this(provider, dispatcher, options, provider.getService(RequestContextAccessor.class).orElse(null));
