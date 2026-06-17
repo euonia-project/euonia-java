@@ -1,16 +1,14 @@
 package com.euonia.bus.options;
 
+import java.util.List;
+
 import com.euonia.bus.Configurator;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.strategy.TransportStrategy;
 
-import java.util.List;
-
 /**
- * Defines the options for configuring the message bus, including transport
- * strategies, message conventions, and pipeline behaviors.
- * This class is immutable and can be used to create a message bus instance with
- * the specified options.
+ * 定义配置消息总线的选项，包括传输策略、消息约定和管道行为。
+ * 该类是不可变的，可用于使用指定的选项创建消息总线实例。
  *
  * @author damon(zhaorong@outlook)
  */
@@ -21,82 +19,73 @@ public final class MessageBusOptions {
     private boolean isEnablePipelineBehaviors = true;
 
     /**
-     * Creates a new instance of MessageBusOptions with the specified configurator.
+     * 使用指定的配置器创建 {@link MessageBusOptions} 的新实例。
      *
-     * @param configurator the configurator used to configure the message bus
+     * @param configurator 用于配置消息总线的配置器
      */
     public MessageBusOptions(Configurator configurator) {
         this.configurator = configurator;
     }
 
     /**
-     * Gets the default transport strategy name, which can be used for message
-     * routing and categorization.
+     * 获取默认传输策略名称，可用于消息路由和分类。
      *
-     * @return the default transport strategy name
+     * @return 默认传输策略名称
      */
     public String getDefaultTransport() {
         return defaultTransport;
     }
 
     /**
-     * Sets the default transport strategy name, which can be used for message
-     * routing and categorization.
+     * 设置默认传输策略名称，可用于消息路由和分类。
      *
-     * @param defaultTransport the default transport strategy name
+     * @param defaultTransport 默认传输策略名称
      */
     public void setDefaultTransport(String defaultTransport) {
         this.defaultTransport = defaultTransport;
     }
 
     /**
-     * Gets whether to enable pipeline behaviors, which can be used for message
-     * processing and handling.
+     * 获取是否启用管道行为，可用于消息处理和操作。
      *
-     * @return true if pipeline behaviors are enabled, false otherwise
+     * @return 如果管道行为已启用则返回 true，否则返回 false
      */
     public boolean isEnablePipelineBehaviors() {
         return isEnablePipelineBehaviors;
     }
 
     /**
-     * Sets whether to enable pipeline behaviors, which can be used for message
-     * processing and handling.
+     * 设置是否启用管道行为，可用于消息处理和操作。
      *
-     * @param enablePipelineBehaviors true to enable pipeline behaviors, false
-     *                                otherwise
+     * @param enablePipelineBehaviors true 表示启用管道行为，false 表示禁用
      */
     public void setEnablePipelineBehaviors(boolean enablePipelineBehaviors) {
         isEnablePipelineBehaviors = enablePipelineBehaviors;
     }
 
     /**
-     * Gets the message convention, which can be used for message formatting and
-     * validation.
+     * 获取消息约定，可用于消息格式化和验证。
      *
-     * @return the message convention
+     * @return 消息约定
      */
     public MessageConvention getConvention() {
         return configurator.getConventionBuilder().getConvention();
     }
 
     /**
-     * Gets the list of transport strategy names, which can be used for message
-     * routing and categorization.
+     * 获取传输策略名称列表，可用于消息路由和分类。
      *
-     * @return the list of transport strategy names
+     * @return 传输策略名称列表
      */
     public List<String> getStrategyAssignedTypes() {
         return configurator.getStrategyBuilders().keySet().stream().toList();
     }
 
     /**
-     * Gets the transport strategy for the specified transport name, which can be
-     * used for message routing and categorization.
+     * 获取指定传输名称对应的传输策略，可用于消息路由和分类。
      *
-     * @param transport the transport name
-     * @return the transport strategy for the specified transport name, or null if
-     *         not found
+     * @param transport 传输名称
+     * @return 指定传输名称对应的传输策略，如果未找到则返回 null
      */
     public TransportStrategy getStrategy(String transport) {
         var builder = configurator.getStrategyBuilders().get(transport);

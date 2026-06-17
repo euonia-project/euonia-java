@@ -1,18 +1,19 @@
 package com.euonia.bus;
 
 /**
- * Defines a contract for handling messages of a specific type and returning a response.
+ * 定义处理特定类型消息并返回响应的契约。
  *
- * @param <M> the type of the message to be handled
- * @param <R> the type of the response to be returned after handling the message
+ * @param <M> 要处理的消息类型
+ * @param <R> 处理消息后返回的响应类型
+ * @author damon(zhaorong@outlook)
  */
 public interface Handler<M, R> {
     /**
-     * Handles a message of type M and returns a response of type R.
+     * 处理类型为 M 的消息并返回类型为 R 的响应。
      *
-     * @param message the message to be handled
-     * @param context the context in which the message is being handled
-     * @return the response after handling the message
+     * @param message 要处理的消息
+     * @param context 处理消息的上下文
+     * @return 处理消息后的响应
      */
     R handle(M message, MessageContext context);
 }

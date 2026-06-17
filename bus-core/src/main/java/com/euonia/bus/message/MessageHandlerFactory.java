@@ -2,12 +2,18 @@ package com.euonia.bus.message;
 
 import com.euonia.reflection.ServiceProvider;
 
+/**
+ * 消息处理器工厂的函数式接口，用于通过 {@link ServiceProvider} 创建 {@link MessageHandler} 实例。
+ *
+ * @author damon(zhaorong@outlook)
+ */
 @FunctionalInterface
 public interface MessageHandlerFactory {
     /**
-     * Create a new MessageHandler instance.
+     * 创建一个新的 {@link MessageHandler} 实例。
      *
-     * @return a new MessageHandler instance
+     * @param provider 用于解析依赖的服务提供者
+     * @return 一个新的 {@link MessageHandler} 实例
      */
     MessageHandler createHandler(ServiceProvider provider);
 }

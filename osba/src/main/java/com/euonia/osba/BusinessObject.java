@@ -11,7 +11,12 @@ import java.util.function.Supplier;
 
 import com.euonia.osba.abstracts.RuleCheckable;
 import com.euonia.osba.abstracts.UseBusinessContext;
-import com.euonia.osba.rules.*;
+import com.euonia.osba.rules.BrokenRuleCollection;
+import com.euonia.osba.rules.LambdaRule;
+import com.euonia.osba.rules.Rule;
+import com.euonia.osba.rules.RuleContext;
+import com.euonia.osba.rules.RuleManager;
+import com.euonia.osba.rules.Rules;
 import com.euonia.reflection.FieldDataManager;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.reflection.PropertyInfoManager;
@@ -98,11 +103,7 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
      */
     public FieldDataManager getFieldManager() {
         if (fieldManager == null) {
-            synchronized (this) {
-                if (fieldManager == null) {
-                    fieldManager = new FieldDataManager(this.getClass());
-                }
-            }
+            fieldManager = new FieldDataManager(this.getClass());
         }
         return fieldManager;
     }
@@ -116,11 +117,7 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
      */
     protected Rules getRules() {
         if (rules == null) {
-            synchronized (this) {
-                if (rules == null) {
-                    rules = new Rules(this);
-                }
-            }
+            rules = new Rules(this);
         }
         return rules;
     }

@@ -32,6 +32,7 @@ public final class BusinessContext {
      * @param <T>        对象的类型。
      * @return 指定类型的实例。
      */
+    @SuppressWarnings("unchecked")
     public <T> T getOrCreateObject(Class<T> objectType) {
         Objects.requireNonNull(objectType, "objectType");
         if (instanceCreator == null) {

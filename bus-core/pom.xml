@@ -15,6 +15,12 @@
     <dependencies>
         <dependency>
             <groupId>com.euonia</groupId>
+            <artifactId>core</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.euonia</groupId>
             <artifactId>pipeline</artifactId>
             <version>${revision}</version>
         </dependency>

@@ -86,6 +86,7 @@ public class FieldDataManager {
      * @param property 属性信息
      * @return 指定属性的字段数据
      */
+    @SuppressWarnings("unchecked")
     public <T> FieldData<T> getFieldData(PropertyInfo<T> property) {
         return (FieldData<T>) getFieldData(property.getName());
     }
@@ -97,6 +98,7 @@ public class FieldDataManager {
      * @param property 要检索或创建字段数据的属性
      * @return 指定属性的字段数据
      */
+    @SuppressWarnings("unchecked")
     public synchronized <T> FieldData<T> getOrCreateFieldData(PropertyInfo<T> property) {
         if (!fieldData.containsKey(property.getName())) {
             var field = property.newFieldData(property.getName());
