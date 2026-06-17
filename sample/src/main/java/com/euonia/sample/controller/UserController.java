@@ -19,7 +19,7 @@ public class UserController {
     @PostMapping()
     public ResponseEntity<String> createUser(@RequestBody UserCreateDto data) {
         return service.createAsync(data)
-                      .thenApply(v -> ResponseEntity.ok(""))
+                      .thenApply(v -> ResponseEntity.ok(v.toString()))
                       .join();
     }
 
