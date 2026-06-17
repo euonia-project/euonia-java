@@ -71,7 +71,7 @@ public final class MessageBus implements Bus {
             () -> MessageCache.getInstance().getOrAddChannel(messageType)
         );
 
-        RoutedMessage<T> pack = new RoutedMessage<T>(message, channelName);
+        RoutedMessage<T> pack = new RoutedMessage<>(message, channelName);
         pack.setMessageId(StringUtility.collapse(publishOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
