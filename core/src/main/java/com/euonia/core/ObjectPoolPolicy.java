@@ -39,10 +39,8 @@ public interface ObjectPoolPolicy<T> {
 
     /**
      * 定义当对象池中的对象超过预设的最大容量时的行为。
-     *
-     * @return OversizeBehavior 枚举值，指示池应该如何处理超过最大容量的情况。
      */
-    public enum OversizeBehavior {
+    enum OversizeBehavior {
         /**
          * 当对象池中的对象超过预设的最大容量时，抛出异常。
          */
