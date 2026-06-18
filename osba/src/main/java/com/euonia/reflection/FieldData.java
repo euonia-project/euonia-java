@@ -12,7 +12,7 @@ import com.euonia.osba.abstracts.TrackableObject;
  * 此类提供了获取和设置字段值的方法，以及将其标记为未更改或撤销更改的方法。
  *
  * @param <T> 字段值的类型。
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class FieldData<T> implements TrackableObject {
     private final Stack<T> history = new Stack<>();

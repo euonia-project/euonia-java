@@ -16,7 +16,7 @@ import com.euonia.osba.abstracts.TrackableObject;
  * 可观察列表，提供子属性通知、集合变更通知以及聚合忙碌状态通知。
  *
  * @param <TItem> 列表项类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class ObservableList<TItem> extends ArrayList<TItem> {
     private final List<Consumer<ObjectChangedEventArgs>> childChangedListeners = new CopyOnWriteArrayList<>();

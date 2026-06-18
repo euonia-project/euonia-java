@@ -20,7 +20,7 @@ import com.euonia.reflection.ServiceProvider;
  * {@link com.euonia.bus.messenger.StrongReferenceMessenger} 或
  * {@link com.euonia.bus.messenger.WeakReferenceMessenger}。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class InMemoryRecipientRegistrar implements RecipientRegistrar {
 

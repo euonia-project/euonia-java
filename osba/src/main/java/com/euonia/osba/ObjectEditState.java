@@ -4,7 +4,7 @@ package com.euonia.osba;
  * 表示对象的编辑状态，指示对象是新建、已更改、已删除还是未更改。
  * 该枚举用于在对象的生命周期中跟踪其状态，以便在业务规则和数据持久化的上下文中正确处理更改和删除。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public enum ObjectEditState {
 

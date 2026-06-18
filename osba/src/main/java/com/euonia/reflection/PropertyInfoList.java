@@ -10,7 +10,7 @@ import java.util.concurrent.Semaphore;
  * 该类还包含一个 Semaphore 用于控制对列表的访问，以确保线程安全。此外，它还具有锁定机制，可以通过 lock 和 unlock
  * 方法来控制列表的修改权限。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class PropertyInfoList extends ArrayList<PropertyInfo<?>> {
     private final Semaphore semaphore = new Semaphore(1);

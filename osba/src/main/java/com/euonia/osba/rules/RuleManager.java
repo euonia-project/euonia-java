@@ -11,7 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 内部使用 {@link ConcurrentMap} 存储不同类型对应的 RuleManager 实例，
  * 使用 {@link CopyOnWriteArrayList} 存储每个类型的规则列表，确保修改规则时不影响并发读取。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class RuleManager {
 

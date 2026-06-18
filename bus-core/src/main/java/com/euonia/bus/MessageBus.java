@@ -37,7 +37,7 @@ import com.euonia.utility.StringUtility;
  *   <li><b>请求/响应</b> — 通过 {@link #callAsync} 发送请求并期待类型化的响应</li>
  * </ul>
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class MessageBus implements Bus {
 

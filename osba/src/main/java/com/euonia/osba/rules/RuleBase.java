@@ -8,7 +8,7 @@ import com.euonia.reflection.PropertyInfo;
 /**
  * 提供规则的基础实现，包括公共属性和方法。此类可被扩展以创建具体的规则实现。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class RuleBase implements Rule {
     private static final String NAME_PREFIX = "rule://";

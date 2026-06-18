@@ -7,7 +7,7 @@ package com.euonia.osba.rules;
  * @param property    违反规则的属性名称。
  * @param description 违反规则的描述，提供有关违规的详细信息。
  * @param severity    违反规则的严重程度，指示违规的严重性级别
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record BrokenRule(String property, String description, RuleSeverity severity) {
 }

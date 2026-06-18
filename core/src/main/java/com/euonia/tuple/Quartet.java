@@ -15,7 +15,7 @@ import java.util.List;
  * @param <V2>   第二个值的类型
  * @param <V3>   第三个值的类型
  * @param <V4>   第四个值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Quartet<V1, V2, V3, V4>(V1 value1, V2 value2, V3 value3, V4 value4) implements Tuple {
     @Serial

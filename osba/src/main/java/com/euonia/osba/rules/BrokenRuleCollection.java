@@ -8,7 +8,7 @@ import java.util.stream.Stream;
  * 表示在规则检查过程中被违反的已破坏规则的集合。
  * 提供管理已破坏规则集合的方法，包括添加新的已破坏规则、清除现有规则以及根据严重程度检索已破坏规则的数量。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class BrokenRuleCollection {
     private final List<BrokenRule> rules = new ArrayList<>();

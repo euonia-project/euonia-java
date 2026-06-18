@@ -7,7 +7,7 @@ package com.euonia.core;
  * @param value 与键关联的值
  * @param <K>   键的类型
  * @param <V>   值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Pair<K extends Comparable<K>, V>(K key, V value) {
     public static <K extends Comparable<K>, V> Pair<K, V> of(K key, V value) {

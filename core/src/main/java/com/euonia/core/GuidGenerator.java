@@ -7,7 +7,7 @@ import java.util.UUID;
 /**
  * 使用与框架 .NET GUID 生成模式相匹配的布局生成 UUID 值。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class GuidGenerator {
 

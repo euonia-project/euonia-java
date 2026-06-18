@@ -11,7 +11,7 @@ import java.util.List;
  * @param value2 第二个值
  * @param <V1>   第一个值的类型
  * @param <V2>   第二个值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Duet<V1, V2>(V1 value1, V2 value2) implements Tuple {
     @Serial

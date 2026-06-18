@@ -6,7 +6,7 @@ package com.euonia.bus.messenger;
  * 实现此接口的接收者可以通过优化的快速路径（null 分发器标记）注册到 {@link Messenger}。
  *
  * @param <TMessage> 此接收者处理的消息类型（必须是引用类型）
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 @FunctionalInterface
 public interface Recipient<TMessage> {

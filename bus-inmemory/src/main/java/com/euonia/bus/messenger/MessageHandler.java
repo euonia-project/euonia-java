@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
  *
  * @param <TRecipient> 处理消息的接收者类型
  * @param <TMessage>   消息类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 @FunctionalInterface
 public interface MessageHandler<TRecipient, TMessage> extends BiConsumer<TRecipient, TMessage> {

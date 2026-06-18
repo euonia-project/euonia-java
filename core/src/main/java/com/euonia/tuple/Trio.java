@@ -13,7 +13,7 @@ import java.util.List;
  * @param <T2>   第二个值的类型
  * @param <T3>   第三个值的类型
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Trio<T1, T2, T3>(T1 value1, T2 value2, T3 value3) implements Tuple {
     @Serial

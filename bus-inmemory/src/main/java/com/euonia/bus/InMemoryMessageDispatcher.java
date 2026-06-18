@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * <p>
  * 处理器以强引用方式存储——调用者负责在不再需要处理器时取消注册。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class InMemoryMessageDispatcher {
 

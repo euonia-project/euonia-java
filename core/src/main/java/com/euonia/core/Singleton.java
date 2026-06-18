@@ -9,7 +9,7 @@ import java.util.function.Supplier;
  * 它使用 ConcurrentHashMap 来存储不同类型的实例，并通过 computeIfAbsent 方法确保每个类型只有一个实例被创建。
  * 该类提供了两种获取实例的方法：一种是通过 Class 对象直接获取，另一种是通过 Supplier 提供实例创建逻辑。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class Singleton {
     private static final ConcurrentHashMap<Class<?>, Object> instances = new ConcurrentHashMap<>();

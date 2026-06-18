@@ -5,7 +5,7 @@ package com.euonia.pipeline;
  * 它抽象了创建逻辑，允许使用不同的 Pipeline 实现，
  * 而无需更改依赖它的客户端代码。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface PipelineFactory {
     /**

@@ -12,7 +12,7 @@ package com.euonia.bus.messenger;
  * <li>{@code NullDispatcher} — 标记接收者实现了 {@link Recipient} 接口</li>
  * </ul>
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class MessageHandlerDispatcher {
 

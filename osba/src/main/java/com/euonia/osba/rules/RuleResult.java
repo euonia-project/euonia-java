@@ -9,7 +9,7 @@ import com.euonia.reflection.PropertyInfo;
 /**
  * 表示规则执行的结果，包含规则是否通过、结果描述、严重级别以及所执行规则的名称。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class RuleResult {
 

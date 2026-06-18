@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * 表示消息类型与其令牌（通道）类型键的不可变二元组。用作类型字典中的复合键，以查找特定消息/令牌类型组合的已注册处理器。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class EquatableType {
 

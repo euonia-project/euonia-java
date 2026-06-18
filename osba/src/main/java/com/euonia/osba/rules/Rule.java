@@ -8,7 +8,7 @@ import com.euonia.reflection.PropertyInfo;
 /**
  * 表示一个基于特定数据注解的规则。该规则可用于根据属性上指定注解的存在和配置来强制执行验证或其他逻辑。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Rule {
     /**

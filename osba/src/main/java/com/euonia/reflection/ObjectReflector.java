@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
  * - getParameterTypeName：生成参数类型名称的字符串表示。
  * - getConventionMethodNames：根据注解类型生成符合命名约定的方法名称列表。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class ObjectReflector {
 

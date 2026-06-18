@@ -10,7 +10,7 @@ import com.euonia.bus.strategy.TransportStrategy;
  * 定义配置消息总线的选项，包括传输策略、消息约定和管道行为。
  * 该类是不可变的，可用于使用指定的选项创建消息总线实例。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class MessageBusOptions {
     private final Configurator configurator;

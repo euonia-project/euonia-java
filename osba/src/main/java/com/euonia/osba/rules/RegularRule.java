@@ -1,16 +1,16 @@
 package com.euonia.osba.rules;
 
-import com.euonia.osba.BusinessObject;
-import com.euonia.reflection.PropertyInfo;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+
+import com.euonia.osba.BusinessObject;
+import com.euonia.reflection.PropertyInfo;
 
 /**
  * RegularRule 类实现了一个基于正则表达式的验证规则，用于验证业务对象的字符串属性是否符合指定的正则表达式模式。
  * 该规则允许配置是否忽略空值，并提供了一个消息工厂函数，用于根据属性值生成适当的错误消息。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class RegularRule extends RuleBase {
 

@@ -12,7 +12,7 @@ package com.euonia.core;
  * 此实现允许每个工作节点每毫秒生成最多 1024 个唯一 ID，并支持最多 32 个数据中心，每个数据中心最多 32 个工作节点。
  * 自定义纪元设置为 2021 年 1 月 1 日，这使得 ID 生成具有较长的使用寿命，而不会耗尽时间戳的位数。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class SnowflakeId {
     private static final long EPOCH = 1609459200000L; // 2021-01-01 00:00:00 UTC

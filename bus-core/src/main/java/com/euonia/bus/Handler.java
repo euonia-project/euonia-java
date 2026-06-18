@@ -5,7 +5,7 @@ package com.euonia.bus;
  *
  * @param <M> 要处理的消息类型
  * @param <R> 处理消息后返回的响应类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Handler<M, R> {
     /**

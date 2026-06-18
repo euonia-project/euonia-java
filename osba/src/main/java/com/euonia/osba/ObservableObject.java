@@ -15,7 +15,7 @@ import com.euonia.reflection.PropertyInfo;
  * 它还实现了遵循对象规则和权限的属性访问方法。
  *
  * @param <T> 可观察对象的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 @SuppressWarnings("unused")
 public abstract class ObservableObject<T extends ObservableObject<T>> extends BusinessObject<T> implements TrackableObject, OperableProperty {

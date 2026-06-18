@@ -26,7 +26,7 @@ import com.euonia.security.UnauthorizedAccessException;
  * 业务对象的抽象基类，提供属性管理、规则检查、授权和属性变更通知等核心功能。
  *
  * @param <B> 业务对象的具体类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class BusinessObject<B extends BusinessObject<B>> implements UseBusinessContext, RuleCheckable, AutoCloseable {
     private final List<PropertyInfo<?>> changedProperties = new ArrayList<>();

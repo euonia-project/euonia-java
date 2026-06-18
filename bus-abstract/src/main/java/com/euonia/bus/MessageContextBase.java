@@ -18,7 +18,7 @@ import com.euonia.security.UserPrincipal;
  * 通知。在调用 {@link #close()} 时，上下文会自动调用 {@link #complete(Object)}
  * 并传入原始消息，以标志消息处理结束。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  * @see MessageContext
  */
 public final class MessageContextBase implements MessageContext {

@@ -3,7 +3,7 @@ package com.euonia.osba;
 /**
  * 表示一个保存事件的参数类，包含保存操作的结果信息，如新对象、错误信息和用户状态。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class SavedEventArgs {
     private final Object newObject;

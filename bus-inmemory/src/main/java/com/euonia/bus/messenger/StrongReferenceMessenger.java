@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * <b>线程安全：</b>所有公开方法都是线程安全的。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  * @see WeakReferenceMessenger
  */
 public final class StrongReferenceMessenger implements Messenger {

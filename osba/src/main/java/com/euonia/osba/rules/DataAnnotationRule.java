@@ -15,7 +15,7 @@ import com.euonia.tuple.Duet;
  * 该规则检查目标对象是否为业务对象，检索属性的值，然后使用注解指定的验证器来验证该值。
  * 如果验证失败，则将带有适当消息的错误结果添加到上下文中。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class DataAnnotationRule<A extends Annotation> extends RuleBase {
 

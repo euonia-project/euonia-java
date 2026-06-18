@@ -8,13 +8,12 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.euonia.bus.messenger.WeakReferenceMessenger;
-
 import com.euonia.bus.contract.Transport;
 import com.euonia.bus.event.MessageDeliveredEvent;
 import com.euonia.bus.event.MessageRepliedEvent;
 import com.euonia.bus.messenger.Messenger;
 import com.euonia.bus.messenger.StrongReferenceMessenger;
+import com.euonia.bus.messenger.WeakReferenceMessenger;
 
 /**
  * 使用内存消息传递的 {@link Transport} 实现。
@@ -23,7 +22,7 @@ import com.euonia.bus.messenger.StrongReferenceMessenger;
  * <p>
  * 生命周期：实现 {@link AutoCloseable} 接口——调用 {@link #close()} 来重置底层 messenger（通常由 DI 容器管理）。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class InMemoryTransport implements Transport, AutoCloseable {
 

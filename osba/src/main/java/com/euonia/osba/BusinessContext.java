@@ -8,7 +8,7 @@ import com.euonia.factory.ObjectFactory;
 /**
  * 业务上下文，为 OSBA 工厂创建的业务对象提供轻量级的服务解析和实例创建网关。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class BusinessContext {
     private final Function<Class<?>, ?> instanceCreator;

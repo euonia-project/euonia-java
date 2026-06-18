@@ -10,7 +10,7 @@ import com.euonia.osba.BusinessObject;
  * 表示业务对象属性的元数据，包括其名称、类型、默认值和显示名称。
  *
  * @param <T> 属性值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class PropertyInfo<T> implements Comparable<PropertyInfo<T>> {
     private final Class<T> type;

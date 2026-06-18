@@ -7,7 +7,7 @@ import com.euonia.security.UserPrincipal;
 /**
  * 包含当前请求的相关信息。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class RequestContext {
 

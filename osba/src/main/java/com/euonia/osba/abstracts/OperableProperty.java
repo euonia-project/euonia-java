@@ -5,7 +5,7 @@ import com.euonia.reflection.PropertyInfo;
 /**
  * 表示一个可以获取和设置属性的对象的契约。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface OperableProperty {
     /**

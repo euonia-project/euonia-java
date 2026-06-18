@@ -8,7 +8,7 @@ import com.euonia.reflection.PropertyInfo;
  * 它不提供任何额外的方法或属性，但作为一个标记，用于指示该对象是只读的。
  *
  * @param <T> 业务对象的类型，必须继承自 ReadOnlyObject
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class ReadOnlyObject<T extends ReadOnlyObject<T>> extends BusinessObject<T> {
     @Override

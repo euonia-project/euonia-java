@@ -15,7 +15,7 @@ import java.util.Objects;
  * Tuple 接口设计灵活，可由表示不同大小和类型的元组的各种类来实现（如 Pair、Triplet、Quadruple 等）。
  * 它为操作元组提供了通用约定，允许在不同的实现和用例中一致地处理元组。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Tuple extends Iterable<Object>, Serializable {
     /**

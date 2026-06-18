@@ -9,7 +9,7 @@ import java.util.Comparator;
  *
  * @param <E> 元素类型
  * @param <K> 优先级类型，必须实现 Comparable 接口
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class PriorityQueue<E, K extends Comparable<K>> {
     private final java.util.PriorityQueue<Pair<K, E>> queue;

@@ -7,7 +7,7 @@ package com.euonia.reflection;
  * 此异常通常在存在多个同名或同注解的方法都可能是工厂方法，
  * 且提供的条件无法清晰区分它们时抛出。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class AmbiguousMethodException extends RuntimeException {
     /**

@@ -26,7 +26,7 @@ import com.euonia.reflection.ServiceProvider;
  * 使用反射基于带注解的工厂方法来创建、检索、插入、更新、保存、执行和删除业务对象。
  * 它支持与 bean 工厂集成以进行对象实例化，并根据保存操作处理不同的对象状态。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class BusinessObjectFactory implements ObjectFactory {
 

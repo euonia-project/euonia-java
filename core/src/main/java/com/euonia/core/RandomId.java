@@ -5,7 +5,7 @@ import java.util.Random;
 /**
  * 基于种子值生成随机 ID 的工具。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 final class RandomId {
 

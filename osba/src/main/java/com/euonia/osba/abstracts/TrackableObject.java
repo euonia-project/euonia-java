@@ -16,7 +16,7 @@ package com.euonia.osba.abstracts;
  * 实现此接口允许业务对象有效管理其状态，并确保仅在对象处于适当状态时才执行操作。
  * 例如，无效的对象不应保存，已标记为删除的对象不应更新。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface TrackableObject {
 

@@ -20,7 +20,7 @@ import com.euonia.bus.MessageConventionType;
  * 缓存键的行为等同于 .NET 的 {@code RuntimeTypeHandle} —— 轻量级、指针级别的比较，
  * 每次查找无堆内存分配开销。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class BaseMessageConvention implements MessageConvention {
 

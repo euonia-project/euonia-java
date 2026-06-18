@@ -1,12 +1,14 @@
 package com.euonia.reflection;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("GenericType")
 class GenericTypeTest {
@@ -37,7 +39,7 @@ class GenericTypeTest {
         assertNotEquals(left, other);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     @Test
     @DisplayName("Given raw GenericType subclass when instantiating then illegal argument is thrown")
     void givenRawSubclassWhenInstantiatingThenThrowIllegalArgument() {

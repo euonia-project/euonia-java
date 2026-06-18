@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 基于已配置的策略和约定为消息类型确定传输的分发器。
  * 它使用缓存来存储消息类型的传输判定结果以提高性能。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class StrategicDispatcher implements Dispatcher {
     private final ConcurrentHashMap<Class<?>, List<String>> transportCache = new ConcurrentHashMap<>();

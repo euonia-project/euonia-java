@@ -11,7 +11,7 @@ import com.euonia.reflection.PropertyInfo;
  * LambdaRule 允许使用 lambda 函数定义验证规则，为实现业务对象特定属性的自定义验证逻辑提供了灵活性。
  *
  * @param <T> 被验证的属性值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class LambdaRule<T> extends RuleBase {
     private final PropertyInfo<T> property;
