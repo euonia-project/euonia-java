@@ -9,12 +9,30 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
  */
-public class ObjectPoolProvider {
+public final class DefaultObjectPoolProvider implements ObjectPoolProvider {
 
-    private static final ConcurrentMap<Class<?>, ObjectPool<?>> cache = new ConcurrentHashMap<>();
+    private volatile static DefaultObjectPoolProvider instance;
 
     /**
-     * 使用默认容量创建或获取与给定策略关联的 {@link ObjectPool}。
+     * 获取 DefaultObjectPoolProvider 的单例实例。
+     *
+     * @return DefaultObjectPoolProvider 的单例实例
+     */
+    public static DefaultObjectPoolProvider getInstance() {
+        if (instance == null) {
+            synchronized (DefaultObjectPoolProvider.class) {
+                if (instance == null) {
+                    instance = new DefaultObjectPoolProvider();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private final ConcurrentMap<Class<?>, ObjectPool<?>> cache = new ConcurrentHashMap<>();
+
+    /**
+     * 使用默认容量创建或获取与给定策略关联的 {@link DefaultObjectPool}。
      * 如果该策略的池已存在，则返回缓存的实例。
      *
      * @param <T>    池管理的对象类型
@@ -22,12 +40,13 @@ public class ObjectPoolProvider {
      * @return 与策略关联的对象池
      */
     @SuppressWarnings("unchecked")
-    public static <T> ObjectPool<T> create(ObjectPoolPolicy<T> policy) {
-        return (ObjectPool<T>) cache.computeIfAbsent(policy.getClass(), k -> new ObjectPool<>(policy));
+    @Override
+    public <T> ObjectPool<T> create(ObjectPoolPolicy<T> policy) {
+        return (ObjectPool<T>) cache.computeIfAbsent(policy.getClass(), k -> new DefaultObjectPool<>(policy));
     }
 
     /**
-     * 使用指定容量创建或获取与给定策略关联的 {@link ObjectPool}。
+     * 使用指定容量创建或获取与给定策略关联的 {@link DefaultObjectPool}。
      * 如果该策略的池已存在，则返回缓存的实例。
      *
      * @param <T>    池管理的对象类型
@@ -36,8 +55,9 @@ public class ObjectPoolProvider {
      * @return 与策略关联的对象池
      */
     @SuppressWarnings("unchecked")
-    public static <T> ObjectPool<T> create(ObjectPoolPolicy<T> policy, int size) {
-        return (ObjectPool<T>) cache.computeIfAbsent(policy.getClass(), k -> new ObjectPool<>(policy, size));
+    @Override
+    public <T> ObjectPool<T> create(ObjectPoolPolicy<T> policy, int size) {
+        return (ObjectPool<T>) cache.computeIfAbsent(policy.getClass(), k -> new DefaultObjectPool<>(policy, size));
     }
 
     /**
@@ -45,7 +65,8 @@ public class ObjectPoolProvider {
      *
      * @param policy 要移除其关联池的策略
      */
-    public static void remove(ObjectPoolPolicy<?> policy) {
+    @Override
+    public void remove(ObjectPoolPolicy<?> policy) {
         cache.remove(policy.getClass());
     }
 }

@@ -27,8 +27,8 @@
     <url>https://euonia.com</url>
 
     <scm>
-        <url>https://github.com/NerosoftDev/euonia-java</url>
-        <connection>scm:git:git://github.com/NerosoftDev/euonia-java.git</connection>
+        <url>https://github.com/euonia-project/euonia-java</url>
+        <connection>scm:git:git://github.com/euonia-project/euonia-java.git</connection>
     </scm>
 
     <developers>

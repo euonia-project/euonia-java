@@ -4,7 +4,7 @@
 
 Euonia is a development framework for building enterprise Java applications. It combines **Object-Oriented Scalable Business Architecture (OSBA)** with **Domain-Driven Design (DDD)** principles to provide a comprehensive foundation for creating robust, maintainable business applications. The framework is built on **Java 17+** and integrates seamlessly with **Spring Boot**.
 
-Euonia is also available for **[.NET](https://github.com/NerosoftDev/Euonia)** — this repository hosts the **Java edition**.
+Euonia is also available for **[.NET](https://github.com/euonia-project/euonia-dotnet)** — this repository hosts the **Java edition**.
 
 ---
 
@@ -445,8 +445,8 @@ mvn spring-boot:run
 
 ## Project Links
 
-- **GitHub**: [github.com/NerosoftDev/euonia-java](https://github.com/NerosoftDev/euonia-java)
-- **.NET Edition**: [github.com/NerosoftDev/Euonia](https://github.com/NerosoftDev/Euonia)
+- **GitHub**: [github.com/euonia-project/euonia-java](https://github.com/euonia-project/euonia-java)
+- **.NET Edition**: [github.com/euonia-project/euonia-dotnet](https://github.com/euonia-project/euonia-dotnet)
 
 ---
 
