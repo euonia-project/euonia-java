@@ -4,6 +4,8 @@ package com.euonia.core;
  * 对象池接口，定义了获取池容量、关联的策略以及获取和释放对象的方法。
  *
  * @param <T> 池管理的对象类型
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface ObjectPool<T> {
 

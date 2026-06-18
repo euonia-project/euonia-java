@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @param value 元组的值
  * @param <V>   值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Solo<V>(V value) implements Tuple {
     @Serial

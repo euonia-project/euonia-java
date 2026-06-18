@@ -10,7 +10,7 @@ import java.time.Instant;
  * ULID 是一个 128 位的通用唯一标识符，具有字典序可排序和 URL 安全的特性。
  * </p>
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class ULID {
 

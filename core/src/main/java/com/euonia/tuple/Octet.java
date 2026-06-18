@@ -22,7 +22,7 @@ import java.util.List;
  * @param <V6>   第六个值的类型
  * @param <V7>   第七个值的类型
  * @param <V8>   第八个值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Octet<V1, V2, V3, V4, V5, V6, V7, V8>(V1 value1, V2 value2, V3 value3, V4 value4, V5 value5, V6 value6,
                                                     V7 value7, V8 value8) implements Tuple {

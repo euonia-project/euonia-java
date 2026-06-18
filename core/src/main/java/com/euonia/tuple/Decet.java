@@ -26,7 +26,7 @@ import java.util.List;
  * @param <V8>    第八个值的类型
  * @param <V9>    第九个值的类型
  * @param <V10>   第十个值的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public record Decet<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(V1 value1, V2 value2, V3 value3, V4 value4, V5 value5,
                                                              V6 value6, V7 value7, V8 value8, V9 value9,

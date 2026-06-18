@@ -9,7 +9,7 @@ import java.util.function.Supplier;
  * 该类提供方法在优先级队列中搜索并返回第一个匹配给定过滤条件的值。
  * 如果未找到匹配值，则返回指定的默认值。
  *
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 public final class PriorityValueFinder {
 

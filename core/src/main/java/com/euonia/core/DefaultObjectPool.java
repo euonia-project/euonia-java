@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * 当池耗尽时，支持多种超限行为：
  * <ul>
- *   <li>{@code THROW_EXCEPTION} —— 抛出 RuntimeException</li>
- *   <li>{@code RETURN_NULL} —— 返回 null</li>
- *   <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
- *   <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞调用线程直到有对象被释放</li>
+ * <li>{@code THROW_EXCEPTION} —— 抛出 RuntimeException</li>
+ * <li>{@code RETURN_NULL} —— 返回 null</li>
+ * <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
+ * <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞调用线程直到有对象被释放</li>
  * </ul>
  *
  * @param <T> 池管理的对象类型
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 public final class DefaultObjectPool<T> implements ObjectPool<T> {
 
@@ -126,17 +126,17 @@ public final class DefaultObjectPool<T> implements ObjectPool<T> {
      * <p>
      * <b>正常路径</b>（inUseCount &lt; capacity）：
      * <ol>
-     *   <li>如果空闲池中有可用对象，则对其进行验证并返回。
-     *       如果验证失败，对象将被销毁并重试获取。</li>
-     *   <li>如果空闲池为空，则通过策略创建新对象。</li>
+     * <li>如果空闲池中有可用对象，则对其进行验证并返回。
+     * 如果验证失败，对象将被销毁并重试获取。</li>
+     * <li>如果空闲池为空，则通过策略创建新对象。</li>
      * </ol>
      * <p>
      * <b>超限路径</b>（inUseCount &ge; capacity）：
      * <ul>
-     *   <li>{@code THROW_EXCEPTION} —— 抛出 {@code RuntimeException}</li>
-     *   <li>{@code RETURN_NULL} —— 返回 {@code null}</li>
-     *   <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
-     *   <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞直到有对象被释放，然后重试</li>
+     * <li>{@code THROW_EXCEPTION} —— 抛出 {@code RuntimeException}</li>
+     * <li>{@code RETURN_NULL} —— 返回 {@code null}</li>
+     * <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
+     * <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞直到有对象被释放，然后重试</li>
      * </ul>
      *
      * @return 获取到的对象，如果超限行为为 {@code RETURN_NULL} 则返回 {@code null}

@@ -11,7 +11,7 @@ import java.util.UUID;
  * ObjectId 类是不可变的，这意味着一旦创建，其值就不能更改。
  * 这确保了标识符的唯一性在其整个生命周期中得到维护。
  *
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 public final class ObjectId {
     private final Object value;

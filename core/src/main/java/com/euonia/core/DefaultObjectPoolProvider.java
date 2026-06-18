@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentMap;
  * 对象池提供者，用于根据提供的策略创建和管理对象池。
  * 它使用并发映射来缓存不同策略的对象池，确保每个策略只有一个关联的池。
  *
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 public final class DefaultObjectPoolProvider implements ObjectPoolProvider {
 

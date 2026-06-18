@@ -15,7 +15,7 @@ import java.util.jar.JarFile;
  * 支持基于目录的 classpath（典型于 IDE/开发环境）和基于 JAR 的 classpath（典型于打包部署环境）。
  * 仅使用标准 Java API —— 无第三方依赖。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class ClassScanner {
 

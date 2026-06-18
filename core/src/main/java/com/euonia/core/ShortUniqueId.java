@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * 该类允许自定义编码过程中使用的字母表、分隔符、守卫字符和盐值，以确保唯一性和安全性。
  * 该实现基于 Hashids 算法，该算法旨在创建短小、非连续且 URL 友好的 ID。
  *
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 @SuppressWarnings("unused")
 public final class ShortUniqueId {

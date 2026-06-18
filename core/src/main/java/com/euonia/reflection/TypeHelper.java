@@ -25,7 +25,7 @@ import java.util.UUID;
  * TypeHelper 是一个工具类，提供将值强制转换为目标类型的方法，支持原始类型、枚举、日期/时间转换、集合等。
  * 旨在简化类型转换并确保各种场景下的类型安全。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class TypeHelper {
     private TypeHelper() {

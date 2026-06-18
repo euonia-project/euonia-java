@@ -4,7 +4,7 @@ package com.euonia.core;
  * ObjectPoolPolicy 是一个定义对象池行为的接口。它指定了对象池如何创建、验证和销毁对象，以及当所有对象都在使用中时池是否应该中断。
  *
  * @param <T> 池中对象的类型
- * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
+ * @author damon(zhaorong@outlook.com)
  */
 public interface ObjectPoolPolicy<T> {
 
