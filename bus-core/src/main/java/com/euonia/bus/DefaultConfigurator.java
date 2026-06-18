@@ -12,7 +12,7 @@ import com.euonia.bus.strategy.TransportStrategyBuilder;
  * DefaultConfigurator 是 {@link Configurator} 接口的默认实现。
  * 它提供了用于配置消息约定、传输策略和处理器注册的流式 API。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class DefaultConfigurator implements Configurator {
     private final MessageConventionBuilder conventionBuilder = new MessageConventionBuilder();

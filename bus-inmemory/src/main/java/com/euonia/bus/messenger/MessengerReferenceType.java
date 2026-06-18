@@ -5,7 +5,7 @@ package com.euonia.bus.messenger;
  * <p>
  * 这是 .NET {@code MessengerReferenceType} 枚举的 Java 等价物。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public enum MessengerReferenceType {
 

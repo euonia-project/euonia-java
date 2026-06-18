@@ -8,7 +8,7 @@ import com.euonia.bus.MessageContext;
  * 该接口作为 {@link MessageHandlerFactory} 创建的处理器的实际执行入口，
  * 由框架内部使用，不应由应用程序直接实现。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 @FunctionalInterface
 public interface MessageHandler {

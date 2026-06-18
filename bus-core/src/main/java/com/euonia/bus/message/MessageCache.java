@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentMap;
  * 线程安全的消息类型与通道名称缓存。用于优化消息类型对应通道名称的获取，
  * 减少反射和注解处理的开销。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class MessageCache {
     private static volatile MessageCache instance;

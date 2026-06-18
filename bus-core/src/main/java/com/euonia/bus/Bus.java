@@ -22,7 +22,7 @@ import com.euonia.bus.options.SendOptions;
  * <p>
  * 每个系列的默认方法提供了渐进式的参数组合，最终委托到对应的抽象方法。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Bus {
     default <T> CompletableFuture<Void> publishAsync(T message) {

@@ -3,7 +3,7 @@ package com.euonia.bus.messenger;
 /**
  * 定义消息传递器的契约，能够在由令牌标识的各个通道上发送消息以及订阅/取消订阅接收者。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  * @see StrongReferenceMessenger
  * @see WeakReferenceMessenger
  */

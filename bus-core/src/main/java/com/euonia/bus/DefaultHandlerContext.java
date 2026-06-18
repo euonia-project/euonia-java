@@ -26,7 +26,7 @@ import java.util.logging.Logger;
  * 该类管理处理器注册并将传入的消息分派到适当的处理器。
  * 它支持泛型处理器类型注册（通过 DI 解析）和基于反射的注册（通过 {@link HandlerRegistration}） 。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 final class DefaultHandlerContext implements HandlerContext {
 

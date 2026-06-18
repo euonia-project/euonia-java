@@ -3,7 +3,7 @@ package com.euonia.bus;
 /**
  * 定义用于内存传输的消息包，将路由消息与其处理上下文封装在一起。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class MessagePack {
 

@@ -18,7 +18,7 @@ import com.euonia.reflection.ClassScanner;
  *   <li>按类型解析 —— 解析指定的处理器类型，同时支持 {@link Subscribe} 注解方法和 {@link Handler} 接口实现</li>
  * </ul>
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class MessageHandlerFinder {
 

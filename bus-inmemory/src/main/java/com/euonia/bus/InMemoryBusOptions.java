@@ -3,7 +3,7 @@ package com.euonia.bus;
 /**
  * 内存消息总线传输的配置选项。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class InMemoryBusOptions {
 

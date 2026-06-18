@@ -18,7 +18,7 @@ import com.euonia.bus.messenger.Recipient;
  * {@code messageReceived} 监听器，调用抽象的 {@link #handleAsync} 方法，
  * 然后触发 {@code messageAcknowledged} 监听器。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class InMemoryRecipient implements Recipient<MessagePack> {
 

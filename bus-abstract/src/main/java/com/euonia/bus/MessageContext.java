@@ -9,7 +9,7 @@ import com.euonia.security.UserPrincipal;
  * <p>
  * 此接口继承 {@link AutoCloseable}，允许在消息处理完成后释放相关资源。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface MessageContext extends AutoCloseable {
 

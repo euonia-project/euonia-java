@@ -9,7 +9,7 @@ import com.euonia.pipeline.Pipeline;
  *
  * @param <M> 消息类型
  * @param <R> 管道执行的响应类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class PipelineMessage<M, R> {
     /** 原始消息对象 */
