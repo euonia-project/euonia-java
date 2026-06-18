@@ -3,7 +3,7 @@ package com.euonia.core;
 /**
  * 描述要生成的 GUID 值的类型。
  *
- * @author damon(zhaorong@outlook)
+ * @author <a href="mailto:zhaorong@outlook.com>">damon(zhaorong@outlook.com)</a>
  */
 public enum GuidType {
     /**
