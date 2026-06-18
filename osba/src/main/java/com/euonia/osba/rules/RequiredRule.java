@@ -1,16 +1,16 @@
 package com.euonia.osba.rules;
 
-import com.euonia.osba.BusinessObject;
-import com.euonia.reflection.PropertyInfo;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+
+import com.euonia.osba.BusinessObject;
+import com.euonia.reflection.PropertyInfo;
 
 /**
  * RequiredRule 类实现了一个验证规则，用于确保业务对象的特定属性具有非空值。
  * 该规则检查属性值是否为 null 或空字符串，如果验证失败，则将带有适当消息的错误结果添加到上下文中。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class RequiredRule extends RuleBase {
 

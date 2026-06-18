@@ -12,7 +12,7 @@ import com.euonia.http.ResponseHttpStatusCode;
  * 该异常携带按属性名分组的校验错误信息，并通过 {@link ResponseHttpStatusCode} 注解
  * 标记对应的 HTTP 状态码为 400（Bad Request）。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 @ResponseHttpStatusCode(400)
 public class RuleCheckException extends RuntimeException {

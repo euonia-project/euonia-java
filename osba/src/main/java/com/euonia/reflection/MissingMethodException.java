@@ -5,7 +5,7 @@ package com.euonia.reflection;
  * 它继承自 RuntimeException，并提供有关未找到的类型和方法的相关信息。
  * 异常消息包含类型名称以及预期但未找到的方法名称或注解。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class MissingMethodException extends RuntimeException {
 

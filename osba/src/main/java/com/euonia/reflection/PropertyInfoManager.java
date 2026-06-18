@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentMap;
  * 该类使用 ConcurrentHashMap 来存储不同类型的属性信息列表，并通过 computeIfAbsent
  * 方法确保每个类型只有一个属性信息列表被创建。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class PropertyInfoManager {
     private static final ConcurrentMap<Type, PropertyInfoList> propertyCache = new ConcurrentHashMap<>();

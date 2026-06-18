@@ -12,7 +12,7 @@ import java.util.Map;
  * FieldDataManager 是一个管理业务对象字段数据的类。它维护一个字段数据的映射，并提供方法来获取、创建、设置和加载字段数据。
  * 该类还提供了一个静态方法来初始化业务对象类型的静态字段，以确保所有静态属性都被注册。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class FieldDataManager {
     private final Map<String, FieldData<?>> fieldData = new HashMap<>();

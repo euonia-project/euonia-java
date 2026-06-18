@@ -5,7 +5,7 @@ import com.euonia.osba.BusinessContext;
 /**
  * 标记一个参与 OSBA 业务上下文传播的对象。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface UseBusinessContext {
     /**

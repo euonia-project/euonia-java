@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  * 规则管理器，负责管理业务对象的验证规则执行，
  * 跟踪已违反的规则并在验证完成时通知监听器。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public final class Rules {
 

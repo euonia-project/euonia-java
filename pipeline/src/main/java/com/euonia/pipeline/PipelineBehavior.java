@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionStage;
  *
  * @param <C> 请求/上下文对象的类型
  * @param <R> 响应对象的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface PipelineBehavior<C, R> {
     /**

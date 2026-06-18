@@ -6,7 +6,7 @@ import com.euonia.reflection.ServiceProvider;
  * DefaultPipelineFactory 是 PipelineFactory 的默认实现，负责创建 Pipeline 的实例。
  * 它使用 ServiceProvider 来解析和实例化管道组件。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class DefaultPipelineFactory implements PipelineFactory {
     private final ServiceProvider provider;

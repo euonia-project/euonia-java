@@ -4,7 +4,7 @@ package com.euonia.osba;
  * 表示可执行的业务对象。该类继承自 BusinessObject 类，为 execute 和 create 方法提供了默认实现，子类可以重写这些方法以提供特定的行为。
  *
  * @param <T> 业务对象的类型，必须继承自 ExecutableObject
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class ExecutableObject<T extends ExecutableObject<T>> extends BusinessObject<T> {
 

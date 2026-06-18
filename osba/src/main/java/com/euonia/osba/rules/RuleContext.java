@@ -10,7 +10,7 @@ import java.util.function.Consumer;
  * <p>
  * 规则执行完毕后，调用 {@link #complete()} 方法触发完成回调，若结果列表为空则自动添加成功结果。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public class RuleContext {
 

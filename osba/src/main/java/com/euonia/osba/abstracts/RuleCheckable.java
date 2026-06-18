@@ -6,7 +6,7 @@ import com.euonia.reflection.PropertyInfo;
 /**
  * 表示实现类具有规则检查功能。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface RuleCheckable {
 

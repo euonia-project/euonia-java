@@ -15,7 +15,7 @@ import com.euonia.osba.rules.RuleCheckException;
  * 此类继承 ObservableObject 并实现 Savable 接口，为 save 方法提供包含验证和事件处理的默认实现。
  *
  * @param <T> 可编辑对象的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class EditableObject<T extends EditableObject<T>> extends ObservableObject<T> implements Savable<T> {
 

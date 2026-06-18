@@ -4,7 +4,7 @@ package com.euonia.osba.rules;
  * 定义 OSBA 框架中规则的严重级别。
  * 这些级别表示规则违规的重要程度，可用于对规则评估过程中发现的问题进行分类和优先级排序。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public enum RuleSeverity {
     /**

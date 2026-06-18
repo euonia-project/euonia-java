@@ -12,7 +12,7 @@ package com.euonia.factory;
  * - execute：使用给定的参数，执行与指定类型相关的特定操作，可能涉及复杂的业务逻辑。
  * - delete：根据给定的参数，从数据存储中删除指定类型的现有实例。
  *
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public interface ObjectFactory {
     /**

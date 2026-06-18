@@ -17,7 +17,7 @@ import java.util.function.Function;
  *
  * @param <C> 请求/上下文对象的类型
  * @param <R> 响应对象的类型
- * @author damon(zhaorong@outlook)
+ * @author damon(zhaorong@outlook.com)
  */
 public abstract class PipelineBase<C, R> implements Pipeline<C, R> {
     private final List<Function<PipelineDelegate<C, R>, PipelineDelegate<C, R>>> components = new ArrayList<>();
