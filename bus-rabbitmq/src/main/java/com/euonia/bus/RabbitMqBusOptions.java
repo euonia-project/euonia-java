@@ -12,9 +12,11 @@ public final class RabbitMqBusOptions {
     private int port = 5672;
 
     private String exchangeNamePrefix = Constants.DEFAULT_EXCHANGE_NAME_PREFIX,
-            queueNamePrefix = Constants.DEFAULT_QUEUE_NAME_PREFIX,
-            exchangeType = Constants.DEFAULT_EXCHANGE_TYPE,
-            routingKey = "*";
+        queueNamePrefix = Constants.DEFAULT_QUEUE_NAME_PREFIX,
+        exchangeType = Constants.DEFAULT_EXCHANGE_TYPE,
+        topicName = Constants.DEFAULT_TOPIC_NAME_PREFIX,
+        rpcQueuePrefix = Constants.DEFAULT_RPC_QUEUE_NAME_PREFIX,
+        routingKey = "*";
 
     private boolean autoAck = true, persistent = true, mandatory = true;
 
@@ -135,6 +137,22 @@ public final class RabbitMqBusOptions {
 
     public void setRoutingKey(String routingKey) {
         this.routingKey = routingKey;
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
+    public String getRpcQueuePrefix() {
+        return rpcQueuePrefix;
+    }
+
+    public void setRpcQueuePrefix(String rpcQueuePrefix) {
+        this.rpcQueuePrefix = rpcQueuePrefix;
     }
 
     public boolean isAutoAck() {

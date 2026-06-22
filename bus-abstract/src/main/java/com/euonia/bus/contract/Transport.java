@@ -56,9 +56,10 @@ public interface Transport {
      * The message is sent asynchronously, and the method returns a CompletableFuture that completes with the response when it is received.
      *
      * @param message the request message to be sent
+     * @param responseType the expected type of the response message, allowing the transport to handle deserialization and type conversion appropriately
      * @param <M>     the type of the request message
      * @param <R>     the type of the response message
      * @return a CompletableFuture that completes with the response when it is received
      */
-    <M, R> CompletableFuture<R> requestAsync(RoutedMessage<M> message);
+    <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType);
 }

@@ -22,7 +22,7 @@ import com.rabbitmq.client.Envelope;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 
-public class RabbitMqTransport implements Transport {
+public final class RabbitMqTransport implements Transport {
 
     private static final Logger LOGGER = Logger.getLogger(RabbitMqTransport.class.getName());
 
@@ -85,7 +85,8 @@ public class RabbitMqTransport implements Transport {
         try (var channel = connection.createChannel()) {
             var requestQueueName = getQueueName(message.getChannel());
             checkQueue(channel, requestQueueName);
-            var responseQueueName = channel.queueDeclare();
+            var responseQueue = channel.queueDeclare();
+            var responseQueueName = responseQueue.getQueue();
             var consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
@@ -123,18 +124,18 @@ public class RabbitMqTransport implements Transport {
 
             var properties = new AMQP.BasicProperties().builder()
                                                        .contentType("application/json")
-                                                       .type(typeName)
                                                        .headers(Map.of(MessageHeaders.MESSAGE_TYPE, typeName))
                                                        .correlationId(message.getCorrelationId())
                                                        .build();
 
             var data = serializer.serialize(message);
 
-            return Failsafe.with(retryPolicy).runAsync(() -> {
+            Failsafe.with(retryPolicy).runAsync(() -> {
                 channel.basicPublish("", requestQueueName, options.isMandatory(), properties, data.getBytes());
-                channel.basicConsume(responseQueueName.getQueue(), true, consumer);
+                String replyTag = channel.basicConsume(responseQueueName, true, consumer);
+                channel.basicCancel(replyTag);
                 LOGGER.log(Level.INFO, "Sent message to queue {0}: {1}", new Object[]{requestQueueName, data});
-            }).thenCompose(ignored -> future);
+            });
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "Failed to publish message: {0}", exception.getMessage());
             future.completeExceptionally(exception);
@@ -144,8 +145,61 @@ public class RabbitMqTransport implements Transport {
     }
 
     @Override
-    public <M, R> CompletableFuture<R> requestAsync(RoutedMessage<M> message) {
-        return null;
+    public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
+        CompletableFuture<R> future = new CompletableFuture<>();
+
+        try (var channel = connection.createChannel()) {
+            var queueNamePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
+            var requestQueueName = String.format("%s:%s@%s", queueNamePrefix, message.getChannel(), options.getSubscriptionId());
+            checkQueue(channel, requestQueueName);
+            var responseQueue = channel.queueDeclare();
+            var responseQueueName = responseQueue.getQueue();
+
+            var typeName = message.getTypeName();
+
+            var properties = new AMQP.BasicProperties().builder()
+                                                       .contentType("application/json")
+                                                       .headers(Map.of(MessageHeaders.MESSAGE_TYPE, typeName))
+                                                       .correlationId(message.getCorrelationId())
+                                                       .replyTo(responseQueueName)
+                                                       .build();
+
+            var data = serializer.serialize(message);
+            Failsafe.with(retryPolicy).runAsync(() -> {
+                channel.basicPublish("", requestQueueName, options.isMandatory(), properties, data.getBytes());
+                String replyTag = channel.basicConsume(responseQueueName, true, (consumerTag, delivery) -> {
+                    if (!Objects.equals(delivery.getProperties().getCorrelationId(), message.getCorrelationId())) {
+                        return;
+                    }
+
+                    var responseData = new String(delivery.getBody());
+                    LOGGER.log(Level.INFO, "Received response for message {0}: {1}", new Object[]{message.getMessageId(), responseData});
+
+                    switch (delivery.getProperties().getType()) {
+                        case "exception":
+                            var exception = serializer.deserialize(responseData, RuntimeException.class);
+                            future.completeExceptionally(exception);
+                            break;
+                        case "void":
+                            future.complete(null);
+                            break;
+                        case "message":
+                            future.complete(serializer.deserialize(responseData, responseType));
+                            break;
+                        default:
+                            future.complete(null);
+                    }
+                }, consumerTag -> {
+                });
+                channel.basicCancel(replyTag);
+                LOGGER.log(Level.INFO, "Sent message to queue {0}: {1}", new Object[]{requestQueueName, data});
+            });
+        } catch (Exception exception) {
+            LOGGER.log(Level.SEVERE, "Failed to publish message: {0}", exception.getMessage());
+            future.completeExceptionally(exception);
+        }
+
+        return future;
     }
 
     private String getQueueName(String channelName) {

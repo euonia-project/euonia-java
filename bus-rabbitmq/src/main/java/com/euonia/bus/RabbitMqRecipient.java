@@ -12,13 +12,15 @@ import java.util.function.Consumer;
 public abstract class RabbitMqRecipient implements AutoCloseable {
     protected final Connection connection;
     protected final RabbitMqBusOptions options;
+    protected final HandlerContext handler;
     protected final MessageSerializer serializer;
     private final List<Consumer<MessageReceivedEvent>> messageReceivedListeners = new ArrayList<>();
     private final List<Consumer<MessageAcknowledgedEvent>> messageAcknowledgedListeners = new ArrayList<>();
 
-    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, MessageSerializer serializer) {
+    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer) {
         this.connection = connection;
         this.options = options;
+        this.handler = handler;
         this.serializer = serializer;
     }
 
@@ -42,9 +44,15 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
         }
     }
 
-    protected abstract void handle(String channel, Object message, MessageContext context);
+    protected void handle(RoutedMessage<?> message, MessageContext context) {
+        handler.handleAsync(message.getChannel(), message.getPayload(), context);
+    }
 
     abstract void start(String group);
+
+    public String getName() {
+        return getClass().getSimpleName();
+    }
 
     @Override
     public void close() {

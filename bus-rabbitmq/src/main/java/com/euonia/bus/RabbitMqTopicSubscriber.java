@@ -15,19 +15,9 @@ public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements 
 
     private final Class<? extends RoutedMessage<?>> messageType;
 
-    public RabbitMqTopicSubscriber(Connection connection, RabbitMqBusOptions options, MessageSerializer serializer, Class<? extends RoutedMessage<?>> messageType) {
-        super(connection, options, serializer);
+    public RabbitMqTopicSubscriber(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<? extends RoutedMessage<?>> messageType) {
+        super(connection, options, handler, serializer);
         this.messageType = messageType;
-    }
-
-    @Override
-    public String getName() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    protected void handle(String channel, Object message, MessageContext context) {
-
     }
 
     @Override
@@ -40,15 +30,15 @@ public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements 
 
             channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false);
             var queueName = channel.queueDeclare(String.format("%s@%s", exchangeName, options.getSubscriptionId()), true, false, false, null).getQueue();
-
+            channel.queueBind(queueName, exchangeName, "*");
             var consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 
-                    RoutedMessage<?> message = (RoutedMessage<?>) serializer.deserialize(new String(body), messageType);
+                    RoutedMessage<?> message = serializer.deserialize(new String(body), messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handle(message.getChannel(), message.getPayload(), context);
+                    handle(message, context);
                     try {
                         channel.basicAck(envelope.getDeliveryTag(), false);
                     } catch (IOException e) {

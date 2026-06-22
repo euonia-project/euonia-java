@@ -191,9 +191,8 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      * @return 在收到响应时完成并携带响应的 future
      */
     @Override
-    @SuppressWarnings("unchecked")
-    public <M, R> CompletableFuture<R> requestAsync(RoutedMessage<M> message) {
-        return (CompletableFuture<R>) sendAsync(message, Object.class);
+    public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
+        return sendAsync(message, responseType);
     }
 
     // ---- 消息已送达事件（对应 .NET ITransport.Delivered） ----

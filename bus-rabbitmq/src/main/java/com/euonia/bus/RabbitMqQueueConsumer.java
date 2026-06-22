@@ -18,19 +18,9 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
 
     private final Class<? extends RoutedMessage<?>> messageType;
 
-    public RabbitMqQueueConsumer(Connection connection, RabbitMqBusOptions options, MessageSerializer serializer, Class<? extends RoutedMessage<?>> messageType) {
-        super(connection, options, serializer);
+    public RabbitMqQueueConsumer(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<? extends RoutedMessage<?>> messageType) {
+        super(connection, options, handler, serializer);
         this.messageType = messageType;
-    }
-
-    @Override
-    public String getName() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    protected void handle(String channel, Object message, MessageContext context) {
-
     }
 
     @Override
@@ -52,7 +42,7 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
                     var message = serializer.deserialize(new String(body), messageType);
                     var context = getMessageContext(message, future);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handle(message.getChannel(), message.getPayload(), context);
+                    handle(message, context);
                     channel.basicAck(envelope.getDeliveryTag(), false);
                     raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
 
@@ -76,7 +66,6 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
 
                               var replyProperties = new AMQP.BasicProperties.Builder()
                                   .correlationId(properties.getCorrelationId())
-                                  .replyTo(properties.getReplyTo())
                                   .type(type)
                                   .build();
 
@@ -102,7 +91,7 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
     private MessageContext getMessageContext(RoutedMessage<?> message, CompletableFuture<Object> future) {
         var context = new MessageContextBase(message);
 
-        context.onReplied(new Flow.Subscriber<MessageRepliedEvent>() {
+        context.onReplied(new Flow.Subscriber<>() {
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
                 subscription.request(1);

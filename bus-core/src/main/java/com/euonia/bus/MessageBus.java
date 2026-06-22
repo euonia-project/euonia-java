@@ -359,6 +359,6 @@ public final class MessageBus implements Bus {
         var transport = provider.getService(Transport.class, transportName)
                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-        return transport.requestAsync(pack);
+        return transport.callAsync(pack, responseType);
     }
 }
