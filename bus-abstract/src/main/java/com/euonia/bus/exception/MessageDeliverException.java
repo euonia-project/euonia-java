@@ -20,4 +20,14 @@ public class MessageDeliverException extends RuntimeException {
     public MessageDeliverException(String message) {
         super(message);
     }
+
+    /**
+     * Constructs a new MessageDeliverException with the specified error message and cause.
+     *
+     * @param message the detail message
+     * @param cause   the cause of the exception
+     */
+    public MessageDeliverException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
