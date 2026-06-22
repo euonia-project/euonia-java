@@ -1,6 +1,7 @@
 package com.euonia.core;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -12,6 +13,8 @@ import java.util.function.Supplier;
  * @author damon(zhaorong@outlook.com)
  */
 public final class Singleton {
+    private static final ResourceBundle resource = ResourceBundle.getBundle("core");
+
     private static final ConcurrentHashMap<Class<?>, Object> instances = new ConcurrentHashMap<>();
 
     private Singleton() {
@@ -34,7 +37,6 @@ public final class Singleton {
      * 获取指定类型的单例实例。如果实例不存在，则使用提供的 Supplier 创建一个新的实例。
      *
      * @param clazz    要获取实例的类对象
-     * @param supplier 用于创建实例的 Supplier
      * @param <T>      实例的类型
      * @return 指定类型的单例实例
      */
@@ -43,7 +45,7 @@ public final class Singleton {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException
                 | InvocationTargetException exception) {
-            throw new RuntimeException("创建实例失败：" + clazz.getName(), exception);
+            throw new RuntimeException(String.format(resource.getString("Singleton.FailedToCreateInstanceException"), clazz.getName()), exception);
         }
     }
 

@@ -1,5 +1,7 @@
 package com.euonia.core;
 
+import java.util.ResourceBundle;
+
 /**
  * SnowflakeId 是一个分布式唯一 ID 生成器，灵感来源于 Twitter 的 Snowflake 算法。
  * 它基于当前时间戳、工作节点 ID、数据中心 ID 和序列号生成 64 位唯一 ID。
@@ -15,6 +17,8 @@ package com.euonia.core;
  * @author damon(zhaorong@outlook.com)
  */
 public final class SnowflakeId {
+    private static final ResourceBundle resource = ResourceBundle.getBundle("core");
+
     private static final long EPOCH = 1609459200000L; // 2021-01-01 00:00:00 UTC
     private static final long WORKER_ID_BITS = 5L;
     private static final long DATACENTER_ID_BITS = 5L;
@@ -35,10 +39,10 @@ public final class SnowflakeId {
 
     private SnowflakeId(long workerId, long datacenterId) {
         if (workerId > MAX_WORKER_ID || workerId < 0) {
-            throw new IllegalArgumentException(String.format("工作节点 ID 必须在 0 到 %d 之间", MAX_WORKER_ID));
+            throw new IllegalArgumentException(String.format(resource.getString("SnowflakeId.WorkIdOverflowException"), MAX_WORKER_ID));
         }
         if (datacenterId > MAX_DATACENTER_ID || datacenterId < 0) {
-            throw new IllegalArgumentException(String.format("数据中心 ID 必须在 0 到 %d 之间", MAX_DATACENTER_ID));
+            throw new IllegalArgumentException(String.format(resource.getString("SnowflakeId.DatacenterIdOverflowException"), MAX_DATACENTER_ID));
         }
         this.workerId = workerId;
         this.datacenterId = datacenterId;
@@ -56,7 +60,7 @@ public final class SnowflakeId {
         long timestamp = timeGen();
 
         if (timestamp < lastTimestamp) {
-            throw new RuntimeException(String.format("时钟回拨。拒绝生成 ID，回拨时长为 %d 毫秒", lastTimestamp - timestamp));
+            throw new RuntimeException(String.format(resource.getString("SnowflakeId.ClockBackwardException"), lastTimestamp - timestamp));
         }
 
         if (lastTimestamp == timestamp) {
@@ -71,9 +75,9 @@ public final class SnowflakeId {
         lastTimestamp = timestamp;
 
         return ((timestamp - EPOCH) << TIMESTAMP_LEFT_SHIFT)
-                | (datacenterId << DATACENTER_ID_SHIFT)
-                | (workerId << WORKER_ID_SHIFT)
-                | sequence;
+            | (datacenterId << DATACENTER_ID_SHIFT)
+            | (workerId << WORKER_ID_SHIFT)
+            | sequence;
     }
 
     private long tilNextMillis(long lastTimestamp) {
