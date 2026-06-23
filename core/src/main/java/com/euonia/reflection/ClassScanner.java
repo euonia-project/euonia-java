@@ -7,6 +7,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.jar.JarFile;
 
 /**
@@ -18,6 +19,8 @@ import java.util.jar.JarFile;
  * @author damon(zhaorong@outlook.com)
  */
 public final class ClassScanner {
+
+    private static final ResourceBundle bundle = ResourceBundle.getBundle("reflection");
 
     private ClassScanner() {
         // 工具类
@@ -44,7 +47,7 @@ public final class ClassScanner {
                 var protocol = resource.getProtocol();
                 if ("file".equals(protocol)) {
                     scanDirectory(new File(URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8)),
-                            packageName, classes);
+                        packageName, classes);
                 } else if ("jar".equals(protocol)) {
                     scanJar(resource, path, classes);
                 }
@@ -108,7 +111,7 @@ public final class ClassScanner {
                 var entry = entries.nextElement();
                 var entryName = entry.getName();
                 if (entryName.startsWith(packagePath + "/") && entryName.endsWith(".class")
-                        && entryName.indexOf('/', packagePath.length() + 1) < 0) {
+                    && entryName.indexOf('/', packagePath.length() + 1) < 0) {
                     // 仅处理包的直接子类（不包含子包）
                     var className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
                     try {
@@ -121,8 +124,8 @@ public final class ClassScanner {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException("扫描 JAR 失败: " + jarPath, e);
+        } catch (IOException exception) {
+            throw new RuntimeException(String.format(bundle.getString("ClassScanner.JarScanFailed"), jarPath), exception);
         }
     }
 }

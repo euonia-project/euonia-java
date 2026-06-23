@@ -11,14 +11,9 @@ import java.util.function.Predicate;
 import com.euonia.bus.MessageConventionType;
 
 /**
- * 内置的消息约定，聚合多个 {@link MessageConvention} 实例，
- * 并使用 {@link ConcurrentHashMap} 缓存类型分类结果。
+ * 内置的消息约定，聚合多个 {@link MessageConvention} 实例，并使用 {@link ConcurrentHashMap} 缓存类型分类结果。
  * <p>
- * 每种消息类型（unicast、multicast、request）都有自己专用的缓存，
- * 由 {@code ConcurrentHashMap&lt;Class&lt;?&gt;, Boolean&gt;} 支持。
- * 由于 {@link Class} 继承自 {@link Object} 的基于对象标识的 {@code hashCode()} / {@code equals()}，
- * 缓存键的行为等同于 .NET 的 {@code RuntimeTypeHandle} —— 轻量级、指针级别的比较，
- * 每次查找无堆内存分配开销。
+ * 每种消息类型（unicast、multicast、request）都有自己专用的缓存，由 {@code ConcurrentHashMap&lt;Class&lt;?&gt;, Boolean&gt;} 支持。
  *
  * @author damon(zhaorong@outlook.com)
  */
@@ -73,8 +68,7 @@ public class BaseMessageConvention implements MessageConvention {
     public boolean isUnicastType(Class<?> messageType) {
         Objects.requireNonNull(messageType, "messageType cannot be null.");
 
-        return unicastConventionCache.apply(messageType,
-            type -> conventions.stream().anyMatch(c -> c.isUnicastType(type)));
+        return unicastConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isUnicastType(type)));
     }
 
     /**
@@ -88,8 +82,7 @@ public class BaseMessageConvention implements MessageConvention {
     public boolean isMulticastType(Class<?> messageType) {
         Objects.requireNonNull(messageType, "messageType cannot be null.");
 
-        return multicastConventionCache.apply(messageType,
-            type -> conventions.stream().anyMatch(c -> c.isMulticastType(type)));
+        return multicastConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isMulticastType(type)));
     }
 
     /**
@@ -103,8 +96,7 @@ public class BaseMessageConvention implements MessageConvention {
     public boolean isRequestType(Class<?> messageType) {
         Objects.requireNonNull(messageType, "messageType cannot be null.");
 
-        return requestConventionCache.apply(messageType,
-            type -> conventions.stream().anyMatch(c -> c.isRequestType(type)));
+        return requestConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isRequestType(type)));
     }
 
     /**
@@ -181,8 +173,16 @@ public class BaseMessageConvention implements MessageConvention {
     String[] getRegisteredConventions() {
         return conventions.stream()
                           .map(MessageConvention::getName)
-                          .toList()
-                          .toArray(new String[0]);
+                          .toArray(String[]::new);
+    }
+
+    /**
+     * 重置所有缓存的条目，强制在下一次访问时重新计算类型分类结果。
+     */
+    void resetCache() {
+        unicastConventionCache.reset();
+        multicastConventionCache.reset();
+        requestConventionCache.reset();
     }
 
     // ---- 内部缓存类 ----

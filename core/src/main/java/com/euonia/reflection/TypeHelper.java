@@ -73,7 +73,7 @@ public final class TypeHelper {
 
         // 集合/Map/JSON
         if (Collection.class.isAssignableFrom(boxedDesired) || boxedDesired.isArray()
-                || Map.class.isAssignableFrom(boxedDesired)) {
+            || Map.class.isAssignableFrom(boxedDesired)) {
             return convertToCollectionOrMap(boxedDesired, value);
         }
 
@@ -110,7 +110,7 @@ public final class TypeHelper {
             return conv;
 
         throw new IllegalArgumentException(String.format("无法将 %s 类型的值转换为 %s（value=%s）",
-                value.getClass().getName(), desiredType.getName(), value));
+            value.getClass().getName(), desiredType.getName(), value));
     }
 
     /**
@@ -121,6 +121,7 @@ public final class TypeHelper {
      * @param value       要转换的值
      * @return 转换后的值
      */
+    @SuppressWarnings("unchecked")
     public static <T> T coerceValue(Class<T> desiredType, Object value) {
         return (T) coerceValue(desiredType, (value == null ? null : value.getClass()), value);
     }
@@ -170,7 +171,7 @@ public final class TypeHelper {
      */
     public static boolean isPrimitiveNumber(Class<?> type) {
         return type == int.class || type == long.class || type == short.class || type == byte.class
-                || type == float.class || type == double.class;
+            || type == float.class || type == double.class;
     }
 
     /**
@@ -199,7 +200,7 @@ public final class TypeHelper {
         return null;
     }
 
-    @SuppressWarnings({ "rawtypes", "IfCanBeSwitch" })
+    @SuppressWarnings({"rawtypes", "IfCanBeSwitch", "unchecked"})
     private static Object convertToEnum(Class<?> enumType, Object value) {
 
         if (value == null) {
@@ -338,9 +339,9 @@ public final class TypeHelper {
      */
     private static boolean isDateTimeTarget(Class<?> boxedDesired) {
         return boxedDesired == Date.class || boxedDesired == Instant.class || boxedDesired == LocalDateTime.class
-                || boxedDesired == LocalDate.class || boxedDesired == LocalTime.class
-                || boxedDesired == OffsetDateTime.class
-                || boxedDesired == ZonedDateTime.class;
+            || boxedDesired == LocalDate.class || boxedDesired == LocalTime.class
+            || boxedDesired == OffsetDateTime.class
+            || boxedDesired == ZonedDateTime.class;
     }
 
     private static Object convertToDateTime(Class<?> target, Object value) {
@@ -372,8 +373,8 @@ public final class TypeHelper {
         }
 
         if (Temporal.class.isAssignableFrom(target) || target == LocalDate.class || target == LocalDateTime.class
-                || target == LocalTime.class || target == Instant.class || target == OffsetDateTime.class
-                || target == ZonedDateTime.class) {
+            || target == LocalTime.class || target == Instant.class || target == OffsetDateTime.class
+            || target == ZonedDateTime.class) {
             if (value instanceof Number) {
                 long epoch = ((Number) value).longValue();
                 Instant inst = Instant.ofEpochMilli(epoch);
@@ -384,12 +385,12 @@ public final class TypeHelper {
             if (s.isEmpty())
                 return null;
             List<java.util.function.Function<String, Object>> parsers = Arrays.asList(
-                    Instant::parse,
-                    OffsetDateTime::parse,
-                    ZonedDateTime::parse,
-                    LocalDateTime::parse,
-                    LocalDate::parse,
-                    LocalTime::parse);
+                Instant::parse,
+                OffsetDateTime::parse,
+                ZonedDateTime::parse,
+                LocalDateTime::parse,
+                LocalDate::parse,
+                LocalTime::parse);
             for (var p : parsers) {
                 try {
                     Object parsed = p.apply(s);
@@ -399,11 +400,11 @@ public final class TypeHelper {
                         case "OffsetDateTime" -> convertInstantToTarget(target, ((OffsetDateTime) parsed).toInstant());
                         case "ZonedDateTime" -> convertInstantToTarget(target, ((ZonedDateTime) parsed).toInstant());
                         case "LocalDateTime" -> convertInstantToTarget(target,
-                                ((LocalDateTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
+                            ((LocalDateTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
                         case "LocalDate" -> convertInstantToTarget(target,
-                                ((LocalDate) parsed).atStartOfDay(ZoneId.systemDefault()).toInstant());
+                            ((LocalDate) parsed).atStartOfDay(ZoneId.systemDefault()).toInstant());
                         case "LocalTime" -> convertInstantToTarget(target, LocalDateTime
-                                .of(LocalDate.now(), (LocalTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
+                            .of(LocalDate.now(), (LocalTime) parsed).atZone(ZoneId.systemDefault()).toInstant());
                         default -> null;
                     };
                 } catch (DateTimeParseException ignored) {
@@ -481,7 +482,7 @@ public final class TypeHelper {
                     coll.addAll(src);
                     return coll;
                 } catch (IllegalAccessException | IllegalArgumentException | InstantiationException
-                        | NoSuchMethodException | InvocationTargetException ex) {
+                         | NoSuchMethodException | InvocationTargetException ex) {
                     return src;
                 }
             }
@@ -520,7 +521,7 @@ public final class TypeHelper {
             java.lang.reflect.Method read = mapperClass.getMethod("readValue", String.class, Class.class);
             return read.invoke(mapper, json, Object.class);
         } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InstantiationException
-                | NoSuchMethodException | InvocationTargetException ex) {
+                 | NoSuchMethodException | InvocationTargetException ex) {
             return null;
         }
     }
@@ -532,7 +533,7 @@ public final class TypeHelper {
             java.lang.reflect.Method convert = mapperClass.getMethod("convertValue", Object.class, Class.class);
             return convert.invoke(mapper, value, desiredType);
         } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InstantiationException
-                | NoSuchMethodException | InvocationTargetException ex) {
+                 | NoSuchMethodException | InvocationTargetException ex) {
             return null;
         }
     }
