@@ -97,7 +97,7 @@ public class MessageHandlerFinder {
                 }
                 var annotation = method.getAnnotation(Subscribe.class);
                 var channel = annotation.value();
-                if (channel == null) {
+                if (channel == null || channel.isBlank()) {
                     channel = MessageCache.getInstance().getOrAddChannel(firstParam.getType());
                 }
 

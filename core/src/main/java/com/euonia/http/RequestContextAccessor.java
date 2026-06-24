@@ -12,4 +12,16 @@ public interface RequestContextAccessor {
      * @return 当前请求上下文
      */
     RequestContext getContext();
+
+    /**
+     * 设置当前请求上下文。
+     *
+     * @param context 当前请求上下文
+     */
+    void setContext(RequestContext context);
+
+    /**
+     * 移除当前请求上下文。
+     */
+    void removeContext();
 }
