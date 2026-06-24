@@ -67,9 +67,9 @@ public class DefaultPipelineProvider<C, R> extends PipelineBase<C, R> {
     }
 
     /**
-     * 安全地将 {@link Class<?>} 转换为 {@link Class<T>}，避免原始类型警告。
+     * 安全地将 {@code Class<?>} 转换为 {@code Class<T>}，避免原始类型警告。
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     private static <T> Class<T> castType(Class<?> type) {
         return (Class<T>) type;
     }

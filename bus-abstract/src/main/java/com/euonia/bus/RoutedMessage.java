@@ -11,7 +11,7 @@ import com.euonia.core.ObjectId;
  *
  * @param <T> the type of the payload contained in the message
  */
-public class RoutedMessage<T> implements MessageEnvelope {
+public final class RoutedMessage<T> implements MessageEnvelope {
     private final static String MESSAGE_TYPE_KEY = "$nerosoft.euonia:message.type";
 
     private final MessageMetadata metadata = new MessageMetadata();
