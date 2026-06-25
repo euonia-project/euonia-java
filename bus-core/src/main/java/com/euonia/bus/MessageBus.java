@@ -13,6 +13,7 @@ import com.euonia.bus.exception.MessageTypeException;
 import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
+import com.euonia.bus.options.ExtendableOptions;
 import com.euonia.bus.options.PublishOptions;
 import com.euonia.bus.options.SendOptions;
 import com.euonia.core.GuidType;
@@ -137,31 +138,10 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (publishOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
-            var pipeline = pipelineFactory.<RoutedMessage<T>, Void>create();
-            if (pipeline != null) {
-                var pipelineMessage = new PipelineMessage<>(pack, pipeline);
-                if (publishOptions.isAttachDefaultPipelineBehaviors()) {
-                    pipelineMessage.getPipeline().useOf(messageType, true);
-                }
-
-                if (behavior != null) {
-                    behavior.accept(pipelineMessage);
-                }
-                pipelineMessage.executeAsync()
-                               .exceptionally(ex -> {
-                                   LOGGER.log(Level.SEVERE, "Pipeline execution failed for message: " + messageType.getName(), ex);
-                                   return null;
-                               }).join();
-                pack = pipelineMessage.getMessage();
-            }
-
-
-        }
+        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, publishOptions).join();
 
         var transports = dispatcher.determine(messageType);
 
-        RoutedMessage<T> finalPack = pack;
         var tasks = transports.stream()
                               .map(transport -> {
                                   LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
@@ -222,25 +202,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (sendOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
-            var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
-            if (pipeline != null) {
-                var pipelineMessage = new PipelineMessage<>(pack, pipeline);
-                if (sendOptions.isAttachDefaultPipelineBehaviors()) {
-                    pipelineMessage.getPipeline().useOf(messageType, true);
-                }
-
-                if (behavior != null) {
-                    behavior.accept(pipelineMessage);
-                }
-                pipelineMessage.executeAsync()
-                               .exceptionally(ex -> {
-                                   LOGGER.log(Level.SEVERE, "Pipeline execution failed for message: " + messageType.getName(), ex);
-                                   return null;
-                               }).join();
-                pack = pipelineMessage.getMessage();
-            }
-        }
+        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, sendOptions).join();
 
         var transports = dispatcher.determine(messageType);
 
@@ -254,7 +216,6 @@ public final class MessageBus implements Bus {
 
         var transport = provider.getService(Transport.class, transportName)
                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
-        RoutedMessage<T> finalPack = pack;
 
         LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
 
@@ -329,25 +290,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (callOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
-            var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
-            if (pipeline != null) {
-                var pipelineMessage = new PipelineMessage<>(pack, pipeline);
-                if (callOptions.isAttachDefaultPipelineBehaviors()) {
-                    pipelineMessage.getPipeline().useOf(messageType, true);
-                }
-
-                if (behavior != null) {
-                    behavior.accept(pipelineMessage);
-                }
-                pipelineMessage.executeAsync()
-                               .exceptionally(ex -> {
-                                   LOGGER.log(Level.SEVERE, String.format("Pipeline execution failed for message: %s", messageType.getName()), ex);
-                                   return null;
-                               }).join();
-                pack = pipelineMessage.getMessage();
-            }
-        }
+        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, callOptions).join();
 
         var transportNames = dispatcher.determine(messageType);
         if (transportNames.isEmpty()) {
@@ -359,8 +302,42 @@ public final class MessageBus implements Bus {
         var transport = provider.getService(Transport.class, transportName)
                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", pack.getMessageId(), messageType.getName(), transportName, channelName));
+        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
 
-        return transport.callAsync(pack, responseType);
+        return transport.callAsync(finalPack, responseType);
+    }
+
+    private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
+
+        var future = new CompletableFuture<RoutedMessage<T>>();
+
+        if (options.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
+
+            var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
+            if (pipeline != null) {
+                var pipelineMessage = new PipelineMessage<>(pack, pipeline);
+                if (options.isAttachDefaultPipelineBehaviors()) {
+                    pipelineMessage.getPipeline().useOf(messageType, true);
+                }
+
+                if (behavior != null) {
+                    behavior.accept(pipelineMessage);
+                }
+                pipelineMessage.executeAsync()
+                               .whenComplete((result, error) -> {
+                                   if (error != null) {
+                                       LOGGER.log(Level.SEVERE, String.format("Pipeline execution failed for message: %s", messageType.getName()), error);
+                                       future.completeExceptionally(error);
+                                   } else {
+                                       future.complete(pipelineMessage.getMessage());
+                                   }
+                               });
+            } else {
+                future.complete(pack);
+            }
+        } else {
+            future.complete(pack);
+        }
+        return future;
     }
 }

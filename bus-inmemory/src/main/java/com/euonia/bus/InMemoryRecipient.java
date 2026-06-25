@@ -22,7 +22,7 @@ import com.euonia.bus.messenger.Recipient;
  */
 public abstract class InMemoryRecipient implements Recipient<MessagePack> {
 
-    private static final Logger log = Logger.getLogger(InMemoryRecipient.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(InMemoryRecipient.class.getName());
 
     /**
      * 收到消息时（处理前）通知的监听器列表。
@@ -80,7 +80,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
             try {
                 listener.accept(event);
             } catch (Exception e) {
-                log.log(Level.WARNING, "Error in message received listener: " + e.getMessage(), e);
+                LOGGER.log(Level.WARNING, "Error in message received listener: " + e.getMessage(), e);
             }
         }
     }
@@ -95,7 +95,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
             try {
                 listener.accept(event);
             } catch (Exception e) {
-                log.log(Level.WARNING, "Error in message acknowledged listener: " + e.getMessage(), e);
+                LOGGER.log(Level.WARNING, "Error in message acknowledged listener: " + e.getMessage(), e);
             }
         }
     }
@@ -114,12 +114,10 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
 
         try {
             handleAsync(message.getChannel(), message.getPayload(), context, pack.isAborted());
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Error handling message on channel '" + message.getChannel() + "': " + e.getMessage(),
-                e);
+            onMessageAcknowledged(new MessageAcknowledgedEvent(message, context));
+        } catch (Exception exception) {
+            throw new RuntimeException(String.format("Message '%s' on channel '%s' error: %s", message.getMessageId(), message.getChannel(), exception.getMessage()), exception);
         }
-
-        onMessageAcknowledged(new MessageAcknowledgedEvent(message, context));
     }
 
     /**

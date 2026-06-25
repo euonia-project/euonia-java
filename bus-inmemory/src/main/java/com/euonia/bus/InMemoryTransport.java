@@ -12,7 +12,6 @@ import com.euonia.bus.event.MessageDeliveredEvent;
 import com.euonia.bus.event.MessageRepliedEvent;
 import com.euonia.bus.messenger.Messenger;
 import com.euonia.bus.messenger.StrongReferenceMessenger;
-import com.euonia.bus.messenger.WeakReferenceMessenger;
 
 /**
  * 使用内存消息传递的 {@link Transport} 实现。
@@ -69,7 +68,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
         MessageContextBase context = new MessageContextBase(message);
         MessagePack pack = new MessagePack(message, context);
 
-        WeakReferenceMessenger.getDefault().send(pack, message.getChannel());
+        StrongReferenceMessenger.getDefault().send(pack, message.getChannel());
         fireDelivered(message.getPayload(), context);
 
         return CompletableFuture.completedFuture(null);
