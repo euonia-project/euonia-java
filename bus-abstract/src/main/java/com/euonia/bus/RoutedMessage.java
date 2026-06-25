@@ -1,9 +1,12 @@
 package com.euonia.bus;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
+import com.euonia.core.PriorityValueFinder;
+import com.euonia.utility.ObjectUtility;
 
 /**
  * RoutedMessage is an abstract class that represents a message with routing information.
@@ -27,6 +30,17 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     public RoutedMessage(T payload, String channel) {
         setPayload(payload);
         setChannel(channel);
+        messageId = PriorityValueFinder.find(queue -> {
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getMessageId"), 1);
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getCommandId"), 2);
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getEventId"), 3);
+        }, Objects::nonNull, null);
+    }
+
+    public RoutedMessage(T payload, String channel, String messageId) {
+        setPayload(payload);
+        setChannel(channel);
+        messageId = messageId;
     }
 
     @Override
