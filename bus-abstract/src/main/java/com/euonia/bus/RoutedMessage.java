@@ -27,6 +27,9 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     private long timestamp = Instant.EPOCH.toEpochMilli();
     private T payload;
 
+    public RoutedMessage() {
+    }
+
     public RoutedMessage(T payload, String channel) {
         setPayload(payload);
         setChannel(channel);
@@ -40,7 +43,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     public RoutedMessage(T payload, String channel, String messageId) {
         setPayload(payload);
         setChannel(channel);
-        messageId = messageId;
+        setMessageId(messageId);
     }
 
     @Override
@@ -121,6 +124,10 @@ public final class RoutedMessage<T> implements MessageEnvelope {
 
     public String getTypeName() {
         return metadata.get(MESSAGE_TYPE_KEY, String.class);
+    }
+
+    public void setTypeName(String typeName) {
+        this.metadata.put(MESSAGE_TYPE_KEY, typeName);
     }
 
     @Override
