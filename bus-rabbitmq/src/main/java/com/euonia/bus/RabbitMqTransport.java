@@ -104,7 +104,7 @@ public final class RabbitMqTransport implements Transport {
 
             var data = serializer.serialize(message);
 
-            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
+            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), RabbitMqConstants.DEFAULT_EXCHANGE_NAME_PREFIX);
             var exchangeName = String.format("%s:%s", exchangePrefix, message.getChannel());
 
             return Failsafe.with(retryPolicy)
@@ -150,7 +150,7 @@ public final class RabbitMqTransport implements Transport {
 
         try {
             var channel = connection.createChannel();
-            var queueNamePrefix = StringUtility.collapse(options.getQueueNamePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
+            var queueNamePrefix = StringUtility.collapse(options.getQueueNamePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
             var requestQueueName = checkQueue(channel, queueNamePrefix, message.getChannel());
             var responseQueue = channel.queueDeclare();
             var responseQueueName = responseQueue.getQueue();
@@ -255,7 +255,7 @@ public final class RabbitMqTransport implements Transport {
 
         try {
             var channel = connection.createChannel();
-            var queueNamePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
+            var queueNamePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
             var requestQueueName = checkQueue(channel, queueNamePrefix, message.getChannel());
             var responseQueue = channel.queueDeclare();
             var responseQueueName = responseQueue.getQueue();

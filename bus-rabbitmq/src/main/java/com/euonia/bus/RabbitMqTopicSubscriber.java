@@ -61,7 +61,7 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
         try {
             channel = connection.createChannel();
 
-            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
+            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), RabbitMqConstants.DEFAULT_EXCHANGE_NAME_PREFIX);
             var exchangeName = String.format("%s:%s", exchangePrefix, group);
 
             channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);

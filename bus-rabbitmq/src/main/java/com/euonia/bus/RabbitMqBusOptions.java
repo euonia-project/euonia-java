@@ -31,9 +31,9 @@ public final class RabbitMqBusOptions {
     /**
      * 交换器名称前缀
      */
-    private String exchangeNamePrefix = Constants.DEFAULT_EXCHANGE_NAME_PREFIX;
-    private String queueNamePrefix = Constants.DEFAULT_QUEUE_NAME_PREFIX;
-    private String rpcQueuePrefix = Constants.DEFAULT_RPC_QUEUE_NAME_PREFIX;
+    private String exchangeNamePrefix = RabbitMqConstants.DEFAULT_EXCHANGE_NAME_PREFIX;
+    private String queueNamePrefix = RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX;
+    private String rpcQueuePrefix = RabbitMqConstants.DEFAULT_RPC_QUEUE_NAME_PREFIX;
 
     /**
      * 是否为强制模式

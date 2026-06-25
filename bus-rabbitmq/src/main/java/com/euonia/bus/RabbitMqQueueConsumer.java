@@ -57,7 +57,7 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
      */
     @Override
     void start(String group) {
-        var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
+        var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
         var queueName = options.generateQueueName(queuePrefix, group);
 
         try {

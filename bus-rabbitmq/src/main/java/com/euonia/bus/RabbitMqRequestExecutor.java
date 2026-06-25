@@ -56,7 +56,7 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
      */
     @Override
     void start(String group) {
-        var queuePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
+        var queuePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
         var queueName = options.generateQueueName(queuePrefix, group);
 
         try {
