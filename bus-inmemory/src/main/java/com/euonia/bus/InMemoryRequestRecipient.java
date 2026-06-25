@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.recipient.Executor;
@@ -67,15 +66,5 @@ public class InMemoryRequestRecipient extends InMemoryRecipient implements Execu
     @Override
     public String getName() {
         return getClass().getSimpleName();
-    }
-
-    /**
-     * 关闭接收者，释放资源。
-     * <p>
-     * 当前实现为空，资源释放由父类或其他机制处理。
-     */
-    @Override
-    public void close() {
-
     }
 }

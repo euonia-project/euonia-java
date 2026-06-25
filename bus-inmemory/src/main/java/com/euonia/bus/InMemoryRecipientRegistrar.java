@@ -11,6 +11,7 @@ import com.euonia.bus.messenger.WeakReferenceMessenger;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.reflection.ServiceProvider;
+import com.euonia.utility.Assert;
 
 /**
  * 内存消息总线的接收者注册器。
@@ -57,6 +58,9 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
      * @param options      内存总线配置选项
      */
     public InMemoryRecipientRegistrar(Configurator configurator, ServiceProvider provider, InMemoryBusOptions options) {
+        Assert.notNull(configurator, "Configurator must not be null");
+        Assert.notNull(provider, "Provider must not be null");
+        Assert.notNull(options, "Options must not be null");
         this.provider = provider;
         this.options = options;
         this.convention = configurator.getConventionBuilder().getConvention();
