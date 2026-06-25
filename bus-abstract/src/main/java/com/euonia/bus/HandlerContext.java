@@ -27,7 +27,7 @@ public interface HandlerContext {
      * @param context the message context
      * @return a {@link CompletableFuture} representing the pending completion of the operation
      */
-    CompletableFuture<Void> handleAsync(Object message, MessageContext context);
+    CompletableFuture<Object> handleAsync(Object message, MessageContext context);
 
     /**
      * Handle message asynchronously with the specified channel.
@@ -37,5 +37,5 @@ public interface HandlerContext {
      * @param context the message context
      * @return a {@link CompletableFuture} representing the pending completion of the operation
      */
-    CompletableFuture<Void> handleAsync(String channel, Object message, MessageContext context);
+    CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context);
 }

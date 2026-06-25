@@ -74,18 +74,17 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
                 continue;
             }
 
-            /* 构造 RoutedMessage<MessageType> 的合成参数化类型以获取目标类 */
+            /* 构造 RoutedMessage<MessageType> 的合成参数化类型以获取目标类型 */
             var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, registration.messageType());
-            var destinationType = (Class<? extends RoutedMessage<?>>) syntheticType.getRawType();
 
             RabbitMqRecipient recipient;
 
             if (convention.isMulticastType(registration.messageType())) {
-                recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, destinationType);
+                recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, syntheticType);
             } else if (convention.isUnicastType(registration.messageType())) {
-                recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, destinationType);
+                recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, syntheticType);
             } else if (convention.isRequestType(registration.messageType())) {
-                recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, destinationType);
+                recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, syntheticType);
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + registration.messageType());
             }

@@ -104,7 +104,6 @@ public class InMemoryTransport implements Transport, AutoCloseable {
 
             @Override
             public void onError(Throwable throwable) {
-                LOGGER.severe(() -> String.format("Message '%s' response failed with exception: %s", message.getMessageId(), throwable.getMessage()));
                 future.completeExceptionally(throwable);
             }
 
@@ -114,9 +113,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
         });
 
         context.addCompletedSubscriber(event -> {
-            if (!future.isDone()) {
-                future.complete(null);
-            }
+
         });
 
         StrongReferenceMessenger.getDefault().send(pack, message.getChannel());

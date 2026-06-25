@@ -62,11 +62,6 @@ public final class MessageBus implements Bus {
     private final MessageBusOptions options;
 
     /**
-     * HTTP 请求上下文访问器，用于获取当前请求上下文（如 traceId、authorization 等）。
-     */
-    private final RequestContextAccessor requestAccessor;
-
-    /**
      * 管道工厂，用于创建消息处理管道。
      */
     private final PipelineFactory pipelineFactory;
@@ -74,8 +69,7 @@ public final class MessageBus implements Bus {
     /**
      * 使用服务提供者创建消息总线实例。
      * <p>
-     * 从服务提供者中解析 {@link Dispatcher}、{@link MessageBusOptions}、
-     * {@link RequestContextAccessor} 和 {@link PipelineFactory}。
+     * 从服务提供者中解析 {@link Dispatcher}、{@link MessageBusOptions}、 {@link PipelineFactory}。
      *
      * @param provider 服务提供者，必须包含 Dispatcher 服务
      * @throws IllegalStateException 如果 Dispatcher 服务未找到
@@ -84,7 +78,6 @@ public final class MessageBus implements Bus {
         this.provider = provider;
         this.dispatcher = provider.getService(Dispatcher.class).orElseThrow(() -> new IllegalStateException("Dispatcher service not found"));
         this.options = provider.getService(MessageBusOptions.class).orElse(null);
-        this.requestAccessor = provider.getService(RequestContextAccessor.class).orElse(null);
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
@@ -96,22 +89,9 @@ public final class MessageBus implements Bus {
      * @param options    消息总线配置选项
      */
     public MessageBus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
-        this(provider, dispatcher, options, provider.getService(RequestContextAccessor.class).orElse(null));
-    }
-
-    /**
-     * 使用指定的参数和请求上下文访问器创建消息总线实例。
-     *
-     * @param provider        服务提供者
-     * @param dispatcher      消息分发器
-     * @param options         消息总线配置选项
-     * @param requestAccessor HTTP 请求上下文访问器，可以为 {@code null}
-     */
-    public MessageBus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options, RequestContextAccessor requestAccessor) {
         this.dispatcher = dispatcher;
         this.provider = provider;
         this.options = options;
-        this.requestAccessor = requestAccessor;
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
@@ -131,7 +111,6 @@ public final class MessageBus implements Bus {
      */
     @Override
     public <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, PublishOptions publishOptions, Consumer<MessageMetadata> metadataSetter) {
-        LOGGER.log(Level.FINE, "publishAsync called for message: {0}", message.getClass().getName());
         if (publishOptions == null) {
             publishOptions = new PublishOptions();
         }
@@ -141,7 +120,7 @@ public final class MessageBus implements Bus {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not multicast");
         }
 
-        var context = requestAccessor.getContext();
+        var context = RequestContextAccessor.get();
 
         var channelName = StringUtility.collapse(
             publishOptions::getChannel,
@@ -149,7 +128,9 @@ public final class MessageBus implements Bus {
         );
 
         RoutedMessage<T> pack = new RoutedMessage<>(message, channelName);
-        pack.setMessageId(StringUtility.collapse(publishOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
+        if (pack.getMessageId() == null) {
+            pack.setMessageId(StringUtility.collapse(publishOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
+        }
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
 
@@ -184,10 +165,10 @@ public final class MessageBus implements Bus {
         RoutedMessage<T> finalPack = pack;
         var tasks = transports.stream()
                               .map(transport -> {
-                                  LOGGER.log(Level.INFO, String.format("[%s] Publishing message of type %s to transport %s on channel %s.", finalPack.getMessageId(), messageType.getName(), transport, channelName));
+                                  LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
                                   return provider.getService(Transport.class, transport)
                                                  .orElseThrow(() -> new MessageTransportException("Transport service not found: " + transport))
-                                                 .sendAsync(finalPack);
+                                                 .publishAsync(finalPack);
                               })
                               .toArray(CompletableFuture[]::new);
 
@@ -223,7 +204,7 @@ public final class MessageBus implements Bus {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not unicast");
         }
 
-        var context = requestAccessor.getContext();
+        var context = RequestContextAccessor.get();
 
         var channelName = StringUtility.collapse(
             sendOptions::getChannel,
@@ -231,7 +212,9 @@ public final class MessageBus implements Bus {
         );
 
         RoutedMessage<T> pack = new RoutedMessage<>(message, channelName);
-        pack.setMessageId(StringUtility.collapse(sendOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
+        if (pack.getMessageId() == null) {
+            pack.setMessageId(StringUtility.collapse(sendOptions::getMessageId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
+        }
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
         pack.setCorrelationId(StringUtility.collapse(sendOptions::getCorrelationId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
@@ -260,10 +243,22 @@ public final class MessageBus implements Bus {
             }
         }
 
-        var transportName = dispatcher.determine(messageType).get(0);
+        var transports = dispatcher.determine(messageType);
+
+        if (transports.isEmpty()) {
+            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+        } else if (transports.size() > 1) {
+            throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
+        }
+
+        var transportName = transports.get(0);
+
         var transport = provider.getService(Transport.class, transportName)
                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
         RoutedMessage<T> finalPack = pack;
+
+        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
+
         return transport.sendAsync(finalPack, responseType)
                         .whenComplete((response, ex) -> {
                             if (ex != null) {
@@ -318,7 +313,7 @@ public final class MessageBus implements Bus {
             throw new MessageTypeException("The message type " + messageType.getName() + " is not request");
         }
 
-        var context = requestAccessor.getContext();
+        var context = RequestContextAccessor.get();
 
         var channelName = StringUtility.collapse(
             callOptions::getChannel,
@@ -348,16 +343,24 @@ public final class MessageBus implements Bus {
                 }
                 pipelineMessage.executeAsync()
                                .exceptionally(ex -> {
-                                   LOGGER.log(Level.SEVERE, "Pipeline execution failed for message: " + messageType.getName(), ex);
+                                   LOGGER.log(Level.SEVERE, String.format("Pipeline execution failed for message: %s", messageType.getName()), ex);
                                    return null;
                                }).join();
                 pack = pipelineMessage.getMessage();
             }
         }
 
-        var transportName = dispatcher.determine(messageType).get(0);
+        var transportNames = dispatcher.determine(messageType);
+        if (transportNames.isEmpty()) {
+            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+        }
+
+        var transportName = transportNames.get(0);
+
         var transport = provider.getService(Transport.class, transportName)
                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+
+        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", pack.getMessageId(), messageType.getName(), transportName, channelName));
 
         return transport.callAsync(pack, responseType);
     }

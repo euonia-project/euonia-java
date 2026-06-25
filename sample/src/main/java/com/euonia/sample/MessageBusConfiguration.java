@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -43,7 +44,7 @@ public class MessageBusConfiguration {
                                             c.add(DefaultMessageConvention.class);
                                             c.add(AnnotationMessageConvention.class);
                                             c.evaluateUnicast(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
-                                            c.evaluateMulticast(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Event"));
+                                            c.evaluateMulticast(t -> t.getPackageName().startsWith(packageName) && (t.getSimpleName().endsWith("Event") || t.getSimpleName().endsWith("Eto")));
                                             c.evaluateRequest(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Query"));
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
@@ -53,8 +54,8 @@ public class MessageBusConfiguration {
                                         })
                                         .setStrategy("RabbitMqMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("RabbitMqMessageBusTransport"));
-                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Event"));
-                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Event"));
+                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
+                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                         })
                                         .registerHandlers(packageName + ".application.handler");
     }
@@ -115,6 +116,16 @@ public class MessageBusConfiguration {
             public <M> M deserialize(String data, Class<M> type) {
                 try {
                     return mapper.readValue(data, type);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Failed to deserialize message", e);
+                }
+            }
+
+            @Override
+            public <M> M deserialize(String data, java.lang.reflect.Type type) {
+                try {
+                    JavaType javaType = mapper.getTypeFactory().constructType(type);
+                    return mapper.readValue(data, javaType);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException("Failed to deserialize message", e);
                 }

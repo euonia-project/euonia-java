@@ -7,15 +7,13 @@ import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
 import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.MessageHandlerFactory;
+import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +50,26 @@ final class DefaultHandlerContext implements HandlerContext {
 
     @Override
     public void onMessageSubscribed(Consumer<MessageSubscribedEvent> listener) {
-        publisher.consume(listener);
+        publisher.subscribe(new Flow.Subscriber<>() {
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(MessageSubscribedEvent event) {
+                listener.accept(event);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                LOGGER.log(Level.SEVERE, "Error occurred in message subscription event", throwable);
+            }
+
+            @Override
+            public void onComplete() {
+            }
+        });
     }
 
     // endregion
@@ -108,10 +125,7 @@ final class DefaultHandlerContext implements HandlerContext {
         };
 
         concurrentDictionarySafeRegister(registration.channel(), factory);
-        publisher.submit(new MessageSubscribedEvent(
-            registration.channel(),
-            registration.messageType(),
-            registration.handlerType()));
+        publisher.submit(new MessageSubscribedEvent(registration.channel(), registration.messageType(), registration.handlerType()));
     }
 
     // endregion
@@ -119,7 +133,7 @@ final class DefaultHandlerContext implements HandlerContext {
     // region 消息处理
 
     @Override
-    public CompletableFuture<Void> handleAsync(Object message, MessageContext context) {
+    public CompletableFuture<Object> handleAsync(Object message, MessageContext context) {
         if (message == null) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("message is null"));
         }
@@ -129,7 +143,9 @@ final class DefaultHandlerContext implements HandlerContext {
     }
 
     @Override
-    public CompletableFuture<Void> handleAsync(String channel, Object message, MessageContext context) {
+    public CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context) {
+        var future = new CompletableFuture<>();
+
         try {
             if (message == null) {
                 throw new IllegalArgumentException("message is null");
@@ -141,60 +157,94 @@ final class DefaultHandlerContext implements HandlerContext {
                 throw new IllegalStateException(String.format("No handler for message %s on channel %s", context.getMessageId(), channel));
             }
 
-            LOGGER.info(() -> "Message " + context.getMessageId() + " is being handled");
+            LOGGER.info(() -> String.format("Message '%s' is being handled on channel %s with %d handler(s)", context.getMessageId(), channel, factories.size()));
 
-            if (factories.size() == 1) {
+            if (!convention.isMulticastType(message.getClass())) {
                 // 单个处理器 — 支持请求/响应模式
                 var factory = factories.get(0);
 
-                var task = executeHandler(factory, message, context);
+                try {
+                    var result = executeHandler(factory, message, context);
+                    future.complete(result);
+                } catch (Exception exception) {
+                    future.completeExceptionally(exception);
+                }
 
-                return task.<Void>handle((result, exception) -> {
-                               if (exception != null) {
-                                   var cause = unwrapCause(exception);
-                                   context.failure(cause);
-                               } else if (result != null) {
-                                   context.response(result);
-                               }
-                               return null;
-                           })
-                           .whenComplete((v, exception) -> LOGGER.info(() -> "Message " + context.getMessageId() + " was completed handled"));
+//                var task = executeHandlerAsync(factory, message, context);
+//
+//                return task.whenComplete((result, exception) -> {
+//                    if (exception != null) {
+//                        LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, exception.getMessage()), exception);
+//                    } else {
+//                        LOGGER.log(Level.INFO, String.format("Message '%s' is being handled on channel %s with result: %s", context.getMessageId(), channel, result));
+//                    }
+//                });
             } else {
                 // 多个处理器 — 并行执行所有（多播场景）
                 var futures = factories.stream()
-                                       .map(factory -> executeHandler(factory, message, context)
+                                       .map(factory -> executeHandlerAsync(factory, message, context)
                                            .thenAccept(result -> { /* 多播 — 结果被丢弃 */ }))
                                        .toArray(CompletableFuture[]::new);
 
-                return CompletableFuture.allOf(futures)
-                                        .whenComplete((v, ex) ->
-                                            LOGGER.info(() -> "Message " + context.getMessageId() + " was completed handled"));
+                CompletableFuture.allOf(futures).whenComplete((v, exception) -> {
+                    if (exception != null) {
+                        future.completeExceptionally(exception);
+                    } else {
+                        future.complete(v);
+                    }
+                });
             }
         } catch (IllegalArgumentException | IllegalStateException exception) {
             LOGGER.log(Level.SEVERE, exception.getMessage(), exception);
-            return CompletableFuture.failedFuture(exception);
+            future.completeExceptionally(exception);
         }
+        return future.whenComplete((result, exception) -> {
+            if (exception != null) {
+                LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, exception.getMessage()), exception);
+            } else {
+                LOGGER.log(Level.INFO, String.format("Message '%s' is being handled on channel %s with result: %s", context.getMessageId(), channel, result));
+            }
+        });
+    }
+
+    /**
+     * 在给定的服务范围内异步执行单个处理器工厂。
+     * 对于请求/单播消息类型，异常会被重新抛出。
+     * 对于多播消息类型，异常会被吞没并作为结果返回。
+     *
+     * @param factory 处理器工厂
+     * @param message 消息对象
+     * @param context 消息上下文
+     * @return 异步处理结果
+     */
+    private CompletableFuture<Object> executeHandlerAsync(MessageHandlerFactory factory, Object message, MessageContext context) {
+
+        Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
+        return CompletableFuture.supplyAsync(() -> executeHandler(factory, message, context), customExecutor);
     }
 
     /**
      * 在给定的服务范围内执行单个处理器工厂。
      * 对于请求/单播消息类型，异常会被重新抛出。
      * 对于多播消息类型，异常会被吞没并作为结果返回。
+     *
+     * @param factory 处理器工厂
+     * @param message 消息对象
+     * @param context 消息上下文
+     * @return 处理结果
      */
-    private CompletableFuture<Object> executeHandler(MessageHandlerFactory factory, Object message, MessageContext context) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                var handler = factory.createHandler(provider);
-                return handler.handle(message, context);
-            } catch (Exception exception) {
-                LOGGER.log(Level.SEVERE, exception, () -> "Error occurred while handling message " + context.getMessageId());
-                if (!convention.isMulticastType(message.getClass())) {
-                    // 对于请求/响应和单播消息，吞没异常
-                    throw new RuntimeException(exception);
-                }
-                return exception;
+    private Object executeHandler(MessageHandlerFactory factory, Object message, MessageContext context) {
+        try {
+            var handler = factory.createHandler(provider);
+            return handler.handle(message, context);
+        } catch (Exception exception) {
+            LOGGER.log(Level.SEVERE, exception, () -> "Error occurred while handling message " + context.getMessageId());
+            if (!convention.isMulticastType(message.getClass())) {
+                // 对于请求/响应和单播消息类型，异常会被重新抛出，以便调用者可以处理它。
+                throw new RuntimeException(exception);
             }
-        });
+            return exception;
+        }
     }
 
     // endregion

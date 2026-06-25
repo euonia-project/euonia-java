@@ -48,13 +48,14 @@ public class InMemoryRequestRecipient extends InMemoryRecipient implements Execu
      * @return 表示异步处理完成的 {@link CompletableFuture}
      */
     @Override
-    protected CompletableFuture<Void> handleAsync(String channel, Object message, MessageContext context, boolean aborted) {
+    protected CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context, boolean aborted) {
         return handler.handleAsync(channel, message, context)
-                      .whenComplete((result, exception) -> {
-                          if (exception != null) {
-                              log.log(Level.WARNING, exception.getMessage(), exception);
+                      .whenComplete((result, error) -> {
+                          if (error != null) {
+                              context.failure(error);
+                          } else {
+                              context.response(result);
                           }
-                          context.complete(message);
                       });
     }
 
