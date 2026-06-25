@@ -2,6 +2,8 @@ package com.euonia.bus;
 
 import com.euonia.utility.Assert;
 
+import java.util.function.Supplier;
+
 /**
  * RabbitMQ 总线传输的配置选项。
  * 该类封装了与 RabbitMQ 建立连接所需的所有必要设置，以及消息处理的各种参数，如交换器和队列配置、重试策略等。
@@ -12,7 +14,7 @@ public final class RabbitMqBusOptions {
     /**
      * 是否启用该传输
      */
-    private boolean enabled = true;
+    private Supplier<Boolean> enabledSupplier = () -> true;
     /**
      * 传输名称
      */
@@ -62,16 +64,16 @@ public final class RabbitMqBusOptions {
      * @return 如果启用则返回 true，否则返回 false
      */
     public boolean isEnabled() {
-        return enabled;
+        return enabledSupplier.get();
     }
 
     /**
-     * 设置是否启用该传输。
+     * 设置启用状态的供应器。
      *
-     * @param enabled 如果启用则设置为 true，否则设置为 false
+     * @param enabledSupplier 启用状态的供应器
      */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setEnabled(Supplier<Boolean> enabledSupplier) {
+        this.enabledSupplier = enabledSupplier;
     }
 
     /**
@@ -375,6 +377,6 @@ public final class RabbitMqBusOptions {
         Assert.notNull(prefix, "prefix cannot be null");
         Assert.notNull(channelName, "channelName cannot be null");
         Assert.notNull(subscriptionId, "subscriptionId cannot be null");
-        return String.format("%s:%s@%s", prefix, channelName, subscriptionId);
+        return String.format("%s:%s@%s", prefix, channelName, getSubscriptionId());
     }
 }
