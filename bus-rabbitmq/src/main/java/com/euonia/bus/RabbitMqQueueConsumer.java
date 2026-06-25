@@ -25,17 +25,17 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
     @Override
     void start(String group) {
         var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
-        var queueName = String.format("%s:%s@%s", queuePrefix, group, options.getSubscriptionId());
+        var queueName = options.generateQueueName(queuePrefix, group);
 
         try {
             channel = connection.createChannel();
 
             channel.queueDeclare(queueName, true, false, false, null);
-            channel.basicQos(0, 1, false);
+            channel.basicQos(0, options.getPrefetchCount(), false);
 
             var consumer = new DefaultConsumer(channel) {
                 @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 
                     RoutedMessage<?> message = serializer.deserialize(new String(body), messageType);
                     var context = new MessageContextBase(message);

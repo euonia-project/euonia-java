@@ -24,12 +24,12 @@ public final class RabbitMqRequestExecutor extends RabbitMqRecipient implements 
     @Override
     void start(String group) {
         var queuePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
-        var queueName = String.format("%s:%s@%s", queuePrefix, group, options.getSubscriptionId());
+        var queueName = options.generateQueueName(queuePrefix, group);
 
         try {
             channel = connection.createChannel();
             channel.queueDeclare(queueName, true, false, false, null);
-            channel.basicQos(1);
+            channel.basicQos(options.getPrefetchCount());
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 RoutedMessage<?> message = serializer.deserialize(new String(delivery.getBody()), messageType);

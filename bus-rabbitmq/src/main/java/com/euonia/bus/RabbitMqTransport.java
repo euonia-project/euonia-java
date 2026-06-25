@@ -15,6 +15,7 @@ import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.utility.StringUtility;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -61,7 +62,7 @@ public final class RabbitMqTransport implements Transport {
 
             return Failsafe.with(retryPolicy)
                            .runAsync(() -> {
-                               channel.exchangeDeclare(exchangeName, "fanout", true);
+                               channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
                                channel.basicPublish(exchangeName, "*", options.isMandatory(), properties, data.getBytes());
                                LOGGER.info(() -> String.format("Message '%s' successfully published to exchange %s", message.getMessageId(), exchangeName));
                            })
@@ -305,7 +306,7 @@ public final class RabbitMqTransport implements Transport {
      * @throws MessageDeliverException if the queue does not exist or has no consumers
      */
     private String checkQueue(Channel channel, String queueNamePrefix, String channelName) {
-        var requestQueueName = String.format("%s:%s@%s", queueNamePrefix, channelName, options.getSubscriptionId());
+        var requestQueueName = options.generateQueueName(queueNamePrefix, channelName);
 
         try {
             var queueDeclare = channel.queueDeclarePassive(requestQueueName);
