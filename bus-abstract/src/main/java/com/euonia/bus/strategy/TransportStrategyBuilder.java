@@ -1,8 +1,9 @@
 package com.euonia.bus.strategy;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.Predicate;
 
-public class TransportStrategyBuilder {
+public final class TransportStrategyBuilder {
     private final BaseTransportStrategy strategy = new BaseTransportStrategy();
 
     public TransportStrategy getStrategy() {
@@ -30,10 +31,10 @@ public class TransportStrategyBuilder {
     public <S extends TransportStrategy> TransportStrategyBuilder add(Class<S> strategyType) {
         assert strategyType != null : "Strategy type cannot be null";
         try {
-            S strategy = strategyType.getDeclaredConstructor().newInstance();
-            this.strategy.add(strategy);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to instantiate strategy of type: " + strategyType.getName(), e);
+            S instance = strategyType.getDeclaredConstructor().newInstance();
+            this.strategy.add(instance);
+        } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException | InvocationTargetException exception) {
+            throw new RuntimeException("Failed to instantiate strategy of type: " + strategyType.getName(), exception);
         }
         return this;
     }

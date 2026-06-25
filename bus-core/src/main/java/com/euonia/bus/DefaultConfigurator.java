@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
+import com.euonia.bus.convention.DefaultMessageConventionBuilder;
 import com.euonia.bus.convention.MessageConventionBuilder;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
 
@@ -15,7 +16,7 @@ import com.euonia.bus.strategy.TransportStrategyBuilder;
  * @author damon(zhaorong@outlook.com)
  */
 public class DefaultConfigurator implements Configurator {
-    private final MessageConventionBuilder conventionBuilder = new MessageConventionBuilder();
+    private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
     private final List<HandlerRegistration> registrations = new java.util.concurrent.CopyOnWriteArrayList<>();
 

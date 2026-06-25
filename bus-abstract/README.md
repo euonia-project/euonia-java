@@ -136,6 +136,7 @@ public class GetOrderQuery { ... }
 | 接口 | 说明 |
 |------|------|
 | `Recipient` | 接收者基类（继承 `AutoCloseable`），提供 `getName()` |
+| `Consumer` | 通用消费者 — 继承 `Recipient` 的标记接口 |
 | `Subscriber` | 多播接收者 — 用于 `Multicast` 消息 |
 | `Executor` | 单播/请求接收者 — 用于 `Unicast` 和 `Request` 消息 |
 
