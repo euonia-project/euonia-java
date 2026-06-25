@@ -10,7 +10,7 @@ public class EventAggregate implements Aggregate<String> {
 
     private String id;
     private String eventId;
-    private Instant timestamp;
+    private long timestamp;
     private String typeName;
     private String eventIntent;
     private String originatorType;
@@ -36,28 +36,28 @@ public class EventAggregate implements Aggregate<String> {
         this.eventId = eventId;
     }
 
-    public Instant getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
     public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+        this.timestamp = timestamp.toEpochMilli();
     }
 
     public void setTimestamp(String timestamp) {
-        this.timestamp = Instant.parse(timestamp);
+        this.timestamp = Instant.parse(timestamp).toEpochMilli();
     }
 
     public void setTimestamp(long timestamp) {
-        this.timestamp = Instant.ofEpochMilli(timestamp);
+        this.timestamp = timestamp;
     }
 
     public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp.toInstant(java.time.ZoneOffset.UTC);
+        this.timestamp = timestamp.toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
     }
 
     public void setTimestamp(ZonedDateTime timestamp) {
-        this.timestamp = timestamp.toInstant();
+        this.timestamp = timestamp.toInstant().toEpochMilli();
     }
 
     public String getTypeName() {

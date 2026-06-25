@@ -28,7 +28,7 @@ public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements 
             var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
             var exchangeName = String.format("%s:%s", exchangePrefix, group);
 
-            channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false);
+            channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
             var queueName = channel.queueDeclare(String.format("%s@%s", exchangeName, options.getSubscriptionId()), true, false, false, null).getQueue();
             channel.queueBind(queueName, exchangeName, "*");
             var consumer = new DefaultConsumer(channel) {
