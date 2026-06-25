@@ -1,10 +1,6 @@
 package com.euonia.http;
 
-import java.util.logging.Logger;
-
 public final class DefaultRequestContextAccessor implements RequestContextAccessor {
-    private static final Logger LOGGER = Logger.getLogger(DefaultRequestContextAccessor.class.getName());
-
     private static final ThreadLocal<RequestContext> HOLDER = new ThreadLocal<>();
 
     private static final DefaultRequestContextAccessor INSTANCE = new DefaultRequestContextAccessor();
