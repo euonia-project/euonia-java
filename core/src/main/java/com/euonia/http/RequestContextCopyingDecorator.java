@@ -3,18 +3,18 @@ package com.euonia.http;
 public class RequestContextCopyingDecorator {
 
     public Runnable decorate(Runnable runnable) {
-        var context = DefaultRequestContextAccessor.get();
+        var context = RequestContextAccessor.get();
 
         return () -> {
-            var previous = DefaultRequestContextAccessor.get();
+            var previous = RequestContextAccessor.get();
             try {
-                DefaultRequestContextAccessor.set(context);
+                RequestContextAccessor.set(context);
                 runnable.run();
             } finally {
                 if (previous != null) {
-                    DefaultRequestContextAccessor.set(previous);
+                    RequestContextAccessor.set(previous);
                 } else {
-                    DefaultRequestContextAccessor.remove();
+                    RequestContextAccessor.remove();
                 }
             }
         };

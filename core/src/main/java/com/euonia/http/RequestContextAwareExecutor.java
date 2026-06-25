@@ -12,23 +12,24 @@ public class RequestContextAwareExecutor {
         var delegate = ForkJoinPool.commonPool();
 
         return (Runnable command) -> {
-            var context = DefaultRequestContextAccessor.get();
+            var context = RequestContextAccessor.get();
             delegate.execute(new TaskWithRequestContext(command, context));
 
             // Runnable decoratedCommand = () -> {
-        // try {
-        // RequestContextHolder.set(context);
-        // command.run();
-        // } finally {
-        // RequestContextHolder.remove();
-        // }
-        // };
-        // new Thread(decoratedCommand).start();
+            // try {
+            // RequestContextHolder.set(context);
+            // command.run();
+            // } finally {
+            // RequestContextHolder.remove();
+            // }
+            // };
+            // new Thread(decoratedCommand).start();
         };
     }
 
     public static Executor fromExecutor() {
         return new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1000)) {
+            @SuppressWarnings("NullableProblems")
             @Override
             public void execute(Runnable command) {
                 // 拦截提交的任务，进行上下文包装
@@ -41,15 +42,15 @@ public class RequestContextAwareExecutor {
 
         @Override
         public void run() {
-            var previous = DefaultRequestContextAccessor.get();
+            var previous = RequestContextAccessor.get();
             try {
-                DefaultRequestContextAccessor.set(context);
+                RequestContextAccessor.set(context);
                 command.run();
             } finally {
                 if (previous != null) {
-                    DefaultRequestContextAccessor.set(previous);
+                    RequestContextAccessor.set(previous);
                 } else {
-                    DefaultRequestContextAccessor.remove();
+                    RequestContextAccessor.remove();
                 }
             }
         }
