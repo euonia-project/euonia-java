@@ -10,6 +10,8 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ResolvableType;
 
+import com.euonia.utility.Assert;
+
 public class ApplicationContextServiceProvider implements ServiceProvider {
     private final ApplicationContext context;
 
@@ -52,7 +54,7 @@ public class ApplicationContextServiceProvider implements ServiceProvider {
         var beans = context.getBeanNamesForType(resolvableType, true, true);
         return Arrays.stream(beans).map(name -> {
                          var serviceType = resolvableType.resolve();
-                         assert serviceType != null;
+                         Assert.notNull(serviceType, "serviceType cannot be null.");
                          return (T) serviceType.cast(context.getBean(name));
                      })
                      .toList();

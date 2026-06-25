@@ -77,7 +77,7 @@ public final class MessageBus implements Bus {
     public MessageBus(ServiceProvider provider) {
         this.provider = provider;
         this.dispatcher = provider.getService(Dispatcher.class).orElseThrow(() -> new IllegalStateException("Dispatcher service not found"));
-        this.options = provider.getService(MessageBusOptions.class).orElse(null);
+        this.options = provider.getService(MessageBusOptions.class).orElseThrow(() -> new IllegalStateException("MessageBusOptions service not found"));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 

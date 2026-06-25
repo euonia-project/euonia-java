@@ -11,7 +11,7 @@ import com.euonia.bus.event.MessageReceivedEvent;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.rabbitmq.client.Connection;
 
-public abstract class RabbitMqRecipient implements AutoCloseable {
+public abstract class RabbitMqRecipient {
     protected final Connection connection;
     protected final RabbitMqBusOptions options;
     protected final HandlerContext handler;
@@ -63,11 +63,5 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
 
     public String getName() {
         return getClass().getSimpleName();
-    }
-
-    @Override
-    public void close() {
-        messageAcknowledgedListeners.clear();
-        messageReceivedListeners.clear();
     }
 }

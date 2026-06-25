@@ -1,6 +1,6 @@
 package com.euonia.bus.recipient;
 
-public interface Recipient extends AutoCloseable {
+public interface Recipient {
 
     /**
      * Gets the unique name of this recipient.

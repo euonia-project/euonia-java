@@ -56,7 +56,6 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
         this.strategy = configurator.getStrategyBuilders().get(options.getName()).getStrategy();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void register(List<HandlerRegistration> registrations, String defaultTransport) {
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());

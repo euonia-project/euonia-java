@@ -81,7 +81,8 @@ public final class RabbitMqTransport implements Transport {
     public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
 
-        try (var channel = connection.createChannel()) {
+        try {
+            var channel = connection.createChannel();
             var requestQueueName = getQueueName(message.getChannel());
             checkQueue(channel, requestQueueName);
             var responseQueue = channel.queueDeclare();
@@ -135,7 +136,7 @@ public final class RabbitMqTransport implements Transport {
                 channel.basicCancel(replyTag);
                 LOGGER.info(() -> String.format("Message '%s' successfully sent to queue %s", message.getMessageId(), requestQueueName));
             });
-        } catch (Exception exception) {
+        } catch (IOException exception) {
             LOGGER.severe(() -> String.format("Message '%s' publish failed: %s", message.getMessageId(), exception.getMessage()));
             future.completeExceptionally(exception);
         }
@@ -147,7 +148,8 @@ public final class RabbitMqTransport implements Transport {
     public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
 
-        try (var channel = connection.createChannel()) {
+        try {
+            var channel = connection.createChannel();
             var queueNamePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
             var requestQueueName = String.format("%s:%s@%s", queueNamePrefix, message.getChannel(), options.getSubscriptionId());
             checkQueue(channel, requestQueueName);
@@ -193,7 +195,7 @@ public final class RabbitMqTransport implements Transport {
                 channel.basicCancel(replyTag);
                 LOGGER.info(() -> String.format("Message '%s' successfully sent to queue %s", message.getMessageId(), requestQueueName));
             });
-        } catch (Exception exception) {
+        } catch (IOException exception) {
             LOGGER.severe(() -> String.format("Message '%s' publish failed: %s", message.getMessageId(), exception.getMessage()));
             future.completeExceptionally(exception);
         }

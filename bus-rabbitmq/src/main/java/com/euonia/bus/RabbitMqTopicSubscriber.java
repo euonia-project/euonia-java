@@ -58,16 +58,4 @@ public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements 
             throw new RuntimeException(e);
         }
     }
-
-    @Override
-    public void close() {
-        super.close();
-        if (channel != null) {
-            try {
-                channel.close();
-            } catch (Exception e) {
-                // Log the exception or handle it as needed
-            }
-        }
-    }
 }

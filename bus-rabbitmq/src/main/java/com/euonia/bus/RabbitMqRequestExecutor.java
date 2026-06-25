@@ -1,7 +1,7 @@
 package com.euonia.bus;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.concurrent.CompletableFuture;
 
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
@@ -32,8 +32,6 @@ public final class RabbitMqRequestExecutor extends RabbitMqRecipient implements 
             channel.basicQos(1);
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                CompletableFuture<Object> future = new CompletableFuture<>();
-
                 RoutedMessage<?> message = serializer.deserialize(new String(delivery.getBody()), messageType);
                 var context = new MessageContextBase(message);
                 raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
@@ -63,7 +61,7 @@ public final class RabbitMqRequestExecutor extends RabbitMqRecipient implements 
                     try {
                         channel.basicPublish("", delivery.getProperties().getReplyTo(), replyProperties, data.getBytes());
                         channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                     raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
@@ -72,7 +70,7 @@ public final class RabbitMqRequestExecutor extends RabbitMqRecipient implements 
 
             channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
             });
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
