@@ -11,6 +11,6 @@ public class HttpContextAccessorConfiguration {
 
     @Bean
     public RequestContextAccessor requestContextAccessor() {
-        return new DefaultRequestContextAccessor();
+        return DefaultRequestContextAccessor.getInstance();
     }
 }
