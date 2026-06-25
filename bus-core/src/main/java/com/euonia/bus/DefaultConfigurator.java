@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.euonia.bus.convention.DefaultMessageConventionBuilder;
 import com.euonia.bus.convention.MessageConventionBuilder;
+import com.euonia.bus.strategy.DefaultTransportStrategyBuilder;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
 
 /**
@@ -72,7 +73,7 @@ public class DefaultConfigurator implements Configurator {
     public DefaultConfigurator setStrategy(String name, Consumer<TransportStrategyBuilder> strategyConfig) {
         assert name != null && !name.trim().isEmpty() : "Strategy name cannot be null or empty";
         assert strategyConfig != null : "Strategy configuration cannot be null";
-        var builder = strategyBuilders.computeIfAbsent(name, k -> new TransportStrategyBuilder());
+        var builder = strategyBuilders.computeIfAbsent(name, k -> new DefaultTransportStrategyBuilder());
         strategyConfig.accept(builder);
         return this;
     }
