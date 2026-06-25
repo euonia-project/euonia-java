@@ -111,6 +111,18 @@ public final class RoutedMessage<T> implements MessageEnvelope {
         return metadata;
     }
 
+    public Object getMetadata(String key) {
+        return metadata.get(key);
+    }
+
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
+    }
+
+    public <V> V getMetadata(String key, Class<V> type) {
+        return metadata.get(key, type);
+    }
+
     public T getPayload() {
         return payload;
     }

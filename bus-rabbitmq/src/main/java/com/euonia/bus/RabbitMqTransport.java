@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.contract.Transport;
@@ -45,7 +44,9 @@ public final class RabbitMqTransport implements Transport {
 
     @Override
     public <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message) {
-        try (var channel = connection.createChannel()) {
+
+        try {
+            var channel = connection.createChannel();
             var typeName = message.getTypeName();
 
             var properties = new AMQP.BasicProperties().builder()
@@ -56,19 +57,17 @@ public final class RabbitMqTransport implements Transport {
 
             var data = serializer.serialize(message);
 
-            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(),
-                Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
+            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
             var exchangeName = String.format("%s:%s", exchangePrefix, message.getChannel());
-            var routingKey = String.format("%s@%s", exchangeName,
-                message.getMetadata().get(MessageHeaders.ROUTING_KEY));
+            var routingKey = String.format("%s@%s", exchangeName, message.getMetadata(MessageHeaders.ROUTING_KEY));
 
             return Failsafe.with(retryPolicy).runAsync(() -> {
                 channel.exchangeDeclare(exchangeName, "fanout", true);
                 channel.basicPublish(exchangeName, routingKey, options.isMandatory(), properties, data.getBytes());
-                LOGGER.log(Level.INFO, "Published message to exchange {0}: {1}", new Object[]{exchangeName, data});
+                LOGGER.info(() -> String.format("Message '%s' successfully published to exchange %s", message.getMessageId(), exchangeName));
             });
-        } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "Failed to publish message: {0}", exception.getMessage());
+        } catch (IOException exception) {
+            LOGGER.severe(() -> String.format("Message '%s' publish failed: %s", message.getMessageId(), exception.getMessage()));
             return CompletableFuture.failedFuture(exception);
         }
     }
@@ -100,7 +99,7 @@ public final class RabbitMqTransport implements Transport {
                         future.complete(null);
                     } else {
                         var responseData = new String(body);
-                        LOGGER.log(Level.INFO, "Received response for message {0}: {1}", new Object[]{message.getMessageId(), responseData});
+                        LOGGER.info(() -> String.format("Message '%s' Received response: %s", message.getMessageId(), responseData));
 
                         switch (properties.getType()) {
                             case "exception":
@@ -134,10 +133,10 @@ public final class RabbitMqTransport implements Transport {
                 channel.basicPublish("", requestQueueName, options.isMandatory(), properties, data.getBytes());
                 String replyTag = channel.basicConsume(responseQueueName, true, consumer);
                 channel.basicCancel(replyTag);
-                LOGGER.log(Level.INFO, "Sent message to queue {0}: {1}", new Object[]{requestQueueName, data});
+                LOGGER.info(() -> String.format("Message '%s' successfully sent to queue %s", message.getMessageId(), requestQueueName));
             });
         } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "Failed to publish message: {0}", exception.getMessage());
+            LOGGER.severe(() -> String.format("Message '%s' publish failed: %s", message.getMessageId(), exception.getMessage()));
             future.completeExceptionally(exception);
         }
 
@@ -173,7 +172,7 @@ public final class RabbitMqTransport implements Transport {
                     }
 
                     var responseData = new String(delivery.getBody());
-                    LOGGER.log(Level.INFO, "Received response for message {0}: {1}", new Object[]{message.getMessageId(), responseData});
+                    LOGGER.info(() -> String.format("Received response for message '%s': %s", message.getMessageId(), responseData));
 
                     switch (delivery.getProperties().getType()) {
                         case "exception":
@@ -192,10 +191,10 @@ public final class RabbitMqTransport implements Transport {
                 }, consumerTag -> {
                 });
                 channel.basicCancel(replyTag);
-                LOGGER.log(Level.INFO, "Sent message to queue {0}: {1}", new Object[]{requestQueueName, data});
+                LOGGER.info(() -> String.format("Message '%s' successfully sent to queue %s", message.getMessageId(), requestQueueName));
             });
         } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "Failed to publish message: {0}", exception.getMessage());
+            LOGGER.severe(() -> String.format("Message '%s' publish failed: %s", message.getMessageId(), exception.getMessage()));
             future.completeExceptionally(exception);
         }
 
@@ -203,8 +202,7 @@ public final class RabbitMqTransport implements Transport {
     }
 
     private String getQueueName(String channelName) {
-        var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(),
-            Constants.DEFAULT_QUEUE_NAME_PREFIX);
+        var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(), Constants.DEFAULT_QUEUE_NAME_PREFIX);
         return String.format("%s:%s@%s", queuePrefix, channelName, options.getSubscriptionId());
     }
 
@@ -225,7 +223,6 @@ public final class RabbitMqTransport implements Transport {
                 throw new MessageDeliverException(String.format("No consumers for queue '%s' in vhost '%s'", requestQueueName, options.getVirtualHost()));
             }
         } catch (IOException exception) {
-            LOGGER.log(Level.SEVERE, "Failed to check queue: {0}", exception.getMessage());
             throw new MessageDeliverException(String.format("Failed to check queue '%s' in vhost '%s'", requestQueueName, options.getVirtualHost()), exception);
         }
     }
