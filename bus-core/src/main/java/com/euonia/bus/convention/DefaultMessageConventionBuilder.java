@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.euonia.bus.MessageConventionType;
+import com.euonia.utility.Assert;
 
 /**
  * Default implementation of the {@link MessageConventionBuilder} interface.
@@ -31,7 +32,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluateUnicast(Predicate<Class<?>> predicate) {
-        assert predicate != null : "predicate cannot be null.";
+        Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineUnicastTypeConvention(predicate);
         return this;
     }
@@ -44,7 +45,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluateMulticast(Predicate<Class<?>> predicate) {
-        assert predicate != null : "predicate cannot be null.";
+        Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineMulticastTypeConvention(predicate);
         return this;
     }
@@ -57,7 +58,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluateRequest(Predicate<Class<?>> predicate) {
-        assert predicate != null : "predicate cannot be null.";
+        Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineRequestTypeConvention(predicate);
         return this;
     }
@@ -70,7 +71,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluate(Function<Class<?>, MessageConventionType> convention) {
-        assert convention != null : "convention cannot be null.";
+        Assert.notNull(convention, "convention cannot be null.");
         this.convention.defineTypeConvention(convention);
         return this;
     }
@@ -84,7 +85,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public <C extends MessageConvention> MessageConventionBuilder add(C convention) {
-        assert convention != null : "convention cannot be null.";
+        Assert.notNull(convention, "convention cannot be null.");
         this.convention.add(convention);
         return this;
     }
@@ -99,7 +100,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public <C extends MessageConvention> MessageConventionBuilder add(Class<C> conventionClass) {
-        assert conventionClass != null : "conventionClass cannot be null.";
+        Assert.notNull(conventionClass, "conventionClass cannot be null.");
         try {
             C instance = conventionClass.getDeclaredConstructor().newInstance();
             this.convention.add(instance);
