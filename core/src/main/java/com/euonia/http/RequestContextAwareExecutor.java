@@ -2,32 +2,20 @@ package com.euonia.http;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-public class RequestContextAwareExecutor implements Executor {
+public class RequestContextAwareExecutor {
 
-    private final Executor delegate;
+    public static Executor fromCommonPool() {
+        var delegate = ForkJoinPool.commonPool();
 
-    public RequestContextAwareExecutor(Executor delegate) {
-        this.delegate = delegate;
-    }
+        return (Runnable command) -> {
+            var context = DefaultRequestContextAccessor.get();
+            delegate.execute(new TaskWithRequestContext(command, context));
 
-    public static RequestContextAwareExecutor wrap(Executor delegate) {
-        if (delegate instanceof RequestContextAwareExecutor) {
-            return (RequestContextAwareExecutor) delegate;
-        }
-        return new RequestContextAwareExecutor(delegate);
-    }
-
-    public static RequestContextAwareExecutor fromCommonPool() {
-        return new RequestContextAwareExecutor(ForkJoinPool.commonPool());
-    }
-
-    @SuppressWarnings("NullableProblems")
-    @Override
-    public void execute(Runnable command) {
-        var context = DefaultRequestContextAccessor.get();
-        delegate.execute(new TaskWithRequestContext(command, context));
-        // Runnable decoratedCommand = () -> {
+            // Runnable decoratedCommand = () -> {
         // try {
         // RequestContextHolder.set(context);
         // command.run();
@@ -36,6 +24,17 @@ public class RequestContextAwareExecutor implements Executor {
         // }
         // };
         // new Thread(decoratedCommand).start();
+        };
+    }
+
+    public static Executor fromExecutor() {
+        return new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1000)) {
+            @Override
+            public void execute(Runnable command) {
+                // 拦截提交的任务，进行上下文包装
+                super.execute(new RequestContextCopyingDecorator().decorate(command));
+            }
+        };
     }
 
     private record TaskWithRequestContext(Runnable command, RequestContext context) implements Runnable {
