@@ -38,7 +38,7 @@ public class StrategicDispatcher implements Dispatcher {
             var list = new ArrayList<String>();
             for (var type : options.getStrategyAssignedTypes()) {
                 var strategy = options.getStrategy(type);
-                if (strategy.outgoing(messageType)) {
+                if (strategy != null && strategy.outgoing(messageType)) {
                     list.add(type);
                 }
             }
