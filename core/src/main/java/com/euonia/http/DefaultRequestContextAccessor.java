@@ -1,20 +1,45 @@
 package com.euonia.http;
 
-public class DefaultRequestContextAccessor implements RequestContextAccessor {
-    private final ThreadLocal<RequestContext> requestContext = new ThreadLocal<>();
+import java.util.logging.Logger;
+
+public final class DefaultRequestContextAccessor implements RequestContextAccessor {
+    private static final Logger LOGGER = Logger.getLogger(DefaultRequestContextAccessor.class.getName());
+
+    private static final ThreadLocal<RequestContext> HOLDER = new ThreadLocal<>();
+
+    private static final DefaultRequestContextAccessor INSTANCE = new DefaultRequestContextAccessor();
+
+    private DefaultRequestContextAccessor() {
+    }
+
+    public static DefaultRequestContextAccessor getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public void setContext(RequestContext context) {
-        requestContext.set(context);
+        HOLDER.set(context);
     }
 
     @Override
     public void removeContext() {
-        requestContext.remove();
+        HOLDER.remove();
     }
 
     @Override
     public RequestContext getContext() {
-        return requestContext.get();
+        return HOLDER.get();
+    }
+
+    public static RequestContext get() {
+        return getInstance().getContext();
+    }
+
+    public static void set(RequestContext context) {
+        getInstance().setContext(context);
+    }
+
+    public static void remove() {
+        getInstance().removeContext();
     }
 }
