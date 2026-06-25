@@ -22,15 +22,47 @@ import com.rabbitmq.client.Connection;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 
+/**
+ * RabbitMQ 传输实现，负责通过 RabbitMQ 代理发布、发送和调用消息。
+ * <p>
+ * 支持三种消息发送模式：
+ * <ul>
+ *   <li>{@link #publishAsync(RoutedMessage)} —— 多播发布到扇出交换器</li>
+ *   <li>{@link #sendAsync(RoutedMessage, Class)} —— 单播发送到指定队列并等待响应</li>
+ *   <li>{@link #callAsync(RoutedMessage, Class)} —— RPC 调用并等待响应</li>
+ * </ul>
+ * 内置基于 Failsafe 的重试策略，处理 IOException 和 TimeoutException。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 public final class RabbitMqTransport implements Transport {
 
     private static final Logger LOGGER = Logger.getLogger(RabbitMqTransport.class.getName());
 
+    /**
+     * RabbitMQ 连接
+     */
     private final Connection connection;
+    /**
+     * 消息序列化器
+     */
     private final MessageSerializer serializer;
+    /**
+     * RabbitMQ 总线选项
+     */
     private final RabbitMqBusOptions options;
+    /**
+     * 基于 Failsafe 的重试策略
+     */
     private final RetryPolicy<Object> retryPolicy;
 
+    /**
+     * 使用必要的依赖构造 RabbitMQ 传输实例。
+     *
+     * @param connection RabbitMQ 连接
+     * @param serializer 消息序列化器
+     * @param options    RabbitMQ 总线选项
+     */
     public RabbitMqTransport(Connection connection, MessageSerializer serializer, RabbitMqBusOptions options) {
         this.connection = connection;
         this.serializer = serializer;
@@ -38,11 +70,26 @@ public final class RabbitMqTransport implements Transport {
         this.retryPolicy = createRetryPolicy();
     }
 
+    /**
+     * 返回传输名称。
+     *
+     * @return 当前类的简单名称
+     */
     @Override
     public String getName() {
         return getClass().getSimpleName();
     }
 
+    /**
+     * 以多播模式发布消息到扇出（fanout）交换器。
+     * <p>
+     * 交换器名称格式为 {@code {exchangePrefix}:{channel}}。
+     * 发布操作受重试策略保护。
+     *
+     * @param <M>     消息类型
+     * @param message 要发布的路由消息
+     * @return 发布完成后的异步结果
+     */
     @Override
     public <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message) {
         try {
@@ -73,11 +120,30 @@ public final class RabbitMqTransport implements Transport {
         }
     }
 
+    /**
+     * 以单播模式发送消息到指定队列，不等待响应。
+     *
+     * @param <M>     消息类型
+     * @param message 要发送的路由消息
+     * @return 发送完成后的异步结果
+     */
     @Override
     public <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message) {
         return sendAsync(message, Void.class);
     }
 
+    /**
+     * 以单播模式发送消息到指定队列，并等待指定类型的响应。
+     * <p>
+     * 该方法创建一个临时回复队列，发布消息后等待匹配 correlationId 的响应。
+     * 内置超时保护和取消回调处理。
+     *
+     * @param <M>          消息类型
+     * @param <R>          响应类型
+     * @param message      要发送的路由消息
+     * @param responseType 期望的响应类型（{@code Void.class} 表示不期望响应）
+     * @return 包含响应的异步结果
+     */
     @Override
     public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
@@ -99,9 +165,12 @@ public final class RabbitMqTransport implements Transport {
 
             var data = serializer.serialize(message);
 
-            // Register the response consumer before publishing so it is ready to receive the reply
+            // 在发布前注册响应消费者，确保准备好接收回复
             String replyTag = channel.basicConsume(responseQueueName, true, (consumerTag, delivery) -> {
-                if (!Objects.equals(delivery.getProperties().getCorrelationId(), message.getCorrelationId())) {
+
+                var repliedProperties = delivery.getProperties();
+
+                if (!Objects.equals(repliedProperties.getCorrelationId(), message.getCorrelationId())) {
                     return;
                 }
 
@@ -112,32 +181,32 @@ public final class RabbitMqTransport implements Transport {
                         var responseData = new String(delivery.getBody());
                         LOGGER.info(() -> String.format("Message '%s' Received response: %s", message.getMessageId(), responseData));
 
-                        switch (delivery.getProperties().getType()) {
-                            case "exception" -> {
+                        switch (RabbitMqReplyType.valueOf(repliedProperties.getType().toUpperCase())) {
+                            case EXCEPTION -> {
                                 var exception = serializer.deserialize(responseData, RuntimeException.class);
                                 future.completeExceptionally(exception);
                             }
-                            case "void" -> future.complete(null);
-                            case "message" -> future.complete(serializer.deserialize(responseData, responseType));
+                            case EMPTY -> future.complete(null);
+                            case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                             default ->
-                                future.completeExceptionally(new MessageTransportException("Unknown response type: " + delivery.getProperties().getType()));
+                                future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));
                         }
                     }
                 } finally {
-                    // Cancel the temporary reply consumer once a matching response is received
+                    // 一旦收到匹配的响应，取消临时的回复消费者
                     cancelConsumer(channel, consumerTag);
                 }
             }, consumerTag -> {
-                // If the consumer is canceled unexpectedly before the future completes,
-                // signal an error so the caller does not wait indefinitely
+                // 如果消费者在 future 完成之前被意外取消，
+                // 发出错误信号，避免调用者无限等待
                 if (!future.isDone()) {
                     future.completeExceptionally(
                         new MessageDeliverException("Consumer canceled before receiving response for message: " + message.getMessageId()));
                 }
             });
 
-            // Add a timeout to prevent callers from waiting indefinitely.
-            // Close the reply channel when the future completes (success, failure, or timeout).
+            // 添加超时以防止调用者无限等待。
+            // 当 future 完成（成功、失败或超时）时关闭回复通道。
             var timeout = getResponseTimeout();
             future.orTimeout(timeout, TimeUnit.MILLISECONDS)
                   .whenComplete((r, ex) -> {
@@ -147,7 +216,7 @@ public final class RabbitMqTransport implements Transport {
                       closeChannel(channel);
                   });
 
-            // Publish the command message (with retry) and cancel the consumer on failure
+            // 发布命令消息（带重试），并在失败时取消消费者
             Failsafe.with(retryPolicy)
                     .runAsync(() -> {
                         channel.basicPublish("", requestQueueName, options.isMandatory(), properties, data.getBytes());
@@ -168,6 +237,18 @@ public final class RabbitMqTransport implements Transport {
         return future;
     }
 
+    /**
+     * 以 RPC 模式调用消息，发送请求到指定队列并等待响应。
+     * <p>
+     * 与 {@link #sendAsync(RoutedMessage, Class)} 相比，此方法额外设置了 AMQP
+     * {@code replyTo} 属性，使服务端可以将响应发送回调用者声明的临时队列。
+     *
+     * @param <M>          消息类型
+     * @param <R>          响应类型
+     * @param message      要发送的路由消息
+     * @param responseType 期望的响应类型
+     * @return 包含响应的异步结果
+     */
     @Override
     public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
@@ -190,9 +271,12 @@ public final class RabbitMqTransport implements Transport {
 
             var data = serializer.serialize(message);
 
-            // Register the response consumer before publishing so it is ready to receive the reply
+            // 在发布前注册响应消费者，确保准备好接收回复
             String replyTag = channel.basicConsume(responseQueueName, true, (consumerTag, delivery) -> {
-                if (!Objects.equals(delivery.getProperties().getCorrelationId(), message.getCorrelationId())) {
+
+                var repliedProperties = delivery.getProperties();
+
+                if (!Objects.equals(repliedProperties.getCorrelationId(), message.getCorrelationId())) {
                     return;
                 }
 
@@ -200,31 +284,31 @@ public final class RabbitMqTransport implements Transport {
                 LOGGER.info(() -> String.format("Received response for message '%s': %s", message.getMessageId(), responseData));
 
                 try {
-                    switch (delivery.getProperties().getType()) {
-                        case "exception" -> {
+                    switch (RabbitMqReplyType.valueOf(repliedProperties.getType().toUpperCase())) {
+                        case EXCEPTION -> {
                             var exception = serializer.deserialize(responseData, RuntimeException.class);
                             future.completeExceptionally(exception);
                         }
-                        case "void" -> future.complete(null);
-                        case "message" -> future.complete(serializer.deserialize(responseData, responseType));
+                        case EMPTY -> future.complete(null);
+                        case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                         default ->
-                            future.completeExceptionally(new MessageTransportException("Unknown response type: " + delivery.getProperties().getType()));
+                            future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));
                     }
                 } finally {
-                    // Cancel the temporary reply consumer once a matching response is received
+                    // 一旦收到匹配的响应，取消临时的回复消费者
                     cancelConsumer(channel, consumerTag);
                 }
             }, consumerTag -> {
-                // If the consumer is canceled unexpectedly before the future completes,
-                // signal an error so the caller does not wait indefinitely
+                // 如果消费者在 future 完成之前被意外取消，
+                // 发出错误信号，避免调用者无限等待
                 if (!future.isDone()) {
                     future.completeExceptionally(
                         new MessageDeliverException("Consumer canceled before receiving response for message: " + message.getMessageId()));
                 }
             });
 
-            // Add a timeout to prevent callers from waiting indefinitely.
-            // Close the reply channel when the future completes (success, failure, or timeout).
+            // 添加超时以防止调用者无限等待。
+            // 当 future 完成（成功、失败或超时）时关闭回复通道。
             var timeout = getResponseTimeout();
             future.orTimeout(timeout, TimeUnit.MILLISECONDS)
                   .whenComplete((r, ex) -> {
@@ -234,7 +318,7 @@ public final class RabbitMqTransport implements Transport {
                       closeChannel(channel);
                   });
 
-            // Publish the request message (with retry) and cancel the consumer on failure
+            // 发布请求消息（带重试），并在失败时取消消费者
             Failsafe.with(retryPolicy)
                     .runAsync(() -> {
                         channel.basicPublish("", requestQueueName, options.isMandatory(), properties, data.getBytes());
@@ -257,20 +341,20 @@ public final class RabbitMqTransport implements Transport {
     }
 
     /**
-     * Computes a response timeout based on retry policy parameters.
+     * 基于重试策略参数计算响应超时时间。
      * <p>
-     * The timeout is calculated as {@code retryDelay * (retryAttempts + 1)} plus a buffer
-     * for network round-trip and handler processing time.
+     * 超时时间计算方式为 {@code retryDelay * (retryAttempts + 1)} 加上
+     * 网络往返和处理器处理时间的缓冲。
      */
     private long getResponseTimeout() {
-        // Base: total retry window + 5s buffer for handler processing and network latency
+        // 基础值：总重试窗口 + 5 秒缓冲，用于处理器处理和网络延迟
         return options.getRetryDelay() * (options.getRetryAttempts() + 1) + 5_000L;
     }
 
     /**
-     * Safely closes a channel, logging any error without propagating the exception.
+     * 安全地关闭通道，记录任何错误但不传播异常。
      *
-     * @param channel the channel to close
+     * @param channel 要关闭的通道
      */
     private void closeChannel(Channel channel) {
         try {
@@ -283,10 +367,10 @@ public final class RabbitMqTransport implements Transport {
     }
 
     /**
-     * Safely cancels a consumer, logging any error without propagating the exception.
+     * 安全地取消消费者，记录任何错误但不传播异常。
      *
-     * @param channel     the channel the consumer belongs to
-     * @param consumerTag the consumer tag to cancel
+     * @param channel     消费者所属的通道
+     * @param consumerTag 要取消的消费者标签
      */
     private void cancelConsumer(Channel channel, String consumerTag) {
         try {
@@ -299,11 +383,11 @@ public final class RabbitMqTransport implements Transport {
     /**
      * 检查指定队列是否存在，并且至少有一个消费者在监听。
      *
-     * @param channel         the channel to use for checking the queue
-     * @param queueNamePrefix the prefix of the queue name to check
-     * @param channelName     the name of the channel associated with the queue
-     * @return the full queue name if it exists and has consumers
-     * @throws MessageDeliverException if the queue does not exist or has no consumers
+     * @param channel         用于检查队列的通道
+     * @param queueNamePrefix 要检查的队列名称前缀
+     * @param channelName     与队列关联的通道名称
+     * @return 完整的队列名称（如果存在且有消费者）
+     * @throws MessageDeliverException 如果队列不存在或没有消费者
      */
     private String checkQueue(Channel channel, String queueNamePrefix, String channelName) {
         var requestQueueName = options.generateQueueName(queueNamePrefix, channelName);
@@ -323,6 +407,13 @@ public final class RabbitMqTransport implements Transport {
         return requestQueueName;
     }
 
+    /**
+     * 创建基于 Failsafe 的重试策略。
+     * <p>
+     * 处理 IOException 和 TimeoutException，使用配置的延迟和最大重试次数。
+     *
+     * @return 配置好的重试策略
+     */
     private RetryPolicy<Object> createRetryPolicy() {
         return RetryPolicy.builder()
                           .handle(IOException.class)
