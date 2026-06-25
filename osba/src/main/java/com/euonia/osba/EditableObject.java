@@ -2,10 +2,13 @@ package com.euonia.osba;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.osba.abstracts.Savable;
 import com.euonia.osba.rules.BrokenRule;
 import com.euonia.osba.rules.RuleCheckException;
@@ -19,7 +22,7 @@ import com.euonia.osba.rules.RuleCheckException;
  */
 public abstract class EditableObject<T extends EditableObject<T>> extends ObservableObject<T> implements Savable<T> {
 
-    private final SubmissionPublisher<SavedEventArgs> savedEventPublisher = new SubmissionPublisher<>();
+    private final SubmissionPublisher<SavedEventArgs> savedEventPublisher = getSavedEventPublisher();
 
     /**
      * 订阅 onSaved 事件的监听器，该事件在对象保存时触发。
@@ -73,7 +76,7 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
      * @param userState   传递给 onSaved 事件的附加信息
      * @return 已保存的对象
      */
-    @SuppressWarnings({"SameParameterValue", "unchecked"})
+    @SuppressWarnings({ "SameParameterValue", "unchecked" })
     protected T save(boolean forceUpdate, Object userState) {
         if (getState() == ObjectEditState.NONE) {
             if (forceUpdate) {
@@ -91,28 +94,30 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
             validations = CompletableFuture.completedFuture(List.of());
         }
 
-        return validations.thenCompose(ignored -> {
+        validations.whenComplete((ignored, throwable) -> {
             if (!isValid() && (!isDeleted() || isCheckObjectRulesOnDelete())) {
                 var errors = getRules().getBrokenRules()
                                        .stream()
                                        .collect(Collectors.groupingBy(BrokenRule::property, Collectors.mapping(BrokenRule::description, Collectors.toList())));
-                return CompletableFuture.failedFuture(new RuleCheckException(errors));
+                throw new RuleCheckException(errors);
             }
-
-            return CompletableFuture.supplyAsync(() -> {
-                try {
-                    markAsBusy();
-                    T result = getBusinessContext().getObjectFactory().save((Class<T>) getClass(), (T) this);
-                    onSaved(result, null, userState);
-                    return result;
-                } catch (Throwable error) {
-                    onSaved(null, error, userState);
-                    throw new RuntimeException(error);
-                } finally {
-                    markAsIdle();
-                }
-            });
         }).join();
+
+        try {
+            markAsBusy();
+            T result = getBusinessContext().getObjectFactory().save((Class<T>) getClass(), (T) this);
+            onSaved(result, null, userState);
+            return result;
+        } catch (Throwable error) {
+            onSaved(null, error, userState);
+            if (error instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            } else {
+                throw new RuntimeException(error);
+            }
+        } finally {
+            markAsIdle();
+        }
     }
 
     /**
@@ -143,5 +148,12 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
     public void close() {
         super.close();
         savedEventPublisher.close();
+    }
+
+    protected SubmissionPublisher<SavedEventArgs> getSavedEventPublisher() {
+
+        Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
+
+        return new SubmissionPublisher<>(customExecutor, Flow.defaultBufferSize());
     }
 }

@@ -16,3 +16,6 @@ trim_trailing_whitespace = false
 
 [Makefile]
 indent_style = tab
+
+[*.java]
+long_line_length = 9999

@@ -1,9 +1,12 @@
 package com.euonia.bus;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
+import com.euonia.core.PriorityValueFinder;
+import com.euonia.utility.ObjectUtility;
 
 /**
  * RoutedMessage is an abstract class that represents a message with routing information.
@@ -11,7 +14,7 @@ import com.euonia.core.ObjectId;
  *
  * @param <T> the type of the payload contained in the message
  */
-public class RoutedMessage<T> implements MessageEnvelope {
+public final class RoutedMessage<T> implements MessageEnvelope {
     private final static String MESSAGE_TYPE_KEY = "$nerosoft.euonia:message.type";
 
     private final MessageMetadata metadata = new MessageMetadata();
@@ -24,9 +27,23 @@ public class RoutedMessage<T> implements MessageEnvelope {
     private long timestamp = Instant.EPOCH.toEpochMilli();
     private T payload;
 
+    public RoutedMessage() {
+    }
+
     public RoutedMessage(T payload, String channel) {
         setPayload(payload);
         setChannel(channel);
+        messageId = PriorityValueFinder.find(queue -> {
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getMessageId"), 1);
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getCommandId"), 2);
+            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getEventId"), 3);
+        }, Objects::nonNull, null);
+    }
+
+    public RoutedMessage(T payload, String channel, String messageId) {
+        setPayload(payload);
+        setChannel(channel);
+        setMessageId(messageId);
     }
 
     @Override
@@ -94,6 +111,18 @@ public class RoutedMessage<T> implements MessageEnvelope {
         return metadata;
     }
 
+    public Object getMetadata(String key) {
+        return metadata.get(key);
+    }
+
+    public void setMetadata(String key, Object value) {
+        metadata.put(key, value);
+    }
+
+    public <V> V getMetadata(String key, Class<V> type) {
+        return metadata.get(key, type);
+    }
+
     public T getPayload() {
         return payload;
     }
@@ -107,6 +136,10 @@ public class RoutedMessage<T> implements MessageEnvelope {
 
     public String getTypeName() {
         return metadata.get(MESSAGE_TYPE_KEY, String.class);
+    }
+
+    public void setTypeName(String typeName) {
+        this.metadata.put(MESSAGE_TYPE_KEY, typeName);
     }
 
     @Override

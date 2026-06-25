@@ -133,9 +133,5 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
      * @param aborted 消息是否已被标记为中止
      * @return 处理完成后完成的 future
      */
-    protected abstract CompletableFuture<Void> handleAsync(
-        String channel,
-        Object message,
-        MessageContext context,
-        boolean aborted);
+    protected abstract CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context, boolean aborted);
 }

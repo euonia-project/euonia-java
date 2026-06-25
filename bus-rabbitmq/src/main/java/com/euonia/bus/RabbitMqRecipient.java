@@ -1,27 +1,31 @@
 package com.euonia.bus;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.rabbitmq.client.Connection;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 public abstract class RabbitMqRecipient implements AutoCloseable {
     protected final Connection connection;
     protected final RabbitMqBusOptions options;
     protected final HandlerContext handler;
     protected final MessageSerializer serializer;
+    protected final Type messageType;
     private final List<Consumer<MessageReceivedEvent>> messageReceivedListeners = new ArrayList<>();
     private final List<Consumer<MessageAcknowledgedEvent>> messageAcknowledgedListeners = new ArrayList<>();
 
-    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer) {
+    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
         this.connection = connection;
         this.options = options;
         this.handler = handler;
         this.serializer = serializer;
+        this.messageType = messageType;
     }
 
     public void onMessageReceived(Consumer<MessageReceivedEvent> listener) {
@@ -44,8 +48,15 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
         }
     }
 
-    protected void handle(RoutedMessage<?> message, MessageContext context) {
-        handler.handleAsync(message.getChannel(), message.getPayload(), context);
+    protected CompletableFuture<Object> handleAsync(RoutedMessage<?> message, MessageContext context) {
+        return handler.handleAsync(message.getPayload(), context)
+                      .whenComplete((result, error) -> {
+                          if (error != null) {
+                              context.failure(error);
+                          } else {
+                              context.response(result);
+                          }
+                      });
     }
 
     abstract void start(String group);

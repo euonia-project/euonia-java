@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.contract.Transport;
@@ -29,7 +28,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
     /**
      * 日志记录器。
      */
-    private static final Logger log = Logger.getLogger(InMemoryTransport.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(InMemoryTransport.class.getName());
 
     /**
      * 传输实例名称。
@@ -85,6 +84,8 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      */
     @Override
     public <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message) {
+        LOGGER.info(() -> String.format("Message '%s' send with '%s'", message.getMessageId(), getClass().getName()));
+
         MessageContextBase context = new MessageContextBase(message);
         MessagePack pack = new MessagePack(message, context);
 
@@ -103,7 +104,6 @@ public class InMemoryTransport implements Transport, AutoCloseable {
 
             @Override
             public void onError(Throwable throwable) {
-                log.log(Level.SEVERE, String.format("Message '%s' response failed with exception: %s", message.getMessageId(), throwable.getMessage()), throwable);
                 future.completeExceptionally(throwable);
             }
 
@@ -113,9 +113,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
         });
 
         context.addCompletedSubscriber(event -> {
-            if (!future.isDone()) {
-                future.complete(null);
-            }
+
         });
 
         StrongReferenceMessenger.getDefault().send(pack, message.getChannel());
@@ -135,6 +133,9 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      */
     @Override
     public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
+
+        LOGGER.info(() -> String.format("Message '%s' send with '%s'", message.getMessageId(), getClass().getName()));
+
         CompletableFuture<R> future = new CompletableFuture<>();
 
         MessageContextBase context = new MessageContextBase(message);
@@ -147,8 +148,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
 
             @Override
             public void onNext(MessageRepliedEvent event) {
-                log.info(String.format("Message '%s' responded with result: %s", message.getMessageId(),
-                    event.getResult()));
+                LOGGER.info(() -> String.format("Message '%s' responded with result: %s", message.getMessageId(), event.getResult()));
                 try {
                     future.complete(responseType.cast(event.getResult()));
                 } catch (ClassCastException ex) {
@@ -158,8 +158,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
 
             @Override
             public void onError(Throwable throwable) {
-                log.log(Level.SEVERE, String.format("Message '%s' response failed with exception: %s",
-                    message.getMessageId(), throwable.getMessage()), throwable);
+                LOGGER.severe(() -> String.format("Message '%s' response failed with exception: %s", message.getMessageId(), throwable.getMessage()));
                 future.completeExceptionally(throwable);
             }
 
@@ -169,9 +168,6 @@ public class InMemoryTransport implements Transport, AutoCloseable {
         });
 
         context.addCompletedSubscriber(event -> {
-            if (!future.isDone()) {
-                future.complete(null);
-            }
         });
 
         StrongReferenceMessenger.getDefault().send(pack, message.getChannel());

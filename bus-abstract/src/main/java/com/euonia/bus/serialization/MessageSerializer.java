@@ -1,5 +1,7 @@
 package com.euonia.bus.serialization;
 
+import java.lang.reflect.Type;
+
 /**
  * 消息序列化器接口，定义了消息的序列化和反序列化方法。
  * 实现该接口的类可以使用不同的序列化方式（如JSON、XML、Protobuf等）来处理消息的序列化和反序列化。
@@ -26,6 +28,18 @@ public interface MessageSerializer {
      * @return 反序列化后的消息对象
      */
     <M> M deserialize(String data, Class<M> type);
+
+    /**
+     * 将字符串反序列化为消息对象（支持泛型类型）。
+     * 当需要反序列化的目标类型包含泛型参数时（如 {@code RoutedMessage<ConcretePayload>}），
+     * 应优先使用此方法以确保类型信息不会丢失。
+     *
+     * @param <M>  消息对象的类型
+     * @param data 序列化后的字符串
+     * @param type 消息对象的类型（支持参数化类型）
+     * @return 反序列化后的消息对象
+     */
+    <M> M deserialize(String data, Type type);
 
     /**
      * 将字符串反序列化为消息对象（类型未知）。

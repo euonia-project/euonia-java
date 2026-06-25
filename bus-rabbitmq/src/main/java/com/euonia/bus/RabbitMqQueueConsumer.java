@@ -1,26 +1,25 @@
 package com.euonia.bus;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
+
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
-import com.euonia.bus.event.MessageRepliedEvent;
 import com.euonia.bus.recipient.Consumer;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.utility.StringUtility;
-import com.rabbitmq.client.*;
-
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 
 public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer {
 
     private Channel channel;
 
-    private final Class<? extends RoutedMessage<?>> messageType;
-
-    public RabbitMqQueueConsumer(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<? extends RoutedMessage<?>> messageType) {
-        super(connection, options, handler, serializer);
-        this.messageType = messageType;
+    public RabbitMqQueueConsumer(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+        super(connection, options, handler, serializer, messageType);
     }
 
     @Override
@@ -37,48 +36,40 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
             var consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    CompletableFuture<Object> future = new CompletableFuture<>();
 
-                    var message = serializer.deserialize(new String(body), messageType);
-                    var context = getMessageContext(message, future);
+                    RoutedMessage<?> message = serializer.deserialize(new String(body), messageType);
+                    var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handle(message, context);
-                    channel.basicAck(envelope.getDeliveryTag(), false);
-                    raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                    handleAsync(message, context).whenComplete((result, exception) -> {
+                        if (properties.getCorrelationId().isBlank() || properties.getReplyTo().isBlank()) {
+                            return;
+                        }
 
-                    future.whenComplete((result, exception) -> {
-                              if (properties.getCorrelationId().isBlank() || properties.getReplyTo().isBlank()) {
-                                  return;
-                              }
+                        String type, data;
 
-                              String type, data;
+                        if (exception != null) {
+                            type = "exception";
+                            data = serializer.serialize(exception);
+                        } else if (result != null) {
+                            type = "message";
+                            data = serializer.serialize(result);
+                        } else {
+                            type = "void";
+                            data = "";
+                        }
 
-                              if (exception != null) {
-                                  type = "exception";
-                                  data = serializer.serialize(exception);
-                              } else if (result != null) {
-                                  type = "message";
-                                  data = serializer.serialize(result);
-                              } else {
-                                  type = "void";
-                                  data = "";
-                              }
+                        var replyProperties = new AMQP.BasicProperties.Builder().correlationId(properties.getCorrelationId()).type(type).build();
 
-                              var replyProperties = new AMQP.BasicProperties.Builder()
-                                  .correlationId(properties.getCorrelationId())
-                                  .type(type)
-                                  .build();
+                        try {
+                            channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
+                            channel.basicAck(envelope.getDeliveryTag(), false);
+                        } catch (IOException e) {
+                            // 处理发送回复消息时发生的异常
+                            // 可以选择记录日志或其他处理方式
+                        }
+                        raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                    });
 
-                              try {
-                                  channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
-                              } catch (IOException e) {
-                                  // 处理发送回复消息时发生的异常
-                                  // 可以选择记录日志或其他处理方式
-                              }
-                          })
-                          .join();
-
-                    channel.basicAck(envelope.getDeliveryTag(), false);
                 }
             };
 
@@ -86,32 +77,5 @@ public final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Co
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private MessageContext getMessageContext(RoutedMessage<?> message, CompletableFuture<Object> future) {
-        var context = new MessageContextBase(message);
-
-        context.onReplied(new Flow.Subscriber<>() {
-            @Override
-            public void onSubscribe(Flow.Subscription subscription) {
-                subscription.request(1);
-            }
-
-            @Override
-            public void onNext(MessageRepliedEvent item) {
-                future.complete(item.getResult());
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                future.completeExceptionally(throwable);
-            }
-
-            @Override
-            public void onComplete() {
-                future.complete(null);
-            }
-        });
-        return context;
     }
 }

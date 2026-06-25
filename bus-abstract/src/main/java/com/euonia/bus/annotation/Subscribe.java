@@ -13,7 +13,7 @@ public @interface Subscribe {
      *
      * @return the channel name
      */
-    String value();
+    String value() default "";
 
     /**
      * Gets or sets the group name for this subscription.
