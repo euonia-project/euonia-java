@@ -1,7 +1,9 @@
 package com.euonia.sample.domain.event;
 
 import com.euonia.domain.event.DomainEventBase;
+import lombok.Getter;
 
+@Getter
 public class UserCreatedEvent extends DomainEventBase {
     private final long id;
     private final String name;

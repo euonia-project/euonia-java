@@ -54,6 +54,7 @@ public class MessageBusConfiguration {
                                         .setStrategy("RabbitMqMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("RabbitMqMessageBusTransport"));
                                             s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Event"));
+                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Event"));
                                         })
                                         .registerHandlers(packageName + ".application.handler");
     }
