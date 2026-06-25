@@ -24,7 +24,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     private String requestTrackId;
     private String channel;
     private String authorization;
-    private long timestamp = Instant.EPOCH.toEpochMilli();
+    private long timestamp = Instant.now().toEpochMilli();
     private T payload;
 
     public RoutedMessage() {
