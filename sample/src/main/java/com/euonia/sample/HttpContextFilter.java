@@ -1,8 +1,8 @@
 package com.euonia.sample;
 
 import com.euonia.core.ObjectId;
-import com.euonia.http.DefaultRequestContextAccessor;
 import com.euonia.http.RequestContext;
+import com.euonia.http.RequestContextAccessor;
 import jakarta.servlet.*;
 import org.apache.catalina.connector.RequestFacade;
 import org.springframework.stereotype.Component;
@@ -20,10 +20,10 @@ public class HttpContextFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
             var context = getRequestContext((RequestFacade) request);
-            DefaultRequestContextAccessor.set(context);
+            RequestContextAccessor.set(context);
             chain.doFilter(request, response);
         } finally {
-            DefaultRequestContextAccessor.remove();
+            RequestContextAccessor.remove();
         }
     }
 
