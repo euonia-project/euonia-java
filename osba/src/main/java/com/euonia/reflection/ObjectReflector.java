@@ -93,7 +93,9 @@ public final class ObjectReflector {
                 }
 
                 var index = 0;
-                assert criteria != null;
+                if(criteria == null){
+                    throw new IllegalArgumentException("Criteria cannot be null when parameter count is greater than 0.");
+                }
                 if (criteria.getClass() == Object[].class) {
                     for (var c : criteria) {
                         var currentScore = calculateParameterMatchScore(methodParameters[index], c);
