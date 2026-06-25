@@ -13,7 +13,6 @@ import com.euonia.bus.exception.MessageTypeException;
 import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
-import com.euonia.bus.options.MessageBusOptions;
 import com.euonia.bus.options.PublishOptions;
 import com.euonia.bus.options.SendOptions;
 import com.euonia.core.GuidType;
@@ -57,9 +56,9 @@ public final class MessageBus implements Bus {
     private final ServiceProvider provider;
 
     /**
-     * 消息总线配置选项。
+     * 配置器，用于获取消息约定和传输策略。
      */
-    private final MessageBusOptions options;
+    private final Configurator configurator;
 
     /**
      * 管道工厂，用于创建消息处理管道。
@@ -69,7 +68,7 @@ public final class MessageBus implements Bus {
     /**
      * 使用服务提供者创建消息总线实例。
      * <p>
-     * 从服务提供者中解析 {@link Dispatcher}、{@link MessageBusOptions}、 {@link PipelineFactory}。
+     * 从服务提供者中解析 {@link Dispatcher}、{@link Configurator}、 {@link PipelineFactory}。
      *
      * @param provider 服务提供者，必须包含 Dispatcher 服务
      * @throws IllegalStateException 如果 Dispatcher 服务未找到
@@ -77,21 +76,21 @@ public final class MessageBus implements Bus {
     public MessageBus(ServiceProvider provider) {
         this.provider = provider;
         this.dispatcher = provider.getService(Dispatcher.class).orElseThrow(() -> new IllegalStateException("Dispatcher service not found"));
-        this.options = provider.getService(MessageBusOptions.class).orElseThrow(() -> new IllegalStateException("MessageBusOptions service not found"));
+        this.configurator = provider.getService(Configurator.class).orElseThrow(() -> new IllegalStateException("Configurator service not found"));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
     /**
      * 使用指定的参数创建消息总线实例。
      *
-     * @param provider   服务提供者
-     * @param dispatcher 消息分发器
-     * @param options    消息总线配置选项
+     * @param provider     服务提供者
+     * @param dispatcher   消息分发器
+     * @param configurator 消息总线配置选项
      */
-    public MessageBus(ServiceProvider provider, Dispatcher dispatcher, MessageBusOptions options) {
+    public MessageBus(ServiceProvider provider, Dispatcher dispatcher, Configurator configurator) {
         this.dispatcher = dispatcher;
         this.provider = provider;
-        this.options = options;
+        this.configurator = configurator;
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
@@ -116,7 +115,7 @@ public final class MessageBus implements Bus {
         }
 
         var messageType = message.getClass();
-        if (!options.getConvention().isMulticastType(messageType)) {
+        if (!configurator.getConvention().isMulticastType(messageType)) {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not multicast");
         }
 
@@ -138,7 +137,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (publishOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
+        if (publishOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, Void>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);
@@ -200,7 +199,7 @@ public final class MessageBus implements Bus {
 
         var messageType = message.getClass();
 
-        if (!options.getConvention().isUnicastType(messageType)) {
+        if (!configurator.getConvention().isUnicastType(messageType)) {
             throw new MessageTypeException("The message type " + message.getClass().getName() + " is not unicast");
         }
 
@@ -223,7 +222,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (sendOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
+        if (sendOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);
@@ -309,7 +308,7 @@ public final class MessageBus implements Bus {
 
         var messageType = request.getClass();
 
-        if (!options.getConvention().isRequestType(messageType)) {
+        if (!configurator.getConvention().isRequestType(messageType)) {
             throw new MessageTypeException("The message type " + messageType.getName() + " is not request");
         }
 
@@ -330,7 +329,7 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        if (callOptions.isEnablePipelineBehaviors() || options.isEnablePipelineBehaviors()) {
+        if (callOptions.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
             var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
             if (pipeline != null) {
                 var pipelineMessage = new PipelineMessage<>(pack, pipeline);

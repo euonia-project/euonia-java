@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.euonia.bus.convention.DefaultMessageConventionBuilder;
 import com.euonia.bus.convention.MessageConventionBuilder;
@@ -17,10 +18,23 @@ import com.euonia.utility.Assert;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public class DefaultConfigurator implements Configurator {
+public final class DefaultConfigurator implements Configurator {
     private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
     private final List<HandlerRegistration> registrations = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    private Supplier<String> defaultTransportSupplier = () -> "";
+    private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
+
+    @Override
+    public String getDefaultTransport() {
+        return defaultTransportSupplier.get();
+    }
+
+    @Override
+    public boolean isEnablePipelineBehaviors() {
+        return enablePipelineBehaviorsSupplier.get();
+    }
 
     /**
      * 获取消息约定构建器。
@@ -135,6 +149,18 @@ public class DefaultConfigurator implements Configurator {
             var handlerTypes = MessageHandlerFinder.find(packageName);
             this.registrations.addAll(handlerTypes);
         }
+        return this;
+    }
+
+    public DefaultConfigurator setDefaultTransport(Supplier<String> defaultTransportSupplier) {
+        Assert.notNull(defaultTransportSupplier, "Default transport supplier cannot be null");
+        this.defaultTransportSupplier = defaultTransportSupplier;
+        return this;
+    }
+
+    public DefaultConfigurator setEnablePipelineBehaviors(Supplier<Boolean> enablePipelineBehaviorsSupplier) {
+        Assert.notNull(enablePipelineBehaviorsSupplier, "Enable pipeline behaviors cannot be null");
+        this.enablePipelineBehaviorsSupplier = enablePipelineBehaviorsSupplier;
         return this;
     }
 }

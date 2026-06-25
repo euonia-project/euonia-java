@@ -40,7 +40,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @Configuration
 public class MessageBusConfiguration {
-    /** Spring 环境抽象，用于读取应用配置属性 */
+    /**
+     * Spring 环境抽象，用于读取应用配置属性
+     */
     private final Environment environment;
 
     /**
@@ -87,7 +89,9 @@ public class MessageBusConfiguration {
                                             s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                             s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                         })
-                                        .registerHandlers(packageName + ".application.handler");
+                                        .registerHandlers(packageName + ".application.handler")
+                                        .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))
+                                        .setEnablePipelineBehaviors(() -> environment.getProperty("euonia.bus.enable-pipeline-behaviors", Boolean.class, true));
     }
 
     /**
