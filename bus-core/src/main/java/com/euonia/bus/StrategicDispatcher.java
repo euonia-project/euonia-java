@@ -1,11 +1,11 @@
 package com.euonia.bus;
 
-import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.options.MessageBusOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.euonia.bus.exception.MessageTypeException;
+import com.euonia.bus.options.MessageBusOptions;
 
 /**
  * 基于已配置的策略和约定为消息类型确定传输的分发器。
@@ -46,19 +46,19 @@ public class StrategicDispatcher implements Dispatcher {
         });
 
         switch (transportTypes.size()) {
-            case 0:
+            case 0 -> {
                 if (options.getDefaultTransport() == null || options.getDefaultTransport().isEmpty()) {
                     throw new MessageTypeException("No transport is configured for the message type. Message type: " + messageType.getName());
                 }
                 transportTypes.add(options.getDefaultTransport());
-                break;
-            case 1:
-                break;
-            default:
+            }
+            case 1 -> {
+            }
+            default -> {
                 if (!options.getConvention().isMulticastType(messageType)) {
                     throw new MessageTypeException("The message type is not identified as a multicast type, but multiple transport strategies are configured for it. Message type: " + messageType.getName());
                 }
-                break;
+            }
         }
 
         return transportTypes;
