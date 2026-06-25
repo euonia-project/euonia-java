@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Logger;
 
 import com.euonia.bus.recipient.Consumer;
 
@@ -14,11 +13,6 @@ import com.euonia.bus.recipient.Consumer;
  * @author damon(zhaorong@outlook.com)
  */
 public class InMemoryUnicastRecipient extends InMemoryRecipient implements Consumer {
-
-    /**
-     * 日志记录器。
-     */
-    private static final Logger log = Logger.getLogger(InMemoryUnicastRecipient.class.getName());
 
     /**
      * 处理器上下文，用于将消息分发给实际的消息处理器。
