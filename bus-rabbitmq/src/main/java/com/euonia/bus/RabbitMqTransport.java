@@ -176,7 +176,7 @@ public final class RabbitMqTransport implements Transport {
 
                 try {
                     if (responseType.equals(Void.class)) {
-                        future.complete(null);
+                        future.complete((R) null);
                     } else {
                         var responseData = new String(delivery.getBody());
                         LOGGER.info(() -> String.format("Message '%s' Received response: %s", message.getMessageId(), responseData));
@@ -186,7 +186,7 @@ public final class RabbitMqTransport implements Transport {
                                 var exception = serializer.deserialize(responseData, RuntimeException.class);
                                 future.completeExceptionally(exception);
                             }
-                            case EMPTY -> future.complete(null);
+                            case EMPTY -> future.complete((R) null);
                             case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                             default ->
                                 future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));
@@ -289,7 +289,7 @@ public final class RabbitMqTransport implements Transport {
                             var exception = serializer.deserialize(responseData, RuntimeException.class);
                             future.completeExceptionally(exception);
                         }
-                        case EMPTY -> future.complete(null);
+                        case EMPTY -> future.complete((R) null);
                         case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                         default ->
                             future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));

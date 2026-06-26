@@ -37,6 +37,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
             queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getMessageId"), 1);
             queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getCommandId"), 2);
             queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getEventId"), 3);
+            queue.add(() -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString(), 4);
         }, Objects::nonNull, null);
     }
 
