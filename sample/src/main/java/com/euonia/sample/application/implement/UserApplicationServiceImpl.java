@@ -52,7 +52,13 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
                 future.complete(0L);
             }
         };
-        return bus.sendAsync(command, Long.class, subscribe)
+
+        return bus.send(command, Long.class)
+                  .withCallback(subscribe)
+                  .executeAsync()
                   .thenCompose(result -> future);
+
+//        return bus.sendAsync(command, Long.class, subscribe)
+//                  .thenCompose(result -> future);
     }
 }

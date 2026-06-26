@@ -28,9 +28,8 @@ public final class PublishBuilder<T> {
 
     private final Bus bus;
     private final T message;
-    private String channel;
     private Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior;
-    private PublishOptions options;
+    private final PublishOptions options = new PublishOptions();
     private Consumer<MessageMetadata> metadataSetter;
 
     public PublishBuilder(Bus bus, T message) {
@@ -42,7 +41,7 @@ public final class PublishBuilder<T> {
      * 指定消息所属通道。
      */
     public PublishBuilder<T> withChannel(String channel) {
-        this.channel = channel;
+        options.setChannel(channel);
         return this;
     }
 
@@ -58,7 +57,7 @@ public final class PublishBuilder<T> {
      * 指定发布选项。
      */
     public PublishBuilder<T> withOptions(PublishOptions options) {
-        this.options = options;
+        //this.options = options;
         return this;
     }
 
@@ -71,15 +70,55 @@ public final class PublishBuilder<T> {
     }
 
     /**
+     * 指定消息 ID。
+     *
+     * @param messageId 消息 ID
+     * @return 当前的 PublishBuilder 实例
+     */
+    public PublishBuilder<T> withMessageId(String messageId) {
+        options.setMessageId(messageId);
+        return this;
+    }
+
+    /**
+     * 指定消息优先级，数值越大优先级越高。未指定时，系统会使用默认的优先级。
+     *
+     * @param priority 消息优先级
+     * @return 当前的 PublishBuilder 实例
+     */
+    public PublishBuilder<T> withPriority(int priority) {
+        options.setPriority(priority);
+        return this;
+    }
+
+    /**
+     * 指定消息的超时时间，单位为毫秒。未指定时，系统会使用默认的超时时间。
+     *
+     * @param timeoutMillis 超时时间，单位为毫秒
+     * @return 当前的 PublishBuilder 实例
+     */
+    public PublishBuilder<T> withTimeout(long timeoutMillis) {
+        options.setTimeout(timeoutMillis);
+        return this;
+    }
+
+    /**
+     * 指定消息的延迟发送时间，单位为毫秒。未指定时，消息会立即发送。
+     *
+     * @param delayMillis 延迟发送时间，单位为毫秒
+     * @return 当前的 PublishBuilder 实例
+     */
+    public PublishBuilder<T> withDelay(long delayMillis) {
+        options.setDelay(delayMillis);
+        return this;
+    }
+
+    /**
      * 执行发布。
      *
      * @return 在所有传输实例完成发送后完成的 future
      */
-    public CompletableFuture<Void> execute() {
-        var opts = options != null ? options : new PublishOptions();
-        if (channel != null) {
-            opts.setChannel(channel);
-        }
-        return bus.publishAsync(message, behavior, opts, metadataSetter);
+    public CompletableFuture<Void> executeAsync() {
+        return bus.publishAsync(message, behavior, options, metadataSetter);
     }
 }
