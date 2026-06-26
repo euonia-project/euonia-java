@@ -146,7 +146,7 @@ public final class MessageBus implements Bus {
 
                         var tasks = transports.stream()
                                               .map(transport -> {
-                                                  LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
+                                                  LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
                                                   return provider.getService(Transport.class, transport)
                                                                  .orElseThrow(() -> new MessageTransportException("Transport service not found: " + transport))
                                                                  .publishAsync(finalPack);
@@ -225,12 +225,12 @@ public final class MessageBus implements Bus {
                         var transport = provider.getService(Transport.class, transportName)
                                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-                        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
+                        LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
 
                         return transport.sendAsync(finalPack, responseType)
                                         .whenComplete((response, ex) -> {
                                             if (ex != null) {
-                                                LOGGER.log(Level.SEVERE, "Failed to send message: " + messageType.getName(), ex);
+                                                LOGGER.log(Level.SEVERE, ex, () -> "Failed to send message: " + messageType.getName());
                                                 if (callback != null) {
                                                     callback.onError(ex);
                                                 } else {
@@ -316,7 +316,7 @@ public final class MessageBus implements Bus {
                         var transport = provider.getService(Transport.class, transportName)
                                                 .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-                        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
+                        LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
 
                         return transport.callAsync(finalPack, responseType);
                     } finally {
@@ -327,35 +327,33 @@ public final class MessageBus implements Bus {
 
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
 
-        var future = new CompletableFuture<RoutedMessage<T>>();
-
-        if (options.isEnablePipelineBehaviors() || configurator.isEnablePipelineBehaviors()) {
-
-            var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
-            if (pipeline != null) {
-                var pipelineMessage = new PipelineMessage<>(pack, pipeline);
-                if (options.isAttachDefaultPipelineBehaviors()) {
-                    pipelineMessage.getPipeline().useOf(messageType, true);
-                }
-
-                if (behavior != null) {
-                    behavior.accept(pipelineMessage);
-                }
-                pipelineMessage.executeAsync()
-                               .whenComplete((result, error) -> {
-                                   if (error != null) {
-                                       LOGGER.log(Level.SEVERE, String.format("Pipeline execution failed for message: %s", messageType.getName()), error);
-                                       future.completeExceptionally(error);
-                                   } else {
-                                       future.complete(pipelineMessage.getMessage());
-                                   }
-                               });
-            } else {
-                future.complete(pack);
-            }
-        } else {
-            future.complete(pack);
+        if (!options.isEnablePipelineBehaviors() && !configurator.isEnablePipelineBehaviors()) {
+            return CompletableFuture.completedFuture(pack);
         }
+
+        var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
+        if (pipeline == null) {
+            return CompletableFuture.completedFuture(pack);
+        }
+
+        var future = new CompletableFuture<RoutedMessage<T>>();
+        var pipelineMessage = new PipelineMessage<>(pack, pipeline);
+        if (options.isAttachDefaultPipelineBehaviors()) {
+            pipelineMessage.getPipeline().useOf(messageType, true);
+        }
+
+        if (behavior != null) {
+            behavior.accept(pipelineMessage);
+        }
+        pipelineMessage.executeAsync()
+                       .whenComplete((result, error) -> {
+                           if (error != null) {
+                               LOGGER.log(Level.SEVERE, error, () -> String.format("Pipeline execution failed for message: %s", messageType.getName()));
+                               future.completeExceptionally(error);
+                           } else {
+                               future.complete(pipelineMessage.getMessage());
+                           }
+                       });
         return future;
     }
 }
