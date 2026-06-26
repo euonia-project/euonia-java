@@ -138,20 +138,26 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, publishOptions).join();
+        return executePipelineAsync(pack, messageType, behavior, publishOptions)
+                .thenCompose(finalPack -> {
+                    RequestContextAccessor.set(context);
+                    try {
+                        var transports = dispatcher.determine(messageType);
 
-        var transports = dispatcher.determine(messageType);
+                        var tasks = transports.stream()
+                                              .map(transport -> {
+                                                  LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
+                                                  return provider.getService(Transport.class, transport)
+                                                                 .orElseThrow(() -> new MessageTransportException("Transport service not found: " + transport))
+                                                                 .publishAsync(finalPack);
+                                              })
+                                              .toArray(CompletableFuture[]::new);
 
-        var tasks = transports.stream()
-                              .map(transport -> {
-                                  LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
-                                  return provider.getService(Transport.class, transport)
-                                                 .orElseThrow(() -> new MessageTransportException("Transport service not found: " + transport))
-                                                 .publishAsync(finalPack);
-                              })
-                              .toArray(CompletableFuture[]::new);
-
-        return CompletableFuture.allOf(tasks);
+                        return CompletableFuture.allOf(tasks);
+                    } finally {
+                        RequestContextAccessor.remove();
+                    }
+                });
     }
 
     /**
@@ -202,47 +208,53 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, sendOptions).join();
+        return executePipelineAsync(pack, messageType, behavior, sendOptions)
+                .thenCompose(finalPack -> {
+                    RequestContextAccessor.set(context);
+                    try {
+                        var transports = dispatcher.determine(messageType);
 
-        var transports = dispatcher.determine(messageType);
+                        if (transports.isEmpty()) {
+                            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+                        } else if (transports.size() > 1) {
+                            throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
+                        }
 
-        if (transports.isEmpty()) {
-            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
-        } else if (transports.size() > 1) {
-            throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
-        }
+                        var transportName = transports.get(0);
 
-        var transportName = transports.get(0);
+                        var transport = provider.getService(Transport.class, transportName)
+                                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-        var transport = provider.getService(Transport.class, transportName)
-                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+                        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
 
-        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
-
-        return transport.sendAsync(finalPack, responseType)
-                        .whenComplete((response, ex) -> {
-                            if (ex != null) {
-                                LOGGER.log(Level.SEVERE, "Failed to send message: " + messageType.getName(), ex);
-                                if (callback != null) {
-                                    callback.onError(ex);
-                                } else {
-                                    if (ex instanceof RuntimeException exception) {
-                                        throw exception;
-                                    } else {
-                                        throw new RuntimeException(ex);
-                                    }
-                                }
-                            } else {
-                                if (callback != null) {
-                                    callback.onNext(response);
-                                }
-                            }
-                        })
-                        .thenAccept(v -> {
-                            if (callback != null) {
-                                callback.onComplete();
-                            }
-                        });
+                        return transport.sendAsync(finalPack, responseType)
+                                        .whenComplete((response, ex) -> {
+                                            if (ex != null) {
+                                                LOGGER.log(Level.SEVERE, "Failed to send message: " + messageType.getName(), ex);
+                                                if (callback != null) {
+                                                    callback.onError(ex);
+                                                } else {
+                                                    if (ex instanceof RuntimeException exception) {
+                                                        throw exception;
+                                                    } else {
+                                                        throw new RuntimeException(ex);
+                                                    }
+                                                }
+                                            } else {
+                                                if (callback != null) {
+                                                    callback.onNext(response);
+                                                }
+                                            }
+                                        })
+                                        .thenAccept(v -> {
+                                            if (callback != null) {
+                                                callback.onComplete();
+                                            }
+                                        });
+                    } finally {
+                        RequestContextAccessor.remove();
+                    }
+                });
     }
 
     /**
@@ -290,21 +302,27 @@ public final class MessageBus implements Bus {
             metadataSetter.accept(pack.getMetadata());
         }
 
-        RoutedMessage<T> finalPack = executePipelineAsync(pack, messageType, behavior, callOptions).join();
+        return executePipelineAsync(pack, messageType, behavior, callOptions)
+                .thenCompose(finalPack -> {
+                    RequestContextAccessor.set(context);
+                    try {
+                        var transportNames = dispatcher.determine(messageType);
+                        if (transportNames.isEmpty()) {
+                            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+                        }
 
-        var transportNames = dispatcher.determine(messageType);
-        if (transportNames.isEmpty()) {
-            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
-        }
+                        var transportName = transportNames.get(0);
 
-        var transportName = transportNames.get(0);
+                        var transport = provider.getService(Transport.class, transportName)
+                                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-        var transport = provider.getService(Transport.class, transportName)
-                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+                        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
 
-        LOGGER.log(Level.INFO, String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
-
-        return transport.callAsync(finalPack, responseType);
+                        return transport.callAsync(finalPack, responseType);
+                    } finally {
+                        RequestContextAccessor.remove();
+                    }
+                });
     }
 
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
