@@ -11,7 +11,6 @@ import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -256,8 +255,8 @@ final class DefaultHandlerContext implements HandlerContext {
     /**
      * 安全地将值注册到值为列表的并发映射中。
      * <p>
-     * 利用 {@link ConcurrentHashMap#compute} 的键级原子性，无需全局锁。
-     * 每个键的操作互相独立，高并发注册时不会串行化。
+     * 每个键的列表使用 {@link CopyOnWriteArrayList}，确保在 {@link #handleAsync}
+     * 读取时不会与写操作发生竞态。
      *
      * @param key   要注册值所用的键
      * @param value 要添加到给定键对应列表中的值
@@ -265,12 +264,10 @@ final class DefaultHandlerContext implements HandlerContext {
     private void concurrentDictionarySafeRegister(String key, MessageHandlerFactory value) {
         handlerContainer.compute(key, (k, list) -> {
             if (list == null) {
-                var newList = new ArrayList<MessageHandlerFactory>();
+                var newList = new CopyOnWriteArrayList<MessageHandlerFactory>();
                 newList.add(value);
                 return newList;
             }
-            // MessageHandlerFactory 使用 Object.equals（引用等同），
-            // 重复注册会产生新 lambda，identity 比较永不等——直接添加
             list.add(value);
             return list;
         });
