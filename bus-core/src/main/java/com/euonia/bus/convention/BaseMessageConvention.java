@@ -116,7 +116,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为单播的谓词
      */
-    void defineUnicastTypeConvention(Predicate<Class<?>> convention) {
+    public void defineUnicastTypeConvention(Predicate<Class<?>> convention) {
         defaultConvention.setUnicastPredicate(convention);
     }
 
@@ -125,7 +125,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为组播的谓词
      */
-    void defineMulticastTypeConvention(Predicate<Class<?>> convention) {
+    public void defineMulticastTypeConvention(Predicate<Class<?>> convention) {
         defaultConvention.setMulticastPredicate(convention);
     }
 
@@ -134,7 +134,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为请求的谓词
      */
-    void defineRequestTypeConvention(Predicate<Class<?>> convention) {
+    public void defineRequestTypeConvention(Predicate<Class<?>> convention) {
         defaultConvention.setRequestPredicate(convention);
     }
 
@@ -144,7 +144,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 将类型分类为约定类别的函数
      */
-    void defineTypeConvention(Function<Class<?>, MessageConventionType> convention) {
+    public void defineTypeConvention(Function<Class<?>, MessageConventionType> convention) {
         Objects.requireNonNull(convention, "convention cannot be null.");
 
         defineUnicastTypeConvention(type -> convention.apply(type) == MessageConventionType.UNICAST);

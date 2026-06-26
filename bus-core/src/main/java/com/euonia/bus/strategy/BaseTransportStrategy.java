@@ -62,7 +62,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategy a predicate that determines if a message type is considered outgoing
      */
-    void defineOutgoingStrategy(Predicate<Class<?>> strategy) {
+    public void defineOutgoingStrategy(Predicate<Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setOutgoingPredicate(strategy);
     }
@@ -72,7 +72,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategy a predicate that determines if a message type is considered incoming
      */
-    void defineIncomingStrategy(Predicate<Class<?>> strategy) {
+    public void defineIncomingStrategy(Predicate<Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setIncomingPredicate(strategy);
     }
