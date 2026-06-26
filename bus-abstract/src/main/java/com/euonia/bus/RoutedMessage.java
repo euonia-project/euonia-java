@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
+import com.euonia.reflection.TypeHelper;
+import com.euonia.utility.Assert;
 
 /**
  * RoutedMessage is an abstract class that represents a message with routing information.
@@ -15,9 +17,9 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     private final static String MESSAGE_TYPE_KEY = "$nerosoft.euonia:message.type";
 
     private final MessageMetadata metadata = new MessageMetadata();
-    private String messageId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
-    private String correlationId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
-    private String conversationId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
+    private String messageId;
+    private String correlationId;
+    private String conversationId;
     private String requestTrackId;
     private String channel;
     private String authorization;
@@ -28,11 +30,14 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     }
 
     public RoutedMessage(T payload, String channel) {
-        setPayload(payload);
-        setChannel(channel);
+        this(payload, channel, ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString());
     }
 
     public RoutedMessage(T payload, String channel, String messageId) {
+        Assert.notNull(payload, "payload should not be null");
+        if (TypeHelper.isPrimitiveOrWrapper(payload.getClass())) {
+            throw new IllegalArgumentException("payload should not be primitive");
+        }
         setPayload(payload);
         setChannel(channel);
         setMessageId(messageId);

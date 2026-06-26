@@ -102,7 +102,7 @@ class MessageContextBaseTest {
         @Test
         @DisplayName("should copy metadata from routed message")
         void shouldCopyMetadata() {
-            var rm = new RoutedMessage<>("payload", "orders");
+            var rm = new RoutedMessage<>(new TestPayload("payload"), "orders");
             rm.setAuthorization("Bearer abc");
 
             var ctx = new MessageContextBase(rm);
@@ -230,6 +230,14 @@ class MessageContextBaseTest {
             ctx.setMetadata(meta);
 
             assertThat(ctx.getMetadata()).isSameAs(meta);
+        }
+    }
+
+    static class TestPayload {
+        private String payload;
+
+        public TestPayload(String payload) {
+            this.payload = payload;
         }
     }
 }
