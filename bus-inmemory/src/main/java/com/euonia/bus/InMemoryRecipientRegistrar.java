@@ -62,7 +62,9 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
         this.provider = provider;
         this.options = options;
         this.convention = configurator.getConventionBuilder().getConvention();
-        this.strategy = configurator.getStrategyBuilders().get(options.getName()).getStrategy();
+        var strategyBuilder = configurator.getStrategyBuilders().get(options.getName());
+        Assert.notNull(strategyBuilder, () -> "No strategy found for transport '" + options.getName() + "'");
+        this.strategy = strategyBuilder.getStrategy();
     }
 
     @Override
