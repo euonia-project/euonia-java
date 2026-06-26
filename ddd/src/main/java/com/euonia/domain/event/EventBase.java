@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.euonia.core.ObjectId;
 import com.euonia.reflection.TypeHelper;
 
 /**
@@ -14,7 +13,6 @@ import com.euonia.reflection.TypeHelper;
  * Subclasses can extend this base class to create specific types of events with additional properties and behavior.
  */
 public abstract class EventBase implements Event {
-    private static final String PROPERTY_ID = "nerosoft.euonia.internal.event.id";
     private static final String PROPERTY_EVENT_INTENT = "nerosoft.euonia.internal.event.intent";
     private static final String PROPERTY_ORIGINATOR_TYPE = "nerosoft.euonia.internal.event.originator.type";
     private static final String PROPERTY_ORIGINATOR_ID = "nerosoft.euonia.internal.event.originator.id";
@@ -23,7 +21,6 @@ public abstract class EventBase implements Event {
 
     protected EventBase() {
         var type = getClass();
-        properties.put(PROPERTY_ID, ObjectId.guid().toString());
         set(PROPERTY_EVENT_INTENT, type.getName());
     }
 
@@ -51,16 +48,6 @@ public abstract class EventBase implements Event {
     @Override
     public void setEventIntent(String eventIntent) {
         set(PROPERTY_EVENT_INTENT, eventIntent);
-    }
-
-    @Override
-    public final String getEventId() {
-        return get(PROPERTY_ID);
-    }
-
-    @Override
-    public final void setEventId(String eventId) {
-        set(PROPERTY_ID, eventId);
     }
 
     @Override

@@ -8,18 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class CommandBase implements Command {
-    private static final String PROPERTY_ID = "nerosoft.euonia.internal.command.id";
 
     private final Map<String, String> properties = new HashMap<>();
-
-    protected CommandBase() {
-        properties.put(PROPERTY_ID, ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString());
-    }
-
-    @Override
-    public String getCommandId() {
-        return properties.get(PROPERTY_ID);
-    }
 
     public Map<String, String> getProperties() {
         return properties;
