@@ -2,6 +2,7 @@ package com.euonia.bus.messenger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 测试 {@link StrongReferenceMessenger} 和 {@link WeakReferenceMessenger} 的注册/发送/取消注册。
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "ReassignedVariable"})
 @DisplayName("Messenger")
 class MessengerTest {
 
@@ -75,7 +76,8 @@ class MessengerTest {
             var messenger = StrongReferenceMessenger.getDefault();
             var recipient = new TestRecipient();
             messenger.register(recipient, String.class, "ch1");
-            messenger.register(recipient, Integer.class, "ch2", (r, m) -> {});
+            messenger.register(recipient, Integer.class, "ch2", (r, m) -> {
+            });
 
             messenger.unregisterAll(recipient);
 
@@ -104,8 +106,7 @@ class MessengerTest {
             var messenger = StrongReferenceMessenger.getDefault();
             var recipient = new TestRecipient();
 
-            messenger.register(recipient, String.class, (r, m) ->
-                ((TestRecipient) r).received = m);
+            messenger.register(recipient, String.class, (r, m) -> r.received = m);
 
             messenger.send("via-handler");
 
@@ -131,6 +132,7 @@ class MessengerTest {
             assertThat(recipient.received).isEqualTo("weak-delivery");
         }
 
+        @SuppressWarnings("UnusedAssignment")
         @Test
         @DisplayName("should lose GC'd recipients")
         void shouldLoseGCdRecipients() {
@@ -142,7 +144,7 @@ class MessengerTest {
             recipient = null;
             System.gc();
 
-            // After GC, the recipient should be gone but we can't assert
+            // After GC, the recipient should be gone, but we can't assert
             // because GC is non-deterministic. Just verify no exception.
             messenger.send("after-gc", "gc-ch");
         }

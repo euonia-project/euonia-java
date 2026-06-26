@@ -134,9 +134,7 @@ class MessageMetadataTest {
         @Test
         @DisplayName("should return null for missing string key")
         void shouldReturnNullForMissingStringKey() {
-            var md = new MessageMetadata();
-
-            assertThat(md.get("missing")).isNull();
+            assertThat(new MessageMetadata().get("missing")).isNull();
         }
     }
 }
