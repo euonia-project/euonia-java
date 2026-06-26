@@ -26,11 +26,12 @@ class RoutedMessageTest {
         }
 
         @Test
-        @DisplayName("should throw when payload is primitive")
-        void shouldThrowWhenPayloadIsPrimitive() {
-            assertThatThrownBy(() -> new RoutedMessage<>(42, "orders"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("payload should not be primitive");
+        @DisplayName("should accept any reference type including autoboxed primitives")
+        void shouldAcceptAnyReferenceType() {
+            var msg = new RoutedMessage<>(42, "orders");
+
+            assertThat(msg.getPayload()).isEqualTo(42);
+            assertThat(msg.getMessageId()).isNotNull();
         }
 
         @Test

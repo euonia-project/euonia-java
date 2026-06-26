@@ -109,13 +109,15 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param registration 描述要注册的处理器的 {@link HandlerRegistration}
      */
     public void register(HandlerRegistration registration) {
+        // 一次性设置 accessible，避免每次消息处理时的重复安全检查
+        var method = registration.method();
+        method.setAccessible(true);
+
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getServiceOrCreate(registration.handlerType());
             return (message, context) -> {
-                var method = registration.method();
                 var args = resolveArguments(method, message, context);
                 try {
-                    method.setAccessible(true);
                     return method.invoke(handler, args);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     var cause = unwrapCause(e);
@@ -267,9 +269,9 @@ final class DefaultHandlerContext implements HandlerContext {
                 newList.add(value);
                 return newList;
             }
-            if (!list.contains(value)) {
-                list.add(value);
-            }
+            // MessageHandlerFactory 使用 Object.equals（引用等同），
+            // 重复注册会产生新 lambda，identity 比较永不等——直接添加
+            list.add(value);
             return list;
         });
     }
