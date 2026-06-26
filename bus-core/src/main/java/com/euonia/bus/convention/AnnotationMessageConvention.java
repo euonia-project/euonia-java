@@ -1,8 +1,9 @@
 package com.euonia.bus.convention;
 
-import com.euonia.bus.annotation.Unicast;
 import com.euonia.bus.annotation.Multicast;
 import com.euonia.bus.annotation.Request;
+import com.euonia.bus.annotation.Unicast;
+import com.euonia.utility.Assert;
 
 /**
  * Evaluate whether a type is a message, command, event, or request by annotation decorated on the type.
@@ -18,19 +19,19 @@ public class AnnotationMessageConvention implements MessageConvention {
 
     @Override
     public boolean isUnicastType(Class<?> messageType) {
-        assert messageType != null : MESSAGE_TYPE_NULL_ERROR;
+        Assert.notNull(messageType, MESSAGE_TYPE_NULL_ERROR);
         return messageType.getAnnotation(Unicast.class) != null;
     }
 
     @Override
     public boolean isMulticastType(Class<?> messageType) {
-        assert messageType != null : MESSAGE_TYPE_NULL_ERROR;
+        Assert.notNull(messageType, MESSAGE_TYPE_NULL_ERROR);
         return messageType.getAnnotation(Multicast.class) != null;
     }
 
     @Override
     public boolean isRequestType(Class<?> messageType) {
-        assert messageType != null : MESSAGE_TYPE_NULL_ERROR;
+        Assert.notNull(messageType, MESSAGE_TYPE_NULL_ERROR);
         return messageType.getAnnotation(Request.class) != null;
     }
 }

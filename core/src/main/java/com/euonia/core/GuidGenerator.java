@@ -40,8 +40,7 @@ public final class GuidGenerator {
         byte[] guidBytes = new byte[16];
 
         switch (type) {
-            case SEQUENTIAL_AS_STRING:
-            case SEQUENTIAL_AS_BINARY:
+            case SEQUENTIAL_AS_STRING, SEQUENTIAL_AS_BINARY -> {
                 System.arraycopy(timestampBytes, 2, guidBytes, 0, 6);
                 System.arraycopy(randomBytes, 0, guidBytes, 6, 10);
 
@@ -49,15 +48,13 @@ public final class GuidGenerator {
                     reverse(guidBytes, 0, 4);
                     reverse(guidBytes, 4, 2);
                 }
-                break;
-
-            case SEQUENTIAL_AT_END:
+            }
+            case SEQUENTIAL_AT_END -> {
                 System.arraycopy(randomBytes, 0, guidBytes, 0, 10);
                 System.arraycopy(timestampBytes, 2, guidBytes, 10, 6);
-                break;
+            }
 
-            default:
-                throw new IllegalArgumentException("不支持的 GuidType: " + type);
+            default -> throw new IllegalArgumentException("不支持的 GuidType: " + type);
         }
 
         return fromDotNetBytes(guidBytes);

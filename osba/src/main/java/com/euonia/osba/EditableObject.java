@@ -12,6 +12,7 @@ import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.osba.abstracts.Savable;
 import com.euonia.osba.rules.BrokenRule;
 import com.euonia.osba.rules.RuleCheckException;
+import com.euonia.utility.Assert;
 
 /**
  * 表示可编辑的业务对象，可以保存到数据库或其他持久化存储中。
@@ -31,7 +32,7 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
      * @param listener 对象保存时要通知的监听器
      */
     public final void onSaved(Consumer<SavedEventArgs> listener) {
-        assert listener != null : "Listener cannot be null.";
+        Assert.notNull(listener, "Listener cannot be null.");
         savedEventPublisher.consume(listener);
     }
 

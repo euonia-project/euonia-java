@@ -14,7 +14,6 @@ import com.euonia.factory.annotation.FactoryInsert;
 import com.euonia.factory.annotation.FactoryUpdate;
 import com.euonia.osba.BusinessContext;
 import com.euonia.osba.ExecutableObject;
-import com.euonia.osba.ObjectEditState;
 import com.euonia.osba.ObservableObject;
 import com.euonia.osba.ReadOnlyObject;
 import com.euonia.osba.abstracts.UseBusinessContext;
@@ -126,14 +125,11 @@ public class BusinessObjectFactory implements ObjectFactory {
     public <T> T save(Class<T> type, T target) {
         Method method;
         if (target instanceof ObservableObject<?> editableObject) {
-            if (editableObject.getState() == ObjectEditState.NEW) {
-                method = ObjectReflector.findFactoryMethod(type, FactoryInsert.class, new Object[0]);
-            } else if (editableObject.getState() == ObjectEditState.CHANGED) {
-                method = ObjectReflector.findFactoryMethod(type, FactoryUpdate.class, new Object[0]);
-            } else if (editableObject.getState() == ObjectEditState.DELETED) {
-                method = ObjectReflector.findFactoryMethod(type, FactoryDelete.class, new Object[0]);
-            } else {
-                throw new IllegalArgumentException("Unexpected value: " + editableObject.getState());
+            switch (editableObject.getState()) {
+                case NEW -> method = ObjectReflector.findFactoryMethod(type, FactoryInsert.class, new Object[0]);
+                case CHANGED -> method = ObjectReflector.findFactoryMethod(type, FactoryUpdate.class, new Object[0]);
+                case DELETED -> method = ObjectReflector.findFactoryMethod(type, FactoryDelete.class, new Object[0]);
+                default -> throw new IllegalArgumentException("Unexpected value: " + editableObject.getState());
             }
         } else if (target instanceof ExecutableObject) {
             method = ObjectReflector.findFactoryMethod(type, FactoryExecute.class, new Object[0]);

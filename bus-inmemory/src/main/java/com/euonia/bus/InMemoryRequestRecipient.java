@@ -1,8 +1,6 @@
 package com.euonia.bus;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.euonia.bus.recipient.Executor;
 
@@ -15,11 +13,6 @@ import com.euonia.bus.recipient.Executor;
  * @author damon(zhaorong@outlook.com)
  */
 public class InMemoryRequestRecipient extends InMemoryRecipient implements Executor {
-
-    /**
-     * 日志记录器。
-     */
-    private static final Logger log = Logger.getLogger(InMemoryRequestRecipient.class.getName());
 
     /**
      * 处理器上下文，用于将消息分发给实际的消息处理器。
@@ -67,15 +60,5 @@ public class InMemoryRequestRecipient extends InMemoryRecipient implements Execu
     @Override
     public String getName() {
         return getClass().getSimpleName();
-    }
-
-    /**
-     * 关闭接收者，释放资源。
-     * <p>
-     * 当前实现为空，资源释放由父类或其他机制处理。
-     */
-    @Override
-    public void close() {
-
     }
 }

@@ -8,6 +8,7 @@ import com.euonia.annotation.Validator;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.tuple.Duet;
+import com.euonia.utility.Assert;
 
 /**
  * 表示一个基于应用于属性的特定注解的规则。
@@ -31,7 +32,7 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
      */
     public DataAnnotationRule(PropertyInfo<?> property, A annotation, Class<?> validatorType) {
         super(property, annotation.annotationType().getSimpleName());
-        assert validatorType != null : "Validator type cannot be null.";
+        Assert.notNull(validatorType, "Validator type cannot be null.");
         this.annotation = annotation;
         this.validatorType = validatorType;
     }

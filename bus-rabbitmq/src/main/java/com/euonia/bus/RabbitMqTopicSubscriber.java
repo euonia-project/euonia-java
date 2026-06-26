@@ -15,24 +15,57 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
-public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscriber {
+/**
+ * RabbitMQ 主题订阅者，实现多播消息的消费。
+ * <p>
+ * 绑定到扇出（fanout）交换器，声明独占队列并消费所有发布到该交换器的消息。
+ * 消息处理完成后自动发送 ACK 确认并触发消息确认事件。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
+final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscriber {
 
+    /**
+     * RabbitMQ 通道
+     */
     private Channel channel;
 
+    /**
+     * 使用必要的依赖构造主题订阅者。
+     *
+     * @param connection  RabbitMQ 连接
+     * @param options     RabbitMQ 总线选项
+     * @param handler     处理器上下文
+     * @param serializer  消息序列化器
+     * @param messageType 此订阅者处理的消息类型
+     */
     public RabbitMqTopicSubscriber(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
         super(connection, options, handler, serializer, messageType);
     }
 
+    /**
+     * 启动主题订阅，声明扇出交换器和独占队列，绑定后开始监听消息。
+     * <p>
+     * 收到消息后：
+     * <ol>
+     *   <li>反序列化消息体</li>
+     *   <li>触发消息接收事件</li>
+     *   <li>异步处理消息</li>
+     *   <li>处理完成后发送 ACK 确认并触发消息确认事件</li>
+     * </ol>
+     *
+     * @param group 通道组名称，用于生成交换器和队列名
+     */
     @Override
     void start(String group) {
         try {
             channel = connection.createChannel();
 
-            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), Constants.DEFAULT_EXCHANGE_NAME_PREFIX);
+            var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), RabbitMqConstants.DEFAULT_EXCHANGE_NAME_PREFIX);
             var exchangeName = String.format("%s:%s", exchangePrefix, group);
 
             channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
-            var queueName = channel.queueDeclare(String.format("%s@%s", exchangeName, options.getSubscriptionId()), true, false, false, null).getQueue();
+            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, null).getQueue();
             channel.queueBind(queueName, exchangeName, "*");
             var consumer = new DefaultConsumer(channel) {
                 @Override
@@ -41,33 +74,21 @@ public final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements 
                     RoutedMessage<?> message = serializer.deserialize(new String(body), messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handleAsync(message, context).whenComplete((result, exception) -> {
+                    handleAsync(message, context).whenComplete((result, error) -> {
                         try {
                             channel.basicAck(envelope.getDeliveryTag(), false);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                        } catch (IOException exception) {
+                            throw new RuntimeException(exception);
                         }
-                        raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
                     });
                 }
             };
 
             channel.basicConsume(queueName, false, consumer);
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        if (channel != null) {
-            try {
-                channel.close();
-            } catch (Exception e) {
-                // Log the exception or handle it as needed
-            }
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
         }
     }
 }

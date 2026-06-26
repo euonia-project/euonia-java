@@ -158,11 +158,12 @@ public class BaseMessageConvention implements MessageConvention {
      * @param conventions 要添加的约定数组，不能为 {@code null} 或空
      * @throws IllegalArgumentException 若 {@code conventions} 为 {@code null} 或空数组
      */
-    void add(MessageConvention... conventions) {
+    public void add(MessageConvention... conventions) {
         if (conventions == null || conventions.length == 0) {
             throw new IllegalArgumentException("At least one convention must be provided.");
         }
         this.conventions.addAll(Arrays.asList(conventions));
+        resetCache(); // 重置缓存以确保新约定生效
     }
 
     /**
@@ -170,7 +171,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @return 已注册约定的名称数组
      */
-    String[] getRegisteredConventions() {
+    public String[] getRegisteredConventions() {
         return conventions.stream()
                           .map(MessageConvention::getName)
                           .toArray(String[]::new);
@@ -179,7 +180,7 @@ public class BaseMessageConvention implements MessageConvention {
     /**
      * 重置所有缓存的条目，强制在下一次访问时重新计算类型分类结果。
      */
-    void resetCache() {
+    private void resetCache() {
         unicastConventionCache.reset();
         multicastConventionCache.reset();
         requestConventionCache.reset();
@@ -188,12 +189,7 @@ public class BaseMessageConvention implements MessageConvention {
     // ---- 内部缓存类 ----
 
     /**
-     * 线程安全的、以类型为键的缓存，首次访问时计算值，
-     * 并在后续对同一键的所有查找中重用该值。
-     * <p>
-     * 使用 {@link Class} 作为键，依赖于基于对象标识的
-     * {@code hashCode()} / {@code equals()} —— 在精神上等同于
-     * .NET 中基于 {@code RuntimeTypeHandle} 的缓存。
+     * 线程安全的、以类型为键的缓存，首次访问时计算值，并在后续对同一键的所有查找中重用该值。
      */
     private static class ConventionCache {
 

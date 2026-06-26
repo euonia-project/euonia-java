@@ -263,17 +263,13 @@ var configurator = new DefaultConfigurator();
 configurator.setConvention(b -> b.add(new DefaultMessageConvention()));
 configurator.registerHandlers(OrderHandler.class);
 
-// 3. 创建选项
-var options = new MessageBusOptions(configurator);
-options.setDefaultTransport("inmemory");
-
-// 4. 创建分发器
+// 3. 创建分发器
 var dispatcher = new StrategicDispatcher(options);
 
-// 5. 创建总线
+// 4. 创建总线
 var bus = new MessageBus(provider, dispatcher, options);
 
-// 6. 发送消息
+// 5. 发送消息
 bus.sendAsync(new CreateOrderCommand("P123", 5))
     .toCompletableFuture()
     .join();

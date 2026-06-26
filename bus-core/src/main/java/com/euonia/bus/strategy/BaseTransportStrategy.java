@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
+import com.euonia.utility.Assert;
+
 /**
  * Represents a composite transport strategy that aggregates multiple {@link TransportStrategy} instances
  * and caches the results of outgoing and incoming message type evaluations using {@link ConcurrentHashMap}.
@@ -33,13 +35,13 @@ public class BaseTransportStrategy implements TransportStrategy {
 
     @Override
     public boolean outgoing(Class<?> messageType) {
-        assert messageType != null : "messageType cannot be null.";
+        Assert.notNull(messageType, "messageType cannot be null.");
         return outgoingCache.apply(messageType, type -> strategies.stream().anyMatch(s -> s.outgoing(type)));
     }
 
     @Override
     public boolean incoming(Class<?> messageType) {
-        assert messageType != null : "messageType cannot be null.";
+        Assert.notNull(messageType, "messageType cannot be null.");
         return incomingCache.apply(messageType, type -> strategies.stream().anyMatch(s -> s.incoming(type)));
     }
 
@@ -49,11 +51,10 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategies the transport strategies to add
      */
-    void add(TransportStrategy... strategies) {
-        if (strategies == null || strategies.length == 0) {
-            throw new IllegalArgumentException("strategies cannot be null or empty.");
-        }
+    public void add(TransportStrategy... strategies) {
+        Assert.notEmpty(strategies, "strategies cannot be null or empty.");
         Collections.addAll(this.strategies, strategies);
+        resetCache(); // Reset caches to ensure new strategies take effect
     }
 
     /**
@@ -62,6 +63,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      * @param strategy a predicate that determines if a message type is considered outgoing
      */
     void defineOutgoingStrategy(Predicate<Class<?>> strategy) {
+        Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setOutgoingPredicate(strategy);
     }
 
@@ -71,13 +73,14 @@ public class BaseTransportStrategy implements TransportStrategy {
      * @param strategy a predicate that determines if a message type is considered incoming
      */
     void defineIncomingStrategy(Predicate<Class<?>> strategy) {
+        Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setIncomingPredicate(strategy);
     }
 
     /**
      * Resets the caches for outgoing and incoming message evaluations.
      */
-    void resetCache() {
+    private void resetCache() {
         outgoingCache.reset();
         incomingCache.reset();
     }

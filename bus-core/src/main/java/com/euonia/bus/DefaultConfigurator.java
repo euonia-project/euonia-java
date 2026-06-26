@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import com.euonia.bus.convention.DefaultMessageConventionBuilder;
 import com.euonia.bus.convention.MessageConventionBuilder;
+import com.euonia.bus.strategy.DefaultTransportStrategyBuilder;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
+import com.euonia.utility.Assert;
 
 /**
  * DefaultConfigurator 是 {@link Configurator} 接口的默认实现。
@@ -14,10 +18,23 @@ import com.euonia.bus.strategy.TransportStrategyBuilder;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public class DefaultConfigurator implements Configurator {
-    private final MessageConventionBuilder conventionBuilder = new MessageConventionBuilder();
+public final class DefaultConfigurator implements Configurator {
+    private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
     private final List<HandlerRegistration> registrations = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    private Supplier<String> defaultTransportSupplier = () -> "";
+    private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
+
+    @Override
+    public String getDefaultTransport() {
+        return defaultTransportSupplier.get();
+    }
+
+    @Override
+    public boolean isEnablePipelineBehaviors() {
+        return enablePipelineBehaviorsSupplier.get();
+    }
 
     /**
      * 获取消息约定构建器。
@@ -56,7 +73,7 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator setConvention(Consumer<MessageConventionBuilder> conventionConfig) {
-        assert conventionConfig != null : "Convention configuration cannot be null";
+        Assert.notNull(conventionConfig, "Convention configuration cannot be null");
         conventionConfig.accept(conventionBuilder);
         return this;
     }
@@ -69,9 +86,9 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator setStrategy(String name, Consumer<TransportStrategyBuilder> strategyConfig) {
-        assert name != null && !name.trim().isEmpty() : "Strategy name cannot be null or empty";
-        assert strategyConfig != null : "Strategy configuration cannot be null";
-        var builder = strategyBuilders.computeIfAbsent(name, k -> new TransportStrategyBuilder());
+        Assert.notNull(strategyConfig, "Strategy configuration cannot be null");
+        Assert.notEmpty(name, "Strategy name cannot be null or empty");
+        var builder = strategyBuilders.computeIfAbsent(name, k -> new DefaultTransportStrategyBuilder());
         strategyConfig.accept(builder);
         return this;
     }
@@ -83,7 +100,7 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerHandlers(HandlerRegistration registration) {
-        assert registration != null : "Message registration cannot be null";
+        Assert.notNull(registration, "Message registration cannot be null");
         registrations.add(registration);
         return this;
     }
@@ -95,9 +112,11 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerHandlers(List<Class<?>> types) {
-        assert types != null && !types.isEmpty() : "Types cannot be null or empty";
-        var handlerTypes = MessageHandlerFinder.find(types.toArray(Class<?>[]::new));
-        this.registrations.addAll(handlerTypes);
+        Assert.notEmpty(types, "Types cannot be null or empty");
+        if (!types.isEmpty()) {
+            var handlerTypes = MessageHandlerFinder.find(types.toArray(Class<?>[]::new));
+            this.registrations.addAll(handlerTypes);
+        }
         return this;
     }
 
@@ -108,9 +127,12 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerHandlers(Class<?>... types) {
-        assert types != null && types.length > 0 : "Types cannot be null or empty";
-        var handlerTypes = MessageHandlerFinder.find(types);
-        this.registrations.addAll(handlerTypes);
+        Assert.notEmpty(types, "Types cannot be null or empty");
+        if (types.length > 0) {
+            var handlerTypes = MessageHandlerFinder.find(types);
+            this.registrations.addAll(handlerTypes);
+        }
+
         return this;
     }
 
@@ -121,13 +143,24 @@ public class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerHandlers(String... packageNames) {
-        assert packageNames != null && packageNames.length > 0 : "Package names cannot be null or empty";
+        Assert.notContains(packageNames, String::isBlank, "Package names cannot contain null or empty values");
 
         for (String packageName : packageNames) {
-            assert packageName != null && !packageName.trim().isEmpty() : "Package name cannot be null or empty";
             var handlerTypes = MessageHandlerFinder.find(packageName);
             this.registrations.addAll(handlerTypes);
         }
+        return this;
+    }
+
+    public DefaultConfigurator setDefaultTransport(Supplier<String> defaultTransportSupplier) {
+        Assert.notNull(defaultTransportSupplier, "Default transport supplier cannot be null");
+        this.defaultTransportSupplier = defaultTransportSupplier;
+        return this;
+    }
+
+    public DefaultConfigurator setEnablePipelineBehaviors(Supplier<Boolean> enablePipelineBehaviorsSupplier) {
+        Assert.notNull(enablePipelineBehaviorsSupplier, "Enable pipeline behaviors cannot be null");
+        this.enablePipelineBehaviorsSupplier = enablePipelineBehaviorsSupplier;
         return this;
     }
 }

@@ -293,26 +293,26 @@ final class DefaultHandlerContext implements HandlerContext {
         var arguments = new Object[parameterTypes.length];
 
         switch (parameterTypes.length) {
-            case 0:
-                break;
-            case 1:
+            case 0 -> {
+            }
+            case 1 -> {
                 if (parameterTypes[0] == MessageContext.class) {
                     arguments[0] = context;
                 } else {
                     arguments[0] = message;
                 }
-                break;
-            case 2:
-            case 3:
+            }
+            case 2, 3 -> {
                 arguments[0] = message;
                 for (var i = 1; i < parameterTypes.length; i++) {
                     if (parameterTypes[i] == MessageContext.class) {
                         arguments[i] = context;
                     }
                 }
-                break;
-            default:
+            }
+            default -> {
                 return new Object[0];
+            }
         }
 
         return arguments;

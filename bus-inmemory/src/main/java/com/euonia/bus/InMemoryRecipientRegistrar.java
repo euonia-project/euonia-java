@@ -7,18 +7,17 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.messenger.StrongReferenceMessenger;
-import com.euonia.bus.messenger.WeakReferenceMessenger;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.reflection.ServiceProvider;
+import com.euonia.utility.Assert;
 
 /**
  * 内存消息总线的接收者注册器。
  * <p>
  * 负责将消息处理器注册到对应的内存消息传输实例。根据消息约定（{@link MessageConvention}），
  * 将消息类型分类为单播、多播或请求类型，并分别注册到
- * {@link com.euonia.bus.messenger.StrongReferenceMessenger} 或
- * {@link com.euonia.bus.messenger.WeakReferenceMessenger}。
+ * {@link com.euonia.bus.messenger.StrongReferenceMessenger}。
  *
  * @author damon(zhaorong@outlook.com)
  */
@@ -57,6 +56,9 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
      * @param options      内存总线配置选项
      */
     public InMemoryRecipientRegistrar(Configurator configurator, ServiceProvider provider, InMemoryBusOptions options) {
+        Assert.notNull(configurator, "Configurator must not be null");
+        Assert.notNull(provider, "Provider must not be null");
+        Assert.notNull(options, "Options must not be null");
         this.provider = provider;
         this.options = options;
         this.convention = configurator.getConventionBuilder().getConvention();
@@ -79,7 +81,7 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
                 StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
             } else if (convention.isMulticastType(registration.messageType())) {
                 var recipient = getRecipient(InMemoryMulticastRecipient.class);
-                WeakReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
+                StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
             } else if (convention.isRequestType(registration.messageType())) {
                 var recipient = getRecipient(InMemoryRequestRecipient.class);
                 StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());

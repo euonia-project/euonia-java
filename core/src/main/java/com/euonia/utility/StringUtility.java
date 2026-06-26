@@ -9,6 +9,27 @@ import java.util.function.Supplier;
  * @author damon(zhaorong@outlook.com)
  */
 public class StringUtility {
+
+    /**
+     * 检查给定的字符串是否为 null 或空字符串。
+     *
+     * @param input 要检查的字符串
+     * @return 如果字符串为 null 或空字符串，则返回 true；否则返回 false
+     */
+    public static boolean isNullOrEmpty(String input) {
+        return input == null || input.isEmpty();
+    }
+
+    /**
+     * 检查给定的字符串是否为 null、空字符串或仅包含空白字符。
+     *
+     * @param input 要检查的字符串
+     * @return 如果字符串为 null、空字符串或仅包含空白字符，则返回 true；否则返回 false
+     */
+    public static boolean isNullOrBlank(String input) {
+        return input == null || input.isEmpty() || input.isBlank();
+    }
+
     /**
      * 将输入字符串的首字母大写。
      *
@@ -16,7 +37,7 @@ public class StringUtility {
      * @return 首字母大写后的字符串
      */
     public static String capitalizeFirstLetter(String input) {
-        if (input == null || input.isEmpty()) {
+        if (isNullOrEmpty(input)) {
             return input;
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
@@ -29,7 +50,7 @@ public class StringUtility {
      * @return 首字母小写后的字符串
      */
     public static String decapitalizeFirstLetter(String input) {
-        if (input == null || input.isEmpty()) {
+        if (isNullOrEmpty(input)) {
             return input;
         }
         return input.substring(0, 1).toLowerCase() + input.substring(1);
@@ -42,7 +63,7 @@ public class StringUtility {
      * @return 首字母大写并添加下划线后的字符串
      */
     public static String capitalizeFirstLetterWithUnderscore(String input) {
-        if (input == null || input.isEmpty()) {
+        if (isNullOrEmpty(input)) {
             return input;
         }
 

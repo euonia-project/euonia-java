@@ -1,11 +1,10 @@
 package com.euonia.bus;
 
-import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.options.MessageBusOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.euonia.bus.exception.MessageTypeException;
 
 /**
  * 基于已配置的策略和约定为消息类型确定传输的分发器。
@@ -15,15 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StrategicDispatcher implements Dispatcher {
     private final ConcurrentHashMap<Class<?>, List<String>> transportCache = new ConcurrentHashMap<>();
-    private final MessageBusOptions options;
+    private final Configurator configurator;
 
     /**
-     * 使用指定的选项创建 {@link StrategicDispatcher} 的新实例。
+     * 使用指定的配置器创建 {@link StrategicDispatcher} 的新实例。
      *
-     * @param options 消息总线选项
+     * @param configurator 消息总线配置器
      */
-    public StrategicDispatcher(MessageBusOptions options) {
-        this.options = options;
+    public StrategicDispatcher(Configurator configurator) {
+        this.configurator = configurator;
     }
 
     /**
@@ -36,9 +35,9 @@ public class StrategicDispatcher implements Dispatcher {
     public List<String> determine(Class<?> messageType) {
         var transportTypes = transportCache.computeIfAbsent(messageType, t -> {
             var list = new ArrayList<String>();
-            for (var type : options.getStrategyAssignedTypes()) {
-                var strategy = options.getStrategy(type);
-                if (strategy.outgoing(messageType)) {
+            for (var type : configurator.getStrategyAssignedTypes()) {
+                var strategy = configurator.getStrategy(type);
+                if (strategy != null && strategy.outgoing(messageType)) {
                     list.add(type);
                 }
             }
@@ -46,19 +45,19 @@ public class StrategicDispatcher implements Dispatcher {
         });
 
         switch (transportTypes.size()) {
-            case 0:
-                if (options.getDefaultTransport() == null || options.getDefaultTransport().isEmpty()) {
+            case 0 -> {
+                if (configurator.getDefaultTransport() == null || configurator.getDefaultTransport().isEmpty()) {
                     throw new MessageTypeException("No transport is configured for the message type. Message type: " + messageType.getName());
                 }
-                transportTypes.add(options.getDefaultTransport());
-                break;
-            case 1:
-                break;
-            default:
-                if (!options.getConvention().isMulticastType(messageType)) {
+                transportTypes.add(configurator.getDefaultTransport());
+            }
+            case 1 -> {
+            }
+            default -> {
+                if (!configurator.getConvention().isMulticastType(messageType)) {
                     throw new MessageTypeException("The message type is not identified as a multicast type, but multiple transport strategies are configured for it. Message type: " + messageType.getName());
                 }
-                break;
+            }
         }
 
         return transportTypes;

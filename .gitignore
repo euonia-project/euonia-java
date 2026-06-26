@@ -86,3 +86,4 @@ application-*.properties
 application-*.yml
 application-*.yaml
 docker-compose.dev.yaml
+*-formatter.xml
