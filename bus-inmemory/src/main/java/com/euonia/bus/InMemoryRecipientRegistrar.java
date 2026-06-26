@@ -80,12 +80,15 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
 
             if (convention.isUnicastType(registration.messageType())) {
                 var recipient = getRecipient(InMemoryUnicastRecipient.class);
+                recipient.setDeadLetterOptions(options);
                 StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
             } else if (convention.isMulticastType(registration.messageType())) {
                 var recipient = getRecipient(InMemoryMulticastRecipient.class);
+                recipient.setDeadLetterOptions(options);
                 StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
             } else if (convention.isRequestType(registration.messageType())) {
                 var recipient = getRecipient(InMemoryRequestRecipient.class);
+                recipient.setDeadLetterOptions(options);
                 StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
             } else {
                 throw new IllegalStateException("The message type is not identified as unicast or multicast type. Message type: " + registration.messageType().getName());

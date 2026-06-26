@@ -45,6 +45,7 @@ public class InMemoryMulticastRecipient extends InMemoryRecipient implements Sub
         return handler.handleAsync(channel, message, context)
                       .whenComplete((result, error) -> {
                           if (error != null) {
+                              publishDeadLetter(channel, currentMessage, error);
                               context.failure(error);
                           } else {
                               context.response(result);

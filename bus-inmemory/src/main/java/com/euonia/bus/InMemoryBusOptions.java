@@ -30,6 +30,11 @@ public class InMemoryBusOptions {
     private boolean multipleSubscriberInstance;
 
     /**
+     * 是否启用死信队列。启用后，处理失败的消息将被存储到 {@link InMemoryDeadLetterQueue}。
+     */
+    private boolean deadLetterEnabled = true;
+
+    /**
      * 获取传输名称。
      *
      * @return 传输名称
@@ -99,5 +104,13 @@ public class InMemoryBusOptions {
      */
     public void setMultipleSubscriberInstance(boolean multipleSubscriberInstance) {
         this.multipleSubscriberInstance = multipleSubscriberInstance;
+    }
+
+    public boolean isDeadLetterEnabled() {
+        return deadLetterEnabled;
+    }
+
+    public void setDeadLetterEnabled(boolean deadLetterEnabled) {
+        this.deadLetterEnabled = deadLetterEnabled;
     }
 }
