@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,6 +28,7 @@ import com.euonia.core.ObjectPoolPolicy.OversizeBehavior;
  * 针对 {@link DefaultObjectPool} 的全面单元测试，覆盖构造、获取、释放、
  * 四种超限行为、验证失败、线程安全以及中断场景。
  */
+@SuppressWarnings({"unused", "ConvertToTryWithResources", "resource"})
 @DisplayName("DefaultObjectPool")
 class DefaultObjectPoolTest {
 
@@ -69,12 +71,29 @@ class DefaultObjectPoolTest {
         }
 
         // 便捷配置方法
-        void setValidateResult(boolean ok) { this.validateResult = ok; }
-        void setOversizeBehavior(OversizeBehavior b) { this.oversizeBehavior = b; }
-        void setCreateException(RuntimeException ex) { this.createException = ex; }
-        int getCreateCount() { return createCount.get(); }
-        int getDestroyCount() { return destroyCount.get(); }
-        int getValidateCount() { return validateCount.get(); }
+        void setValidateResult(boolean ok) {
+            this.validateResult = ok;
+        }
+
+        void setOversizeBehavior(OversizeBehavior b) {
+            this.oversizeBehavior = b;
+        }
+
+        void setCreateException(RuntimeException ex) {
+            this.createException = ex;
+        }
+
+        int getCreateCount() {
+            return createCount.get();
+        }
+
+        int getDestroyCount() {
+            return destroyCount.get();
+        }
+
+        int getValidateCount() {
+            return validateCount.get();
+        }
     }
 
     // ──────────────────── 构造 ────────────────────
@@ -105,7 +124,7 @@ class DefaultObjectPoolTest {
             StubPolicy policy = new StubPolicy();
             int overMax = (1 << 20) + 1; // MAX_CAPACITY + 1
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                    () -> new DefaultObjectPool<>(policy, overMax));
+                () -> new DefaultObjectPool<>(policy, overMax));
             assertTrue(ex.getMessage().contains("maximum allowed"));
         }
 

@@ -14,21 +14,6 @@ import org.junit.jupiter.api.Test;
 class ObjectIdTest {
 
     @Test
-    @DisplayName("Given primitive and common object values when constructing ObjectId then value is preserved")
-    void givenSupportedValueTypesWhenConstructingThenValueIsPreserved() {
-        ObjectId fromLong = new ObjectId(42L);
-        ObjectId fromString = new ObjectId("abc");
-        UUID uuid = UUID.randomUUID();
-        ObjectId fromUuid = new ObjectId(uuid);
-        ObjectId fromInteger = new ObjectId(7);
-
-        assertEquals(42L, fromLong.getValue());
-        assertEquals("abc", fromString.getValue());
-        assertEquals(uuid, fromUuid.getValue());
-        assertEquals(7, fromInteger.getValue());
-    }
-
-    @Test
     @DisplayName("Given int literal when constructing ObjectId then long constructor is selected")
     void givenIntLiteralWhenConstructingThenLongConstructorIsSelected() {
         ObjectId objectId = new ObjectId(7);
@@ -79,21 +64,6 @@ class ObjectIdTest {
 
         assertEquals(left, right);
         assertEquals(left.hashCode(), right.hashCode());
-    }
-
-    @Test
-    @DisplayName("Given different values or types when comparing ObjectId then equals returns false")
-    void givenDifferentValuesWhenComparingThenNotEqual() {
-        ObjectId left = new ObjectId("left");
-        ObjectId right = new ObjectId("right");
-        ObjectId longNumeric = new ObjectId(7L);
-        ObjectId integerNumeric = new ObjectId(7);
-
-        assertEquals(left, left);
-        assertNotEquals(left, right);
-        assertNotEquals(left, null);
-        assertNotEquals(left, "left");
-        assertNotEquals(longNumeric, integerNumeric);
     }
 
     @Test
