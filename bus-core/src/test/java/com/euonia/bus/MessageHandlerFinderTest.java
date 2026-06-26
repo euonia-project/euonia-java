@@ -1,15 +1,16 @@
 package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.euonia.bus.annotation.Subscribe;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.euonia.bus.annotation.Subscribe;
+
 /**
  * 测试 {@link MessageHandlerFinder} 按类型解析处理器的功能。
  */
+@SuppressWarnings("unused")
 @DisplayName("MessageHandlerFinder")
 class MessageHandlerFinderTest {
 

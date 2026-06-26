@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 测试 {@link RoutedMessage} 核心功能。
  */
+@SuppressWarnings("unused")
 @DisplayName("RoutedMessage")
 class RoutedMessageTest {
 

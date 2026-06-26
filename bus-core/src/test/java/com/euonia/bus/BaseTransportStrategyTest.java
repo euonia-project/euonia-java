@@ -1,17 +1,17 @@
 package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.euonia.bus.MessageConventionType;
-import com.euonia.bus.strategy.BaseTransportStrategy;
-import com.euonia.bus.strategy.TransportStrategy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.euonia.bus.strategy.BaseTransportStrategy;
+import com.euonia.bus.strategy.TransportStrategy;
+
 /**
  * 测试 {@link BaseTransportStrategy} 的组合和缓存逻辑。
  */
+@SuppressWarnings("unused")
 @DisplayName("BaseTransportStrategy")
 class BaseTransportStrategyTest {
 

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 测试 {@link MessageContextBase} 的生命周期和事件通知。
  */
+@SuppressWarnings({"unused", "resource", "ConvertToTryWithResources"})
 @DisplayName("MessageContextBase")
 class MessageContextBaseTest {
 

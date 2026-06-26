@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 测试 {@link DefaultConfigurator} 配置门面的流式 API。
  */
+@SuppressWarnings("unused")
 @DisplayName("DefaultConfigurator")
 class DefaultConfiguratorTest {
 

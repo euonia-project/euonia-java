@@ -2,16 +2,17 @@ package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.euonia.bus.annotation.Channel;
-import com.euonia.bus.message.MessageCache;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.euonia.bus.annotation.Channel;
+import com.euonia.bus.message.MessageCache;
+
 /**
  * 测试 {@link MessageCache} 单例和通道名称缓存。
  */
+@SuppressWarnings("unused")
 @DisplayName("MessageCache")
 class MessageCacheTest {
 

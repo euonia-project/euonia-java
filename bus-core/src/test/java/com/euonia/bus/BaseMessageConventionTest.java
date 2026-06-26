@@ -15,6 +15,7 @@ import com.euonia.bus.convention.MessageConvention;
 /**
  * 测试 {@link BaseMessageConvention} 的类型分类和缓存逻辑。
  */
+@SuppressWarnings("unused")
 @DisplayName("BaseMessageConvention")
 class BaseMessageConventionTest {
 
