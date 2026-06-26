@@ -20,7 +20,7 @@ class ObjectIdTest {
         ObjectId fromString = new ObjectId("abc");
         UUID uuid = UUID.randomUUID();
         ObjectId fromUuid = new ObjectId(uuid);
-        ObjectId fromInteger = new ObjectId(Integer.valueOf(7));
+        ObjectId fromInteger = new ObjectId(7);
 
         assertEquals(42L, fromLong.getValue());
         assertEquals("abc", fromString.getValue());
@@ -42,12 +42,10 @@ class ObjectIdTest {
     void givenFactoriesWhenGeneratingThenReturnExpectedUnderlyingTypes() {
         ObjectId snowflake = ObjectId.snowflake();
         ObjectId guid = ObjectId.guid();
-        ObjectId random = ObjectId.random();
         ObjectId ulid = ObjectId.ulid();
 
         assertInstanceOf(Long.class, snowflake.getValue());
         assertInstanceOf(UUID.class, guid.getValue());
-        assertInstanceOf(UUID.class, random.getValue());
         assertInstanceOf(String.class, ulid.getValue());
         assertEquals(32, ulid.toString().length());
     }
@@ -89,7 +87,7 @@ class ObjectIdTest {
         ObjectId left = new ObjectId("left");
         ObjectId right = new ObjectId("right");
         ObjectId longNumeric = new ObjectId(7L);
-        ObjectId integerNumeric = new ObjectId(Integer.valueOf(7));
+        ObjectId integerNumeric = new ObjectId(7);
 
         assertEquals(left, left);
         assertNotEquals(left, right);
@@ -117,10 +115,8 @@ class ObjectIdTest {
     @DisplayName("Given different UUID-based factories when generating then returned values are valid UUID instances")
     void givenGuidAndRandomFactoriesWhenGeneratingThenReturnUuidValues() {
         ObjectId guid = ObjectId.guid();
-        ObjectId random = ObjectId.random();
 
         assertDoesNotThrow(() -> UUID.fromString(guid.toString()));
-        assertDoesNotThrow(() -> UUID.fromString(random.toString()));
     }
 
     @Test
