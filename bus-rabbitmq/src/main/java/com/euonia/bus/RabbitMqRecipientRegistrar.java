@@ -2,6 +2,8 @@ package com.euonia.bus;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.recipient.RecipientRegistrar;
@@ -26,10 +28,16 @@ import com.rabbitmq.client.Connection;
  */
 public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
 
-    /** 服务提供者，用于解析依赖服务 */
+    private static final Logger LOGGER = Logger.getLogger(RabbitMqRecipientRegistrar.class.getName());
+
+    /**
+     * 服务提供者，用于解析依赖服务
+     */
     private final ServiceProvider provider;
 
-    /** RabbitMQ 总线选项 */
+    /**
+     * RabbitMQ 总线选项
+     */
     private final RabbitMqBusOptions options;
 
     /**
@@ -87,6 +95,12 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + registration.messageType());
             }
+            recipient.onMessageReceived(event -> {
+                LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' received via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
+            });
+            recipient.onMessageAcknowledged(event -> {
+                LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' acknowledged via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
+            });
             recipient.start(registration.channel());
         }
     }

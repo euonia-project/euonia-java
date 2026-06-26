@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
@@ -16,11 +18,20 @@ import com.rabbitmq.client.Connection;
  * RabbitMQ 消息接收者的抽象基类，封装了与 RabbitMQ 交互的公共逻辑。
  * <p>
  * 提供消息接收/确认事件的监听器管理、消息异步处理以及 AMQP 回复属性构建等公共功能。
- * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式（队列消费、主题订阅或 RPC 执行）。
+ * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式，以及 {@link #stop()}
+ * 方法来停止监听并释放资源。
+ * <p>
+ * 实现 {@link AutoCloseable}，调用 {@link #close()} 将:
+ * <ol>
+ *   <li>调用 {@link #stop()} 停止消息监听并关闭 Channel</li>
+ *   <li>清除所有已注册的事件监听器</li>
+ * </ol>
  *
  * @author damon(zhaorong@outlook.com)
  */
-public abstract class RabbitMqRecipient {
+public abstract class RabbitMqRecipient implements AutoCloseable {
+
+    private static final Logger LOGGER = Logger.getLogger(RabbitMqRecipient.class.getName());
     /**
      * RabbitMQ 连接
      */
@@ -134,6 +145,34 @@ public abstract class RabbitMqRecipient {
      * @param group 要监听的通道/组名称
      */
     abstract void start(String group);
+
+    /**
+     * 停止接收者，取消消费者并关闭 Channel。
+     * <p>
+     * 实现应:
+     * <ol>
+     *   <li>调用 {@code channel.basicCancel(consumerTag)} 停止投递</li>
+     *   <li>调用 {@code channel.close()} 释放 Channel 资源</li>
+     * </ol>
+     * 此方法可能被多次调用，实现应为幂等的。
+     */
+    protected abstract void stop();
+
+    /**
+     * 关闭此接收者，停止消息监听并清除所有事件监听器。
+     * <p>
+     * 此方法可安全地多次调用。
+     */
+    @Override
+    public void close() {
+        try {
+            stop();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, () -> "Error stopping recipient '" + getName() + "': " + e.getMessage());
+        }
+        messageReceivedListeners.clear();
+        messageAcknowledgedListeners.clear();
+    }
 
     /**
      * 返回接收者的名称，默认为当前类的简单名称。

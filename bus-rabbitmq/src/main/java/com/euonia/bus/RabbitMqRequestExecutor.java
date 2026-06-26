@@ -23,10 +23,8 @@ import com.rabbitmq.client.DeliverCallback;
  */
 final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executor {
 
-    /**
-     * RabbitMQ 通道
-     */
     private Channel channel;
+    private String recipientTag;
 
     /**
      * 使用必要的依赖构造 RPC 请求执行器。
@@ -100,10 +98,23 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
                 });
             };
 
-            channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
-            });
+            recipientTag = channel.basicConsume(queueName, false, deliverCallback, ct -> {});
         } catch (IOException exception) {
             throw new RuntimeException(exception);
+        }
+    }
+
+    @Override
+    protected void stop() {
+        if (channel != null && channel.isOpen()) {
+            try {
+                if (recipientTag != null) {
+                    channel.basicCancel(recipientTag);
+                }
+                channel.close();
+            } catch (IOException | java.util.concurrent.TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
