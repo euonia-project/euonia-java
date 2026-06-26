@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * {@link Messenger} 的强引用实现。
@@ -165,7 +166,7 @@ public final class StrongReferenceMessenger implements Messenger {
         }
 
         // 创建当前处理器的快照，以避免广播期间处理器注册/取消注册导致的问题
-        List<Map.Entry<RecipientKey, MessageHandlerDispatcher>> snapshot = new ArrayList<>(recipientMap.entrySet());
+        List<Map.Entry<RecipientKey, MessageHandlerDispatcher>> snapshot = new CopyOnWriteArrayList<>(recipientMap.entrySet());
 
         for (Map.Entry<RecipientKey, MessageHandlerDispatcher> entry : snapshot) {
             MessageHandlerDispatcher dispatcher = entry.getValue();

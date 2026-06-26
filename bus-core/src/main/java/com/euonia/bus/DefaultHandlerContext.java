@@ -253,26 +253,25 @@ final class DefaultHandlerContext implements HandlerContext {
 
     /**
      * 安全地将值注册到值为列表的并发映射中。
-     * 该方法使用对内部处理器容器的锁，以确保对于组合的键/值操作，
-     * 列表变更（添加/替换）是线程安全的。
+     * <p>
+     * 利用 {@link ConcurrentHashMap#compute} 的键级原子性，无需全局锁。
+     * 每个键的操作互相独立，高并发注册时不会串行化。
      *
      * @param key   要注册值所用的键
      * @param value 要添加到给定键对应列表中的值
      */
     private void concurrentDictionarySafeRegister(String key, MessageHandlerFactory value) {
-        synchronized (handlerContainer) {
-            handlerContainer.compute(key, (k, list) -> {
-                if (list == null) {
-                    var newList = new ArrayList<MessageHandlerFactory>();
-                    newList.add(value);
-                    return newList;
-                }
-                if (!list.contains(value)) {
-                    list.add(value);
-                }
-                return list;
-            });
-        }
+        handlerContainer.compute(key, (k, list) -> {
+            if (list == null) {
+                var newList = new ArrayList<MessageHandlerFactory>();
+                newList.add(value);
+                return newList;
+            }
+            if (!list.contains(value)) {
+                list.add(value);
+            }
+            return list;
+        });
     }
 
     /**
