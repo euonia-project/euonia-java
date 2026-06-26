@@ -63,7 +63,8 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
             var exchangeName = String.format("%s:%s", exchangePrefix, group);
 
             channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
-            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, null).getQueue();
+            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
+            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, dlxArgs).getQueue();
             channel.queueBind(queueName, exchangeName, "*");
             var consumer = new DefaultConsumer(channel) {
                 @Override

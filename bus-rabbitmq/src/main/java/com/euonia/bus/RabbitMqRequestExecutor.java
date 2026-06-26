@@ -59,7 +59,8 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
 
         try {
             channel = connection.createChannel();
-            channel.queueDeclare(queueName, true, false, false, null);
+            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
+            channel.queueDeclare(queueName, true, false, false, dlxArgs);
             channel.basicQos(options.getPrefetchCount());
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {

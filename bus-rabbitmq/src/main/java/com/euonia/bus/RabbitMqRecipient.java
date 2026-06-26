@@ -1,8 +1,10 @@
 package com.euonia.bus;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -12,6 +14,8 @@ import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 /**
@@ -196,5 +200,32 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
                                          .correlationId(correlationId)
                                          .type(type.getValue())
                                          .build();
+    }
+
+    /**
+     * 声明死信交换器和死信队列（如已启用），并返回应传递给主队列声明的
+     * AMQP 参数（{@code x-dead-letter-exchange} 和 {@code x-dead-letter-routing-key}）。
+     *
+     * @param channel     用于声明的通道
+     * @param channelName 主通道名称，用于生成 DLX/DLQ 名
+     * @return 传递给 {@code channel.queueDeclare} 的参数映射
+     * @throws IOException 声明失败时抛出
+     */
+    Map<String, Object> declareDeadLetterInfrastructure(Channel channel, String channelName) throws IOException {
+        if (!options.isDeadLetterEnabled()) {
+            return null;
+        }
+
+        var dlxName = options.generateDlxExchangeName(channelName);
+        var dlqName = options.generateDlqQueueName(channelName);
+
+        channel.exchangeDeclare(dlxName, BuiltinExchangeType.FANOUT, true);
+        channel.queueDeclare(dlqName, true, false, false, null);
+        channel.queueBind(dlqName, dlxName, RabbitMqConstants.DEFAULT_DLX_ROUTING_KEY);
+
+        return Map.of(
+            "x-dead-letter-exchange", dlxName,
+            "x-dead-letter-routing-key", RabbitMqConstants.DEFAULT_DLX_ROUTING_KEY
+        );
     }
 }

@@ -61,7 +61,8 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
         try {
             channel = connection.createChannel();
 
-            channel.queueDeclare(queueName, true, false, false, null);
+            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
+            channel.queueDeclare(queueName, true, false, false, dlxArgs);
             channel.basicQos(0, options.getPrefetchCount(), false);
 
             var consumer = new DefaultConsumer(channel) {

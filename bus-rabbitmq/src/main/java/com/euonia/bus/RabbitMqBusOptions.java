@@ -1,8 +1,8 @@
 package com.euonia.bus;
 
-import com.euonia.utility.Assert;
-
 import java.util.function.Supplier;
+
+import com.euonia.utility.Assert;
 
 /**
  * RabbitMQ 总线传输的配置选项。
@@ -57,6 +57,20 @@ public final class RabbitMqBusOptions {
      * 订阅标识符
      */
     private String subscriptionId;
+
+    /**
+     * 是否启用死信队列。启用后，被拒绝的消息将被路由到死信交换器。
+     * 基于 RabbitMQ 的 Dead Letter Exchange (DLX) 机制。
+     */
+    private boolean deadLetterEnabled = true;
+    /**
+     * 死信交换器名称前缀
+     */
+    private String deadLetterExchangePrefix = RabbitMqConstants.DEFAULT_DLX_EXCHANGE_PREFIX;
+    /**
+     * 死信队列名称前缀
+     */
+    private String deadLetterQueuePrefix = RabbitMqConstants.DEFAULT_DLQ_QUEUE_NAME_PREFIX;
 
     /**
      * 检查是否启用该传输。
@@ -378,5 +392,45 @@ public final class RabbitMqBusOptions {
         Assert.notNull(channelName, "channelName cannot be null");
         Assert.notNull(subscriptionId, "subscriptionId cannot be null");
         return String.format("%s:%s@%s", prefix, channelName, getSubscriptionId());
+    }
+
+    // ──── 死信队列 ────
+
+    public boolean isDeadLetterEnabled() {
+        return deadLetterEnabled;
+    }
+
+    public void setDeadLetterEnabled(boolean deadLetterEnabled) {
+        this.deadLetterEnabled = deadLetterEnabled;
+    }
+
+    public String getDeadLetterExchangePrefix() {
+        return deadLetterExchangePrefix;
+    }
+
+    public void setDeadLetterExchangePrefix(String deadLetterExchangePrefix) {
+        this.deadLetterExchangePrefix = deadLetterExchangePrefix;
+    }
+
+    public String getDeadLetterQueuePrefix() {
+        return deadLetterQueuePrefix;
+    }
+
+    public void setDeadLetterQueuePrefix(String deadLetterQueuePrefix) {
+        this.deadLetterQueuePrefix = deadLetterQueuePrefix;
+    }
+
+    /**
+     * 生成死信交换器名称。
+     */
+    String generateDlxExchangeName(String channelName) {
+        return String.format("%s:%s", deadLetterExchangePrefix, channelName);
+    }
+
+    /**
+     * 生成死信队列名称（入参 channelName 与原始队列一致以确保唯一性）。
+     */
+    String generateDlqQueueName(String channelName) {
+        return String.format("%s:%s", deadLetterQueuePrefix, channelName);
     }
 }

@@ -21,4 +21,16 @@ class RabbitMqConstants {
      * 默认 RPC 队列名称前缀
      */
     static final String DEFAULT_RPC_QUEUE_NAME_PREFIX = "$nerosoft.euonia.request";
+    /**
+     * 死信队列交换器名称前缀
+     */
+    static final String DEFAULT_DLX_EXCHANGE_PREFIX = "$nerosoft.euonia.dlx";
+    /**
+     * 死信队列名称前缀
+     */
+    static final String DEFAULT_DLQ_QUEUE_NAME_PREFIX = "$nerosoft.euonia.dlq";
+    /**
+     * 死信路由键
+     */
+    static final String DEFAULT_DLX_ROUTING_KEY = "dead-letter";
 }
