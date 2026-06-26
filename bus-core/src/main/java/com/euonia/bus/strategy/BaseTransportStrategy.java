@@ -51,9 +51,10 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategies the transport strategies to add
      */
-    void add(TransportStrategy... strategies) {
+    public void add(TransportStrategy... strategies) {
         Assert.notEmpty(strategies, "strategies cannot be null or empty.");
         Collections.addAll(this.strategies, strategies);
+        resetCache(); // Reset caches to ensure new strategies take effect
     }
 
     /**
@@ -79,7 +80,7 @@ public class BaseTransportStrategy implements TransportStrategy {
     /**
      * Resets the caches for outgoing and incoming message evaluations.
      */
-    void resetCache() {
+    private void resetCache() {
         outgoingCache.reset();
         incomingCache.reset();
     }
