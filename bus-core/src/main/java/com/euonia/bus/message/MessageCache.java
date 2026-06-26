@@ -1,9 +1,9 @@
 package com.euonia.bus.message;
 
-import com.euonia.bus.annotation.Channel;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import com.euonia.bus.annotation.Channel;
 
 /**
  * 线程安全的消息类型与通道名称缓存。用于优化消息类型对应通道名称的获取，
@@ -20,6 +20,7 @@ public final class MessageCache {
      *
      * @return MessageCache 的单例实例
      */
+    @SuppressWarnings("DoubleCheckedLocking")
     public static MessageCache getInstance() {
         if (instance == null) {
             synchronized (lock) {
