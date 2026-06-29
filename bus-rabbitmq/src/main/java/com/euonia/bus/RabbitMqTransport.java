@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
-import com.euonia.bus.contract.Transport;
 import com.euonia.bus.exception.MessageDeliverException;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.serialization.MessageSerializer;

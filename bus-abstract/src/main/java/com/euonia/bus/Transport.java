@@ -1,6 +1,4 @@
-package com.euonia.bus.contract;
-
-import com.euonia.bus.RoutedMessage;
+package com.euonia.bus;
 
 import java.util.concurrent.CompletableFuture;
 

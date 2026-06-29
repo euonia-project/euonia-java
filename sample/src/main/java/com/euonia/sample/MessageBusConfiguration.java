@@ -5,7 +5,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import com.euonia.bus.*;
-import com.euonia.bus.contract.Transport;
+import com.euonia.bus.Transport;
 import com.euonia.bus.convention.AnnotationMessageConvention;
 import com.euonia.bus.convention.DefaultMessageConvention;
 import com.euonia.bus.recipient.RecipientRegistrar;

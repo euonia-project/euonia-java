@@ -7,7 +7,6 @@ import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import com.euonia.bus.contract.Transport;
 import com.euonia.bus.event.MessageDeliveredEvent;
 import com.euonia.bus.event.MessageRepliedEvent;
 import com.euonia.bus.messenger.Messenger;
