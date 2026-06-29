@@ -1,18 +1,21 @@
 package com.euonia.bus.options;
 
+import com.euonia.core.GuidType;
+import com.euonia.core.ObjectId;
+
 /**
  * 消息发送和接收的默认选项，用户可以扩展此类以添加自定义选项。
  *
  * @author damon(zhaorong@outlook.com)
  */
 public abstract class ExtendableOptions {
-    private String messageId;
+    private String messageId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
     private String channel;
     private String queue;
     private int priority;
-    private String requestTraceId;
     private boolean enablePipelineBehaviors = true;
     private boolean attachDefaultPipelineBehaviors = true;
+    private long delay, timeout;
 
     /**
      * 获取消息的唯一标识符，可用于消息追踪和关联。
@@ -87,24 +90,6 @@ public abstract class ExtendableOptions {
     }
 
     /**
-     * 获取请求追踪标识符，可用于追踪请求流程。
-     *
-     * @return 请求追踪标识符
-     */
-    public String getRequestTraceId() {
-        return requestTraceId;
-    }
-
-    /**
-     * 设置请求追踪标识符，可用于追踪请求流程。
-     *
-     * @param requestTraceId 请求追踪标识符
-     */
-    public void setRequestTraceId(String requestTraceId) {
-        this.requestTraceId = requestTraceId;
-    }
-
-    /**
      * 检查管道行为是否已启用，可用于自定义消息处理。
      *
      * @return 如果管道行为已启用则返回 true，否则返回 false
@@ -138,5 +123,21 @@ public abstract class ExtendableOptions {
      */
     public void setAttachDefaultPipelineBehaviors(boolean attachDefaultPipelineBehaviors) {
         this.attachDefaultPipelineBehaviors = attachDefaultPipelineBehaviors;
+    }
+
+    public long getDelay() {
+        return delay;
+    }
+
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 }

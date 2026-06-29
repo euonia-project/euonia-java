@@ -10,6 +10,12 @@ public class Assert {
         }
     }
 
+    public static void notNull(Object obj, java.util.function.Supplier<String> messageSupplier) {
+        if (obj == null) {
+            throw new IllegalArgumentException(messageSupplier.get());
+        }
+    }
+
     public static void notEmpty(String str, String message) {
         if (str == null || str.trim().isEmpty() || str.isBlank()) {
             throw new IllegalArgumentException(message);

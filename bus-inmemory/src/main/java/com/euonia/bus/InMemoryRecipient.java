@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.euonia.bus.dlq.DeadLetterMessage;
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
 import com.euonia.bus.messenger.Recipient;
@@ -33,6 +34,26 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
      * 消息确认后（处理完成后）通知的监听器列表。
      */
     private final CopyOnWriteArrayList<Consumer<MessageAcknowledgedEvent>> messageAcknowledgedListeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * 死信队列选项，由 {@link InMemoryRecipientRegistrar} 在创建后注入。
+     */
+    private InMemoryBusOptions deadLetterOptions;
+
+    /**
+     * 当前正在处理的路由消息，由 {@link #receive(MessagePack)} 设置，
+     * 供子类在 {@link #handleAsync} 的错误路径中调用 {@link #publishDeadLetter} 时读取。
+     */
+    protected volatile RoutedMessage<?> currentMessage;
+
+    /**
+     * 设置死信队列选项。由 {@link InMemoryRecipientRegistrar} 在创建接收者后调用。
+     *
+     * @param options 包含 DLQ 配置的总线选项
+     */
+    void setDeadLetterOptions(InMemoryBusOptions options) {
+        this.deadLetterOptions = options;
+    }
 
     /**
      * 添加消息接收事件的监听器。
@@ -108,6 +129,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
     @Override
     public void receive(MessagePack pack) {
         RoutedMessage<?> message = pack.getMessage();
+        this.currentMessage = message;
         MessageContext context = pack.getContext();
 
         onMessageReceived(new MessageReceivedEvent(message, context));
@@ -117,6 +139,19 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
             onMessageAcknowledged(new MessageAcknowledgedEvent(message, context));
         } catch (Exception exception) {
             throw new RuntimeException(String.format("Message '%s' on channel '%s' error: %s", message.getMessageId(), message.getChannel(), exception.getMessage()), exception);
+        }
+    }
+
+    /**
+     * 如果启用了死信队列，则将处理失败的消息发布到 {@link InMemoryDeadLetterQueue}。
+     *
+     * @param channel 消息通道
+     * @param message 原始消息负载
+     * @param error   处理过程中抛出的异常
+     */
+    protected void publishDeadLetter(String channel, RoutedMessage<?> message, Throwable error) {
+        if (deadLetterOptions != null && deadLetterOptions.isDeadLetterEnabled()) {
+            InMemoryDeadLetterQueue.getInstance().publish(channel, new DeadLetterMessage<>(message, error));
         }
     }
 

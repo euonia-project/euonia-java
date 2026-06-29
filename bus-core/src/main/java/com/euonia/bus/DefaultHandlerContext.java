@@ -11,7 +11,6 @@ import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -109,13 +108,15 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param registration 描述要注册的处理器的 {@link HandlerRegistration}
      */
     public void register(HandlerRegistration registration) {
+        // 一次性设置 accessible，避免每次消息处理时的重复安全检查
+        var method = registration.method();
+        method.setAccessible(true);
+
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getServiceOrCreate(registration.handlerType());
             return (message, context) -> {
-                var method = registration.method();
                 var args = resolveArguments(method, message, context);
                 try {
-                    method.setAccessible(true);
                     return method.invoke(handler, args);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     var cause = unwrapCause(e);
@@ -254,8 +255,8 @@ final class DefaultHandlerContext implements HandlerContext {
     /**
      * 安全地将值注册到值为列表的并发映射中。
      * <p>
-     * 利用 {@link ConcurrentHashMap#compute} 的键级原子性，无需全局锁。
-     * 每个键的操作互相独立，高并发注册时不会串行化。
+     * 每个键的列表使用 {@link CopyOnWriteArrayList}，确保在 {@link #handleAsync}
+     * 读取时不会与写操作发生竞态。
      *
      * @param key   要注册值所用的键
      * @param value 要添加到给定键对应列表中的值
@@ -263,13 +264,11 @@ final class DefaultHandlerContext implements HandlerContext {
     private void concurrentDictionarySafeRegister(String key, MessageHandlerFactory value) {
         handlerContainer.compute(key, (k, list) -> {
             if (list == null) {
-                var newList = new ArrayList<MessageHandlerFactory>();
+                var newList = new CopyOnWriteArrayList<MessageHandlerFactory>();
                 newList.add(value);
                 return newList;
             }
-            if (!list.contains(value)) {
-                list.add(value);
-            }
+            list.add(value);
             return list;
         });
     }

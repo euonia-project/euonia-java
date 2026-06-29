@@ -6,22 +6,6 @@ package com.euonia.domain.event;
  */
 public interface Event {
     /**
-     * Gets the unique identifier of the event, which can be used to track and reference the event throughout its lifecycle.
-     * This identifier is typically generated when the event is created and remains constant for the duration of the event's existence.
-     *
-     * @return the unique identifier of the event
-     */
-    String getEventId();
-
-    /**
-     * Sets the unique identifier of the event.
-     * This method allows you to assign a specific identifier to the event, which can be useful for tracking and referencing purposes.
-     *
-     * @param eventId the unique identifier of the event
-     */
-    void setEventId(String eventId);
-
-    /**
      * Gets the sequence number of the event, which can be used to determine the order of events.
      *
      * @return the sequence number of the event

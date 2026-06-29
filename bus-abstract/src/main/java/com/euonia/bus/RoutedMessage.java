@@ -1,12 +1,10 @@
 package com.euonia.bus;
 
 import java.time.Instant;
-import java.util.Objects;
 
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
-import com.euonia.core.PriorityValueFinder;
-import com.euonia.utility.ObjectUtility;
+import com.euonia.utility.Assert;
 
 /**
  * RoutedMessage is an abstract class that represents a message with routing information.
@@ -18,9 +16,9 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     private final static String MESSAGE_TYPE_KEY = "$nerosoft.euonia:message.type";
 
     private final MessageMetadata metadata = new MessageMetadata();
-    private String messageId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
-    private String correlationId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
-    private String conversationId = ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString();
+    private String messageId;
+    private String correlationId;
+    private String conversationId;
     private String requestTrackId;
     private String channel;
     private String authorization;
@@ -31,17 +29,11 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     }
 
     public RoutedMessage(T payload, String channel) {
-        setPayload(payload);
-        setChannel(channel);
-        messageId = PriorityValueFinder.find(queue -> {
-            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getMessageId"), 1);
-            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getCommandId"), 2);
-            queue.add(() -> ObjectUtility.invokeMethod(String.class, payload, "getEventId"), 3);
-            queue.add(() -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString(), 4);
-        }, Objects::nonNull, null);
+        this(payload, channel, ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString());
     }
 
     public RoutedMessage(T payload, String channel, String messageId) {
+        Assert.notNull(payload, "payload should not be null");
         setPayload(payload);
         setChannel(channel);
         setMessageId(messageId);
@@ -131,7 +123,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
     public void setPayload(T payload) {
         this.payload = payload;
         if (payload != null) {
-            this.metadata.put(MESSAGE_TYPE_KEY, payload.getClass().getName());
+            setTypeName(payload.getClass().getName());
         }
     }
 

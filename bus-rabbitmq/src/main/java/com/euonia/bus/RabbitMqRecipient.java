@@ -1,26 +1,41 @@
 package com.euonia.bus;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 /**
  * RabbitMQ 消息接收者的抽象基类，封装了与 RabbitMQ 交互的公共逻辑。
  * <p>
  * 提供消息接收/确认事件的监听器管理、消息异步处理以及 AMQP 回复属性构建等公共功能。
- * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式（队列消费、主题订阅或 RPC 执行）。
+ * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式，以及 {@link #stop()}
+ * 方法来停止监听并释放资源。
+ * <p>
+ * 实现 {@link AutoCloseable}，调用 {@link #close()} 将:
+ * <ol>
+ *   <li>调用 {@link #stop()} 停止消息监听并关闭 Channel</li>
+ *   <li>清除所有已注册的事件监听器</li>
+ * </ol>
  *
  * @author damon(zhaorong@outlook.com)
  */
-public abstract class RabbitMqRecipient {
+public abstract class RabbitMqRecipient implements AutoCloseable {
+
+    private static final Logger LOGGER = Logger.getLogger(RabbitMqRecipient.class.getName());
     /**
      * RabbitMQ 连接
      */
@@ -136,6 +151,34 @@ public abstract class RabbitMqRecipient {
     abstract void start(String group);
 
     /**
+     * 停止接收者，取消消费者并关闭 Channel。
+     * <p>
+     * 实现应:
+     * <ol>
+     *   <li>调用 {@code channel.basicCancel(consumerTag)} 停止投递</li>
+     *   <li>调用 {@code channel.close()} 释放 Channel 资源</li>
+     * </ol>
+     * 此方法可能被多次调用，实现应为幂等的。
+     */
+    protected abstract void stop();
+
+    /**
+     * 关闭此接收者，停止消息监听并清除所有事件监听器。
+     * <p>
+     * 此方法可安全地多次调用。
+     */
+    @Override
+    public void close() {
+        try {
+            stop();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, () -> "Error stopping recipient '" + getName() + "': " + e.getMessage());
+        }
+        messageReceivedListeners.clear();
+        messageAcknowledgedListeners.clear();
+    }
+
+    /**
      * 返回接收者的名称，默认为当前类的简单名称。
      *
      * @return 接收者名称
@@ -157,5 +200,32 @@ public abstract class RabbitMqRecipient {
                                          .correlationId(correlationId)
                                          .type(type.getValue())
                                          .build();
+    }
+
+    /**
+     * 声明死信交换器和死信队列（如已启用），并返回应传递给主队列声明的
+     * AMQP 参数（{@code x-dead-letter-exchange} 和 {@code x-dead-letter-routing-key}）。
+     *
+     * @param channel     用于声明的通道
+     * @param channelName 主通道名称，用于生成 DLX/DLQ 名
+     * @return 传递给 {@code channel.queueDeclare} 的参数映射
+     * @throws IOException 声明失败时抛出
+     */
+    Map<String, Object> declareDeadLetterInfrastructure(Channel channel, String channelName) throws IOException {
+        if (!options.isDeadLetterEnabled()) {
+            return null;
+        }
+
+        var dlxName = options.generateDlxExchangeName(channelName);
+        var dlqName = options.generateDlqQueueName(channelName);
+
+        channel.exchangeDeclare(dlxName, BuiltinExchangeType.FANOUT, true);
+        channel.queueDeclare(dlqName, true, false, false, null);
+        channel.queueBind(dlqName, dlxName, RabbitMqConstants.DEFAULT_DLX_ROUTING_KEY);
+
+        return Map.of(
+            "x-dead-letter-exchange", dlxName,
+            "x-dead-letter-routing-key", RabbitMqConstants.DEFAULT_DLX_ROUTING_KEY
+        );
     }
 }

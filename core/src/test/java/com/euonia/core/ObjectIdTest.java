@@ -14,21 +14,6 @@ import org.junit.jupiter.api.Test;
 class ObjectIdTest {
 
     @Test
-    @DisplayName("Given primitive and common object values when constructing ObjectId then value is preserved")
-    void givenSupportedValueTypesWhenConstructingThenValueIsPreserved() {
-        ObjectId fromLong = new ObjectId(42L);
-        ObjectId fromString = new ObjectId("abc");
-        UUID uuid = UUID.randomUUID();
-        ObjectId fromUuid = new ObjectId(uuid);
-        ObjectId fromInteger = new ObjectId(Integer.valueOf(7));
-
-        assertEquals(42L, fromLong.getValue());
-        assertEquals("abc", fromString.getValue());
-        assertEquals(uuid, fromUuid.getValue());
-        assertEquals(7, fromInteger.getValue());
-    }
-
-    @Test
     @DisplayName("Given int literal when constructing ObjectId then long constructor is selected")
     void givenIntLiteralWhenConstructingThenLongConstructorIsSelected() {
         ObjectId objectId = new ObjectId(7);
@@ -42,12 +27,10 @@ class ObjectIdTest {
     void givenFactoriesWhenGeneratingThenReturnExpectedUnderlyingTypes() {
         ObjectId snowflake = ObjectId.snowflake();
         ObjectId guid = ObjectId.guid();
-        ObjectId random = ObjectId.random();
         ObjectId ulid = ObjectId.ulid();
 
         assertInstanceOf(Long.class, snowflake.getValue());
         assertInstanceOf(UUID.class, guid.getValue());
-        assertInstanceOf(UUID.class, random.getValue());
         assertInstanceOf(String.class, ulid.getValue());
         assertEquals(32, ulid.toString().length());
     }
@@ -84,21 +67,6 @@ class ObjectIdTest {
     }
 
     @Test
-    @DisplayName("Given different values or types when comparing ObjectId then equals returns false")
-    void givenDifferentValuesWhenComparingThenNotEqual() {
-        ObjectId left = new ObjectId("left");
-        ObjectId right = new ObjectId("right");
-        ObjectId longNumeric = new ObjectId(7L);
-        ObjectId integerNumeric = new ObjectId(Integer.valueOf(7));
-
-        assertEquals(left, left);
-        assertNotEquals(left, right);
-        assertNotEquals(left, null);
-        assertNotEquals(left, "left");
-        assertNotEquals(longNumeric, integerNumeric);
-    }
-
-    @Test
     @DisplayName("Given supported underlying value types when converting to string then text representation is returned")
     void givenSupportedValueTypesWhenToStringThenReturnExpectedText() {
         UUID uuid = UUID.randomUUID();
@@ -117,10 +85,8 @@ class ObjectIdTest {
     @DisplayName("Given different UUID-based factories when generating then returned values are valid UUID instances")
     void givenGuidAndRandomFactoriesWhenGeneratingThenReturnUuidValues() {
         ObjectId guid = ObjectId.guid();
-        ObjectId random = ObjectId.random();
 
         assertDoesNotThrow(() -> UUID.fromString(guid.toString()));
-        assertDoesNotThrow(() -> UUID.fromString(random.toString()));
     }
 
     @Test

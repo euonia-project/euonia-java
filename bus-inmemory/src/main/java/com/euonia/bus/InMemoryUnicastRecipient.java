@@ -55,6 +55,7 @@ public class InMemoryUnicastRecipient extends InMemoryRecipient implements Consu
         return handler.handleAsync(channel, message, context)
                       .whenComplete((result, error) -> {
                           if (error != null) {
+                              publishDeadLetter(channel, currentMessage, error);
                               context.failure(error);
                           } else {
                               context.response(result);

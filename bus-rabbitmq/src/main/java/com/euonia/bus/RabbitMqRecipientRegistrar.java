@@ -1,7 +1,10 @@
 package com.euonia.bus;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.recipient.RecipientRegistrar;
@@ -9,6 +12,7 @@ import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.reflection.SyntheticParameterizedType;
+import com.euonia.utility.Assert;
 import com.rabbitmq.client.Connection;
 
 /**
@@ -26,10 +30,19 @@ import com.rabbitmq.client.Connection;
  */
 public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
 
-    /** 服务提供者，用于解析依赖服务 */
+    private static final Logger LOGGER = Logger.getLogger(RabbitMqRecipientRegistrar.class.getName());
+
+    /** 已创建的接收者列表，用于生命周期管理 */
+    private final List<RabbitMqRecipient> recipients = new ArrayList<>();
+
+    /**
+     * 服务提供者，用于解析依赖服务
+     */
     private final ServiceProvider provider;
 
-    /** RabbitMQ 总线选项 */
+    /**
+     * RabbitMQ 总线选项
+     */
     private final RabbitMqBusOptions options;
 
     /**
@@ -53,7 +66,9 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
         this.provider = provider;
         this.options = options;
         this.convention = configurator.getConventionBuilder().getConvention();
-        this.strategy = configurator.getStrategyBuilders().get(options.getName()).getStrategy();
+        var strategyBuilder = configurator.getStrategyBuilders().get(options.getName());
+        Assert.notNull(strategyBuilder, () -> "No strategy found for transport '" + options.getName() + "'");
+        this.strategy = strategyBuilder.getStrategy();
     }
 
     @Override
@@ -87,7 +102,28 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + registration.messageType());
             }
+            recipient.onMessageReceived(event -> {
+                LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' received via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
+            });
+            recipient.onMessageAcknowledged(event -> {
+                LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' acknowledged via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
+            });
             recipient.start(registration.channel());
+            recipients.add(recipient);
         }
+    }
+
+    /**
+     * 关闭所有已创建的接收者，停止消息监听并释放 Channel 资源。
+     */
+    public void close() {
+        for (var recipient : recipients) {
+            try {
+                recipient.close();
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, () -> "Error closing recipient '" + recipient.getName() + "': " + e.getMessage());
+            }
+        }
+        recipients.clear();
     }
 }

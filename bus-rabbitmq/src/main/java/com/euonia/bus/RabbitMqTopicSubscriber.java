@@ -25,10 +25,8 @@ import com.rabbitmq.client.Envelope;
  */
 final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscriber {
 
-    /**
-     * RabbitMQ 通道
-     */
     private Channel channel;
+    private String recipientTag;
 
     /**
      * 使用必要的依赖构造主题订阅者。
@@ -65,7 +63,8 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
             var exchangeName = String.format("%s:%s", exchangePrefix, group);
 
             channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
-            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, null).getQueue();
+            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
+            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, dlxArgs).getQueue();
             channel.queueBind(queueName, exchangeName, "*");
             var consumer = new DefaultConsumer(channel) {
                 @Override
@@ -85,10 +84,24 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
                 }
             };
 
-            channel.basicConsume(queueName, false, consumer);
+            recipientTag = channel.basicConsume(queueName, false, consumer);
 
         } catch (IOException exception) {
             throw new RuntimeException(exception);
+        }
+    }
+
+    @Override
+    protected void stop() {
+        if (channel != null && channel.isOpen()) {
+            try {
+                if (recipientTag != null) {
+                    channel.basicCancel(recipientTag);
+                }
+                channel.close();
+            } catch (IOException | java.util.concurrent.TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

@@ -24,10 +24,8 @@ import com.rabbitmq.client.Envelope;
  */
 final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer {
 
-    /**
-     * RabbitMQ 通道
-     */
     private Channel channel;
+    private String recipientTag;
 
     /**
      * 使用必要的依赖构造队列消费者。
@@ -63,7 +61,8 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
         try {
             channel = connection.createChannel();
 
-            channel.queueDeclare(queueName, true, false, false, null);
+            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
+            channel.queueDeclare(queueName, true, false, false, dlxArgs);
             channel.basicQos(0, options.getPrefetchCount(), false);
 
             var consumer = new DefaultConsumer(channel) {
@@ -106,9 +105,23 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
                 }
             };
 
-            channel.basicConsume(queueName, false, consumer);
+            recipientTag = channel.basicConsume(queueName, false, consumer);
         } catch (IOException exception) {
             throw new RuntimeException(exception);
+        }
+    }
+
+    @Override
+    protected void stop() {
+        if (channel != null && channel.isOpen()) {
+            try {
+                if (recipientTag != null) {
+                    channel.basicCancel(recipientTag);
+                }
+                channel.close();
+            } catch (IOException | java.util.concurrent.TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
