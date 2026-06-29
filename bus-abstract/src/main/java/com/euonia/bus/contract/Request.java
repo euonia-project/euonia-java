@@ -6,5 +6,5 @@ package com.euonia.bus.contract;
  *
  * @param <R> the type of the response expected from the request
  */
-public interface Request<R> {
+public interface Request<R> extends Message {
 }

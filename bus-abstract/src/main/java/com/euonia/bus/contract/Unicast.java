@@ -5,5 +5,5 @@ package com.euonia.bus.contract;
  * Messages that implement this interface will be treated as unicast messages, meaning they will be delivered to only one subscriber, even if multiple subscribers are registered for the same message type.
  * This is useful for scenarios where a message should be processed by only one handler, such as commands or requests that require a single response.
  */
-public interface Unicast {
+public interface Unicast extends Message {
 }
