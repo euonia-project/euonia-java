@@ -87,9 +87,6 @@ public class MessageHandlerFinder {
                     throw new IllegalArgumentException("Method " + method.getName() + " in class " + handlerType.getName() + " must have at least one parameter.");
                 }
                 var firstParam = parameters[0];
-                if (firstParam.getType().isPrimitive()) {
-                    throw new IllegalArgumentException("First parameter of method " + method.getName() + " in class " + handlerType.getName() + " cannot be a primitive type.");
-                }
                 if (parameters.length == 2) {
                     if (!MessageContext.class.isAssignableFrom(parameters[1].getType())) {
                         throw new IllegalArgumentException("Second parameter of method " + method.getName() + " in class " + handlerType.getName() + " must be of type MessageContext or its subtype.");
@@ -98,6 +95,9 @@ public class MessageHandlerFinder {
                 var annotation = method.getAnnotation(Subscribe.class);
                 var channel = annotation.value();
                 if (channel == null || channel.isBlank()) {
+                    if (firstParam.getType().isPrimitive()) {
+                        throw new IllegalArgumentException("First parameter of method " + method.getName() + " in class " + handlerType.getName() + " cannot be a primitive type when channel is not specified.");
+                    }
                     channel = MessageCache.getInstance().getOrAddChannel(firstParam.getType());
                 }
 
@@ -111,14 +111,13 @@ public class MessageHandlerFinder {
                                .toList();
 
         if (!interfaces.isEmpty()) {
-
             for (var genericInterface : interfaces) {
                 var parameterizedType = (ParameterizedType) genericInterface;
-                var messageType = parameterizedType.getActualTypeArguments()[0];
+                var messageType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
                 try {
-                    var method = handlerType.getMethod("handle", (Class<?>) messageType, MessageContext.class);
-                    var channel = MessageCache.getInstance().getOrAddChannel((Class<?>) messageType);
-                    var registration = new HandlerRegistration(channel, (Class<?>) messageType, handlerType, method);
+                    var method = handlerType.getMethod("handle", messageType, MessageContext.class);
+                    var channel = MessageCache.getInstance().getOrAddChannel(messageType);
+                    var registration = new HandlerRegistration(channel, messageType, handlerType, method);
                     registrations.add(registration);
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);

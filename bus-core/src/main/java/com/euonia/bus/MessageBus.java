@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.contract.Request;
-import com.euonia.bus.contract.Transport;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.exception.MessageTypeException;
 import com.euonia.bus.message.MessageCache;

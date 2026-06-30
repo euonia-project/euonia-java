@@ -1,10 +1,12 @@
 package com.euonia.domain.event;
 
+import com.euonia.bus.contract.Multicast;
+
 /**
  * The Event interface represents a generic event in the domain model. It defines the basic properties and methods that all events should have.
  * Events are used to capture and represent significant occurrences or changes in the system, allowing for communication and coordination between different components.
  */
-public interface Event {
+public interface Event extends Multicast {
     /**
      * Gets the sequence number of the event, which can be used to determine the order of events.
      *

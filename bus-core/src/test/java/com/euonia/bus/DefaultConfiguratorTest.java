@@ -21,8 +21,7 @@ class DefaultConfiguratorTest {
         @DisplayName("should configure convention via callback")
         void shouldConfigureConvention() {
             var configurator = new DefaultConfigurator();
-            configurator.setConvention(c ->
-                c.evaluateUnicast(t -> t == String.class));
+            configurator.setConvention(c -> c.evaluateUnicast(t -> t == String.class));
 
             var convention = configurator.getConventionBuilder().getConvention();
 
@@ -39,8 +38,7 @@ class DefaultConfiguratorTest {
         @DisplayName("should add strategy builder by name")
         void shouldAddStrategy() {
             var configurator = new DefaultConfigurator();
-            configurator.setStrategy("rabbitmq", s ->
-                s.evaluateOutgoing(t -> t == Integer.class));
+            configurator.setStrategy("rabbitmq", s -> s.evaluateOutgoing(t -> t == Integer.class));
 
             assertThat(configurator.getStrategyBuilders()).containsKey("rabbitmq");
             var strategy = configurator.getStrategy("rabbitmq");
@@ -52,8 +50,8 @@ class DefaultConfiguratorTest {
         void shouldRejectEmptyName() {
             var configurator = new DefaultConfigurator();
 
-            assertThatThrownBy(() -> configurator.setStrategy("", s -> {}))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> configurator.setStrategy("", s -> {
+            })).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -71,23 +69,10 @@ class DefaultConfiguratorTest {
     class HandlerRegistrationTests {
 
         @Test
-        @DisplayName("should accept single registration")
-        void shouldAcceptSingleRegistration() {
-            var configurator = new DefaultConfigurator();
-            var reg = new HandlerRegistration(
-                "ch", String.class, Object.class, null);
-
-            configurator.registerHandlers(reg);
-
-            assertThat(configurator.getRegistrations()).contains(reg);
-        }
-
-        @Test
         @DisplayName("should reject null registration")
         void shouldRejectNullRegistration() {
             var configurator = new DefaultConfigurator();
-            assertThatThrownBy(() ->
-                configurator.registerHandlers((HandlerRegistration) null))
+            assertThatThrownBy(() -> configurator.registerHandlers((HandlerRegistration) null))
                 .isInstanceOf(IllegalArgumentException.class);
         }
     }

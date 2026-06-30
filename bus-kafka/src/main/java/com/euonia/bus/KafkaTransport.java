@@ -17,7 +17,6 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
-import com.euonia.bus.contract.Transport;
 import com.euonia.bus.serialization.MessageSerializer;
 
 import dev.failsafe.Failsafe;
