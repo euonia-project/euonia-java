@@ -111,13 +111,21 @@ public final class DefaultConfigurator implements Configurator {
     public <T, R> DefaultConfigurator registerHandler(String channel, Class<T> messageType, BiFunction<T, MessageContext, R> handler) {
         try {
             var method = LambdaHandler.class.getDeclaredMethod("handle", Object.class, MessageContext.class);
-            return registerHandlers(channel, messageType, new ChannelHandler(LambdaHandler.class, method, new LambdaHandler<>(handler)));
+            return registerHandler(channel, messageType, new ChannelHandler(LambdaHandler.class, method, new LambdaHandler<>(handler)));
         } catch (NoSuchMethodException e) {
             return this;
         }
     }
 
-    public DefaultConfigurator registerHandlers(String channel, Class<?> messageType, ChannelHandler handler) {
+    /**
+     * 注册处理器。
+     *
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @param handler     处理器处理信息列表
+     * @return 当前配置器实例
+     */
+    public DefaultConfigurator registerHandler(String channel, Class<?> messageType, ChannelHandler handler) {
         Assert.notNull(messageType, "Message type cannot be null");
         Assert.notNull(handler, "Handling cannot be null");
 
@@ -140,7 +148,7 @@ public final class DefaultConfigurator implements Configurator {
      * @param handling    处理器处理信息列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandlers(String channel, Class<?> messageType, List<ChannelHandler> handling) {
+    public DefaultConfigurator registerHandler(String channel, Class<?> messageType, List<ChannelHandler> handling) {
         Assert.notNull(messageType, "Message type cannot be null");
         Assert.notEmpty(handling, "Handling cannot be null or empty");
 
@@ -161,9 +169,9 @@ public final class DefaultConfigurator implements Configurator {
      * @param types 处理器类型列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandlers(List<Class<?>> types) {
+    public DefaultConfigurator registerHandler(List<Class<?>> types) {
         Assert.notEmpty(types, "Types cannot be null or empty");
-        MessageHandlerFinder.find(this::registerHandlers, types.toArray(Class<?>[]::new));
+        MessageHandlerFinder.find(this::registerHandler, types.toArray(Class<?>[]::new));
         return this;
     }
 
@@ -173,9 +181,9 @@ public final class DefaultConfigurator implements Configurator {
      * @param types 处理器类型数组
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandlers(Class<?>... types) {
+    public DefaultConfigurator registerHandler(Class<?>... types) {
         Assert.notEmpty(types, "Types cannot be null or empty");
-        MessageHandlerFinder.find(this::registerHandlers, types);
+        MessageHandlerFinder.find(this::registerHandler, types);
         return this;
     }
 
@@ -185,9 +193,9 @@ public final class DefaultConfigurator implements Configurator {
      * @param packageNames 包名数组
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandlers(String... packageNames) {
+    public DefaultConfigurator registerHandler(String... packageNames) {
         Assert.notContains(packageNames, String::isBlank, "Package names cannot contain null or empty values");
-        MessageHandlerFinder.find(this::registerHandlers, packageNames);
+        MessageHandlerFinder.find(this::registerHandler, packageNames);
         return this;
     }
 

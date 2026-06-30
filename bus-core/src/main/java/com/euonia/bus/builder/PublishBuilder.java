@@ -30,7 +30,6 @@ public final class PublishBuilder<T> {
     private final T message;
     private Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior;
     private final PublishOptions options = new PublishOptions();
-    private Consumer<MessageMetadata> metadataSetter;
 
     public PublishBuilder(Bus bus, T message) {
         this.bus = bus;
@@ -65,7 +64,7 @@ public final class PublishBuilder<T> {
      * 配置元数据设置器。
      */
     public PublishBuilder<T> withMetadata(Consumer<MessageMetadata> metadataSetter) {
-        this.metadataSetter = metadataSetter;
+        options.setMetadataSetter(metadataSetter);
         return this;
     }
 
@@ -118,7 +117,7 @@ public final class PublishBuilder<T> {
      *
      * @return 在所有传输实例完成发送后完成的 future
      */
-    public CompletableFuture<Void> executeAsync() {
-        return bus.publishAsync(message, behavior, options, metadataSetter);
+    public CompletableFuture<Void> runAsync() {
+        return bus.publishAsync(message, options, behavior);
     }
 }

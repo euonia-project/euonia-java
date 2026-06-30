@@ -89,7 +89,7 @@ public class MessageBusConfiguration {
                                             s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                             s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                         })
-                                        .registerHandlers(packageName + ".application.handler")
+                                        .registerHandler(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))
                                         .setEnablePipelineBehaviors(() -> environment.getProperty("euonia.bus.enable-pipeline-behaviors", Boolean.class, true));
     }

@@ -40,7 +40,6 @@ public final class SendBuilder<T, R> {
     private Flow.Subscriber<R> callback;
     private Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior;
     private final SendOptions options = new SendOptions();
-    private Consumer<MessageMetadata> metadataSetter;
 
     public SendBuilder(Bus bus, T message, Class<R> responseType) {
         this.bus = bus;
@@ -87,7 +86,7 @@ public final class SendBuilder<T, R> {
      */
     public SendBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {
         Assert.notNull(metadataSetter, "metadataSetter must not be null");
-        this.metadataSetter = metadataSetter;
+        options.setMetadataSetter(metadataSetter);
         return this;
     }
 
@@ -153,7 +152,7 @@ public final class SendBuilder<T, R> {
      *
      * @return 在消息处理完毕时完成的 future
      */
-    public CompletableFuture<Void> executeAsync() {
-        return bus.sendAsync(message, responseType, callback, behavior, options, metadataSetter);
+    public CompletableFuture<Void> runAsync() {
+        return bus.sendAsync(message, responseType, callback, options, behavior);
     }
 }

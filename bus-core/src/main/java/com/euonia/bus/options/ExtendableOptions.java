@@ -1,7 +1,10 @@
 package com.euonia.bus.options;
 
+import com.euonia.bus.MessageMetadata;
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
+
+import java.util.function.Consumer;
 
 /**
  * 消息发送和接收的默认选项，用户可以扩展此类以添加自定义选项。
@@ -16,6 +19,7 @@ public abstract class ExtendableOptions {
     private boolean enablePipelineBehaviors = true;
     private boolean attachDefaultPipelineBehaviors = true;
     private long delay, timeout;
+    private Consumer<MessageMetadata> metadataSetter;
 
     /**
      * 获取消息的唯一标识符，可用于消息追踪和关联。
@@ -139,5 +143,13 @@ public abstract class ExtendableOptions {
 
     public void setTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    public Consumer<MessageMetadata> getMetadataSetter() {
+        return metadataSetter;
+    }
+
+    public void setMetadataSetter(Consumer<MessageMetadata> metadataSetter) {
+        this.metadataSetter = metadataSetter;
     }
 }
