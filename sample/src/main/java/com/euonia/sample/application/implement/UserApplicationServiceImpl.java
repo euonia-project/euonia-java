@@ -55,7 +55,7 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
 
         return bus.send(command, Long.class)
                   .withCallback(subscribe)
-                  .executeAsync()
+                  .runAsync()
                   .thenCompose(result -> future);
 
 //        return bus.sendAsync(command, Long.class, subscribe)

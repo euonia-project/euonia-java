@@ -8,6 +8,7 @@ import com.euonia.bus.builder.CallBuilder;
 import com.euonia.bus.builder.PublishBuilder;
 import com.euonia.bus.builder.SendBuilder;
 import com.euonia.bus.contract.Request;
+import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.PublishOptions;
@@ -102,101 +103,56 @@ public interface Bus {
     /**
      * 以发布/订阅模式异步发布一条多播消息（完整参数版本）。
      *
-     * @param <T>            消息负载类型
-     * @param message        要发布的消息
-     * @param behavior       可选的管道行为配置回调，可以为 {@code null}
-     * @param options        发布选项
-     * @param metadataSetter 可选的元数据设置器，可以为 {@code null}
+     * @param <T>      消息负载类型
+     * @param message  要发布的消息
+     * @param options  发布选项
+     * @param behavior 可选的管道行为配置回调，可以为 {@code null}
      * @return 在所有传输实例完成发送后完成的 future
      */
-    <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, PublishOptions options, Consumer<MessageMetadata> metadataSetter);
+    <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior);
 
     /**
      * 以发送/命令模式异步发送一条单播消息并等待响应（完整参数版本）。
      *
-     * @param <T>            消息负载类型
-     * @param <R>            响应类型
-     * @param message        要发送的消息
-     * @param responseType   期望的响应类型
-     * @param callback       可选的回调，用于接收响应或错误
-     * @param behavior       可选的管道行为配置回调，可以为 {@code null}
-     * @param sendOptions    发送选项
-     * @param metadataSetter 可选的元数据设置器，可以为 {@code null}
+     * @param <T>          消息负载类型
+     * @param <R>          响应类型
+     * @param message      要发送的消息
+     * @param responseType 期望的响应类型
+     * @param callback     可选的回调，用于接收响应或错误
+     * @param sendOptions  发送选项
+     * @param behavior     可选的管道行为配置回调，可以为 {@code null}
      * @return 在消息处理完毕时完成的 future
      */
-    <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, SendOptions sendOptions, Consumer<MessageMetadata> metadataSetter);
+    <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions sendOptions, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior);
 
     /**
      * 以请求/响应模式异步发送一条请求消息并期待类型化的响应（完整参数版本）。
      *
-     * @param <T>            请求类型，必须实现 {@link Request}
-     * @param <R>            响应类型
-     * @param request        请求消息
-     * @param responseType   期望的响应类型
-     * @param behavior       可选的管道行为配置回调，可以为 {@code null}
-     * @param callOptions    调用选项
-     * @param metadataSetter 可选的元数据设置器，可以为 {@code null}
+     * @param <T>          请求类型，必须实现 {@link Request}
+     * @param <R>          响应类型
+     * @param request      请求消息
+     * @param responseType 期望的响应类型
+     * @param callOptions  调用选项
+     * @param behavior     可选的管道行为配置回调，可以为 {@code null}
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, CallOptions callOptions, Consumer<MessageMetadata> metadataSetter);
+    <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior);
 
     // ──── 便利默认方法 ────
 
     default <T> CompletableFuture<Void> publishAsync(T message) {
-        return publishAsync(message, null, new PublishOptions(), null);
-    }
-
-    default <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
-        return publishAsync(message, behavior, new PublishOptions(), null);
-    }
-
-    default <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, PublishOptions options) {
-        return publishAsync(message, behavior, options, null);
-    }
-
-    default <T> CompletableFuture<Void> publishAsync(String channel, T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, Consumer<MessageMetadata> metadataSetter) {
-        var options = new PublishOptions();
-        options.setChannel(channel);
-        return publishAsync(message, behavior, options, metadataSetter);
+        return publishAsync(message, new PublishOptions(), null);
     }
 
     default <T> CompletableFuture<Void> sendAsync(T message) {
-        return sendAsync(message, Void.class, null, null, new SendOptions(), null);
-    }
-
-    default <T> CompletableFuture<Void> sendAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
-        return sendAsync(message, Void.class, null, behavior, new SendOptions(), null);
-    }
-
-    default <T> CompletableFuture<Void> sendAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, SendOptions sendOptions) {
-        return sendAsync(message, Void.class, null, behavior, sendOptions, null);
-    }
-
-    default <T> CompletableFuture<Void> sendAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, SendOptions sendOptions, Consumer<MessageMetadata> metadataSetter) {
-        return sendAsync(message, Void.class, null, behavior, sendOptions, metadataSetter);
+        return sendAsync(message, Void.class, null, new SendOptions(), null);
     }
 
     default <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback) {
-        return sendAsync(message, responseType, callback, null, new SendOptions(), null);
-    }
-
-    default <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
-        return sendAsync(message, responseType, callback, behavior, new SendOptions(), null);
-    }
-
-    default <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, SendOptions sendOptions) {
-        return sendAsync(message, responseType, callback, behavior, sendOptions, null);
+        return sendAsync(message, responseType, callback, new SendOptions(), null);
     }
 
     default <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType) {
-        return callAsync(request, responseType, null, new CallOptions(), null);
-    }
-
-    default <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
-        return callAsync(request, responseType, behavior, new CallOptions(), null);
-    }
-
-    default <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, CallOptions callOptions) {
-        return callAsync(request, responseType, behavior, callOptions, null);
+        return callAsync(request, responseType, new CallOptions(), null);
     }
 }

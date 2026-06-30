@@ -1,6 +1,8 @@
 package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.euonia.bus.contract.Message;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,10 +40,10 @@ class MessageHandlerFinderTest {
     }
 
     // 测试用消息类
-    static class OrderCmd {
+    static class OrderCmd implements Message {
     }
 
-    static class SimpleEvent {
+    static class SimpleEvent implements Message {
     }
 
     @Nested

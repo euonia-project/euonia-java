@@ -1,8 +1,8 @@
 package com.euonia.bus.recipient;
 
-import com.euonia.bus.HandlerRegistration;
+import com.euonia.bus.ChannelRegistration;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * RecipientRegistrar is responsible for registering handler registrations with the recipient system. It provides a method to register a list of handler registrations along with a default transport.
@@ -18,5 +18,5 @@ public interface RecipientRegistrar {
      * @param registrations    the handler registrations to register
      * @param defaultTransport the default transport to use
      */
-    void register(List<HandlerRegistration> registrations, String defaultTransport);
+    void register(Map<String, ChannelRegistration> registrations, String defaultTransport);
 }

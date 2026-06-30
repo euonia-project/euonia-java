@@ -100,16 +100,15 @@ public final class MessageBus implements Bus {
      * 消息将被发送到 {@link Dispatcher} 确定的所有匹配传输实例。
      * 如果启用了管道行为，消息会先经过管道处理再发送。
      *
-     * @param <T>            消息负载类型
-     * @param message        要发布的消息
-     * @param behavior       可选的管道行为配置回调
-     * @param options        发布选项，可以为 {@code null}
-     * @param metadataSetter 可选的元数据设置器
+     * @param <T>      消息负载类型
+     * @param message  要发布的消息
+     * @param options  发布选项，可以为 {@code null}
+     * @param behavior 可选的管道行为配置回调
      * @return 在所有传输实例完成发送后完成的 future
      * @throws MessageTypeException 如果消息类型不是多播类型
      */
     @Override
-    public <T> CompletableFuture<Void> publishAsync(T message, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior, PublishOptions options, Consumer<MessageMetadata> metadataSetter) {
+    public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
         if (options == null) {
             options = new PublishOptions();
         }
@@ -130,8 +129,8 @@ public final class MessageBus implements Bus {
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
 
-        if (metadataSetter != null) {
-            metadataSetter.accept(pack.getMetadata());
+        if (options.getMetadataSetter() != null) {
+            options.getMetadataSetter().accept(pack.getMetadata());
         }
 
         return executePipelineAsync(pack, messageType, behavior, options)
@@ -162,19 +161,18 @@ public final class MessageBus implements Bus {
      * 消息将被发送到 {@link Dispatcher} 确定的第一个传输实例。
      * 如果启用了管道行为，消息会先经过管道处理再发送。
      *
-     * @param <T>            消息负载类型
-     * @param <R>            响应类型
-     * @param message        要发送的消息
-     * @param responseType   期望的响应类型
-     * @param callback       可选的回调，用于接收响应或错误
-     * @param behavior       可选的管道行为配置回调
-     * @param options        发送选项，可以为 {@code null}
-     * @param metadataSetter 可选的元数据设置器
+     * @param <T>          消息负载类型
+     * @param <R>          响应类型
+     * @param message      要发送的消息
+     * @param responseType 期望的响应类型
+     * @param callback     可选的回调，用于接收响应或错误
+     * @param options      发送选项，可以为 {@code null}
+     * @param behavior     可选的管道行为配置回调
      * @return 在消息处理完毕时完成的 future
      * @throws MessageTypeException 如果消息类型不是单播类型
      */
     @Override
-    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, SendOptions options, Consumer<MessageMetadata> metadataSetter) {
+    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new SendOptions();
         }
@@ -197,8 +195,8 @@ public final class MessageBus implements Bus {
         pack.setAuthorization(context.getAuthorization());
         pack.setCorrelationId(StringUtility.collapse(options::getCorrelationId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
 
-        if (metadataSetter != null) {
-            metadataSetter.accept(pack.getMetadata());
+        if (options.getMetadataSetter() != null) {
+            options.getMetadataSetter().accept(pack.getMetadata());
         }
 
         return executePipelineAsync(pack, messageType, behavior, options)
@@ -256,18 +254,17 @@ public final class MessageBus implements Bus {
      * 消息将被发送到 {@link Dispatcher} 确定的第一个传输实例。
      * 如果启用了管道行为，消息会先经过管道处理再发送。
      *
-     * @param <T>            请求类型，必须实现 {@link com.euonia.bus.contract.Request}
-     * @param <R>            响应类型
-     * @param request        请求消息
-     * @param responseType   期望的响应类型
-     * @param behavior       可选的管道行为配置回调
-     * @param options        调用选项，可以为 {@code null}
-     * @param metadataSetter 可选的元数据设置器
+     * @param <T>          请求类型，必须实现 {@link Request}
+     * @param <R>          响应类型
+     * @param request      请求消息
+     * @param responseType 期望的响应类型
+     * @param options      调用选项，可以为 {@code null}
+     * @param behavior     可选的管道行为配置回调
      * @return 在收到响应时完成并携带响应结果的 future
      * @throws MessageTypeException 如果消息类型不是请求类型
      */
     @Override
-    public <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, CallOptions options, Consumer<MessageMetadata> metadataSetter) {
+    public <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new CallOptions();
         }
@@ -290,8 +287,8 @@ public final class MessageBus implements Bus {
         pack.setAuthorization(context.getAuthorization());
         pack.setCorrelationId(StringUtility.collapse(options::getCorrelationId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
 
-        if (metadataSetter != null) {
-            metadataSetter.accept(pack.getMetadata());
+        if (options.getMetadataSetter() != null) {
+            options.getMetadataSetter().accept(pack.getMetadata());
         }
 
         return executePipelineAsync(pack, messageType, behavior, options)

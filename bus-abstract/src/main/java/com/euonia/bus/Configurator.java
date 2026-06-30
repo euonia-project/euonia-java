@@ -6,6 +6,7 @@ import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -43,11 +44,11 @@ public interface Configurator {
     ConcurrentMap<String, TransportStrategyBuilder> getStrategyBuilders();
 
     /**
-     * Gets the list of handler registrations that have been configured.
+     * Gets the map of handler registrations that have been configured.
      *
-     * @return the list of handler registrations
+     * @return the map of handler registrations
      */
-    List<HandlerRegistration> getRegistrations();
+    Map<String, ChannelRegistration> getRegistrations();
 
     /**
      * 获取消息约定，可用于消息格式化和验证。

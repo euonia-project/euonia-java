@@ -35,7 +35,6 @@ public final class CallBuilder<T extends Request<R>, R> {
     private final Class<R> responseType;
     private Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior;
     private final CallOptions options = new CallOptions();
-    private Consumer<MessageMetadata> metadataSetter;
 
     public CallBuilder(Bus bus, T request, Class<R> responseType) {
         this.bus = bus;
@@ -73,7 +72,7 @@ public final class CallBuilder<T extends Request<R>, R> {
      */
     public CallBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {
         Assert.notNull(metadataSetter, "metadataSetter must not be null");
-        this.metadataSetter = metadataSetter;
+        options.setMetadataSetter(metadataSetter);
         return this;
     }
 
@@ -139,7 +138,7 @@ public final class CallBuilder<T extends Request<R>, R> {
      *
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    public CompletableFuture<R> executeAsync() {
-        return bus.callAsync(request, responseType, behavior, options, metadataSetter);
+    public CompletableFuture<R> runAsync() {
+        return bus.callAsync(request, responseType, options, behavior);
     }
 }

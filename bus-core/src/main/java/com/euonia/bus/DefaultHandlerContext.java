@@ -2,6 +2,7 @@ package com.euonia.bus;
 
 import java.lang.reflect.InvocationTargetException;
 
+import com.euonia.bus.contract.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
  * 默认的消息处理器上下文，使用 Euonia 的 {@link ServiceProvider} 进行依赖解析。
  * <p>
  * 该类管理处理器注册并将传入的消息分派到适当的处理器。
- * 它支持泛型处理器类型注册（通过 DI 解析）和基于反射的注册（通过 {@link HandlerRegistration}） 。
+ * 它支持泛型处理器类型注册（通过 DI 解析）和基于反射的注册（通过 {@link ChannelRegistration}） 。
  *
  * @author damon(zhaorong@outlook.com)
  */
@@ -82,12 +83,11 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param <M>         消息类型
      * @param <R>         响应类型
      * @param <H>         实现 {@link Handler}{@code <M, R>} 的处理器类型
+     * @param channel     要注册处理器的通道名称
      * @param messageType 消息的类
      * @param handlerType 处理器的类
      */
-    public <M, R, H extends Handler<M, R>> void register(Class<M> messageType, Class<H> handlerType) {
-        var channel = MessageCache.getInstance().getOrAddChannel(messageType);
-
+    public <M extends Message, R, H extends Handler<M, R>> void register(String channel, Class<M> messageType, Class<H> handlerType) {
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getRequiredService(handlerType);
             return (message, context) -> {
@@ -102,18 +102,19 @@ final class DefaultHandlerContext implements HandlerContext {
     }
 
     /**
-     * 注册由 {@link HandlerRegistration} 描述的处理器。
+     * 注册由 {@link ChannelHandler} 描述的处理器。
      * 该注册包含处理器类型、要调用的方法和通道名称。
      *
-     * @param registration 描述要注册的处理器的 {@link HandlerRegistration}
+     * @param channel        要注册处理器的通道名称
+     * @param channelHandler 描述要注册的处理器的 {@link ChannelHandler}
      */
-    public void register(HandlerRegistration registration) {
+    public void register(String channel, ChannelHandler channelHandler) {
         // 一次性设置 accessible，避免每次消息处理时的重复安全检查
-        var method = registration.method();
+        var method = channelHandler.method();
         method.setAccessible(true);
 
         MessageHandlerFactory factory = sp -> {
-            var handler = sp.getServiceOrCreate(registration.handlerType());
+            var handler = channelHandler.instance() == null ? sp.getServiceOrCreate(channelHandler.handlerType()) : channelHandler.instance();
             return (message, context) -> {
                 var args = resolveArguments(method, message, context);
                 try {
@@ -125,8 +126,8 @@ final class DefaultHandlerContext implements HandlerContext {
             };
         };
 
-        concurrentDictionarySafeRegister(registration.channel(), factory);
-        publisher.submit(new MessageSubscribedEvent(registration.channel(), registration.messageType(), registration.handlerType()));
+        concurrentDictionarySafeRegister(channel, factory);
+        publisher.submit(new MessageSubscribedEvent(channel, null, channelHandler.handlerType()));
     }
 
     // endregion
@@ -170,16 +171,6 @@ final class DefaultHandlerContext implements HandlerContext {
                 } catch (Exception exception) {
                     future.completeExceptionally(exception);
                 }
-
-//                var task = executeHandlerAsync(factory, message, context);
-//
-//                return task.whenComplete((result, exception) -> {
-//                    if (exception != null) {
-//                        LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, exception.getMessage()), exception);
-//                    } else {
-//                        LOGGER.log(Level.INFO, String.format("Message '%s' is being handled on channel %s with result: %s", context.getMessageId(), channel, result));
-//                    }
-//                });
             } else {
                 // 多个处理器 — 并行执行所有（多播场景）
                 var futures = factories.stream()

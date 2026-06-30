@@ -2,6 +2,7 @@ package com.euonia.bus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +15,7 @@ import com.euonia.reflection.ServiceProvider;
 import com.euonia.reflection.SyntheticParameterizedType;
 
 /**
- * Kafka 消息接收者注册器，负责根据已注册的 {@link HandlerRegistration} 列表创建并启动
+ * Kafka 消息接收者注册器，负责根据已注册的 {@link ChannelRegistration} 列表创建并启动
  * 对应的 Kafka 消费者实例。
  *
  * @author damon(zhaorong@outlook.com)
@@ -38,31 +39,34 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(List<HandlerRegistration> registrations, String defaultTransport) {
+    public void register(Map<String, ChannelRegistration> registrations, String defaultTransport) {
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
         var handlerContext = provider.getService(HandlerContext.class).orElseThrow();
         @SuppressWarnings("null")
         var serializer = provider.getService(MessageSerializer.class).orElseThrow();
 
-        for (var registration : registrations) {
-            if (!isDefaultTransport && (strategy == null || !strategy.incoming(registration.messageType()))) {
+        for (var entry : registrations.entrySet()) {
+            var channel = entry.getKey();
+            var messageType = entry.getValue().getMessageType();
+
+            if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 continue;
             }
 
-            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, registration.messageType());
+            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, messageType);
             KafkaRecipient recipient;
 
-            if (convention.isMulticastType(registration.messageType())) {
+            if (convention.isMulticastType(messageType)) {
                 recipient = new KafkaTopicSubscriber(options, handlerContext, serializer, syntheticType);
-            } else if (convention.isUnicastType(registration.messageType())) {
+            } else if (convention.isUnicastType(messageType)) {
                 recipient = new KafkaQueueConsumer(options, handlerContext, serializer, syntheticType);
-            } else if (convention.isRequestType(registration.messageType())) {
+            } else if (convention.isRequestType(messageType)) {
                 recipient = new KafkaRequestExecutor(options, handlerContext, serializer, syntheticType);
             } else {
-                throw new IllegalArgumentException("Unsupported message type: " + registration.messageType());
+                throw new IllegalArgumentException("Unsupported message type: " + messageType);
             }
 
-            recipient.start(registration.channel());
+            recipient.start(channel);
             recipients.add(recipient);
         }
     }
