@@ -10,7 +10,7 @@ import com.euonia.bus.message.MessageCache;
 import com.euonia.reflection.ClassScanner;
 
 /**
- * 消息处理器查找器，负责扫描指定包或处理器类型并生成 {@link HandlerRegistration} 列表。
+ * 消息处理器查找器，负责扫描指定包或处理器类型并生成 {@link ChannelRegistration} 列表。
  * <p>
  * 支持两种查找方式：
  * <ul>
@@ -24,35 +24,30 @@ public class MessageHandlerFinder {
 
     /**
      * 扫描指定包下的所有类，查找其中带有 {@link Subscribe} 注解的方法，
-     * 并为每个匹配的方法生成一个 {@link HandlerRegistration}。
+     * 并为每个匹配的方法生成一个 {@link ChannelRegistration}。
      *
      * @param packages 要扫描的包名数组
      * @return 找到的处理器注册信息列表
      */
-    public static List<HandlerRegistration> find(String... packages) {
-        List<HandlerRegistration> registrations = new ArrayList<>();
+    public static void find(Delegate delegate, String... packages) {
         for (var pkg : packages) {
             var classes = ClassScanner.scan(pkg);
             for (var cls : classes) {
-                registrations.addAll(resolve(cls));
+                resolve(delegate, cls);
             }
         }
-        return registrations;
     }
 
     /**
      * 解析指定的处理器类型，同时查找 {@link Subscribe} 注解方法和 {@link Handler} 接口实现，
-     * 并为每个匹配的方法生成一个 {@link HandlerRegistration}。
+     * 并为每个匹配的方法生成一个 {@link ChannelRegistration}。
      *
      * @param handlerTypes 要解析的处理器类型数组
-     * @return 找到的处理器注册信息列表
      */
-    public static List<HandlerRegistration> find(Class<?>... handlerTypes) {
-        List<HandlerRegistration> registrations = new ArrayList<>();
+    public static void find(Delegate delegate, Class<?>... handlerTypes) {
         for (var handlerType : handlerTypes) {
-            registrations.addAll(resolve(handlerType));
+            resolve(delegate, handlerType);
         }
-        return registrations;
     }
 
     /**
@@ -67,14 +62,12 @@ public class MessageHandlerFinder {
      * 接口、记录、枚举和数组类型将被跳过。
      *
      * @param handlerType 要解析的处理器类
-     * @return 该处理器类型对应的注册信息列表
      * @throws IllegalArgumentException 如果 {@link Subscribe} 方法签名不符合规范
      */
-    private static List<HandlerRegistration> resolve(Class<?> handlerType) {
+    private static void resolve(Delegate delegate, Class<?> handlerType) {
         if (handlerType.isInterface() || handlerType.isRecord() || handlerType.isEnum() || handlerType.isArray()) {
-            return List.of();
+            return;
         }
-        List<HandlerRegistration> registrations = new ArrayList<>();
 
         var methods = Arrays.stream(handlerType.getDeclaredMethods())
                             .filter(m -> m.getAnnotation(Subscribe.class) != null)
@@ -100,9 +93,7 @@ public class MessageHandlerFinder {
                     }
                     channel = MessageCache.getInstance().getOrAddChannel(firstParam.getType());
                 }
-
-                var registration = new HandlerRegistration(channel, firstParam.getType(), handlerType, method);
-                registrations.add(registration);
+                delegate.next(channel, firstParam.getType(), new ChannelHandler(handlerType, method, null));
             }
         }
 
@@ -117,14 +108,16 @@ public class MessageHandlerFinder {
                 try {
                     var method = handlerType.getMethod("handle", messageType, MessageContext.class);
                     var channel = MessageCache.getInstance().getOrAddChannel(messageType);
-                    var registration = new HandlerRegistration(channel, messageType, handlerType, method);
-                    registrations.add(registration);
+                    delegate.next(channel, messageType, new ChannelHandler(handlerType, method, null));
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
+    }
 
-        return registrations;
+    @FunctionalInterface
+    public interface Delegate {
+        void next(String channel, Class<?> messageType, ChannelHandler handler);
     }
 }

@@ -1,6 +1,5 @@
 package com.euonia.bus;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,13 +68,13 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport) {
+    public void register(Map<String, ChannelRegistration> registrations, String defaultTransport) {
 
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
 
         for (var entry : registrations.entrySet()) {
             var channel = entry.getKey();
-            var messageType = entry.getValue().get(0).messageType();
+            var messageType = entry.getValue().getMessageType();
 
             if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 /* 如果此注册不是针对默认传输，且策略未将其标识为入站类型，则跳过。 */

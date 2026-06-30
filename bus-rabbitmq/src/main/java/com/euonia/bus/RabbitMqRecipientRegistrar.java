@@ -17,7 +17,7 @@ import com.euonia.utility.Assert;
 import com.rabbitmq.client.Connection;
 
 /**
- * RabbitMQ 消息接收者注册器，负责根据已注册的 {@link HandlerRegistration} 列表创建并启动
+ * RabbitMQ 消息接收者注册器，负责根据已注册的 {@link ChannelRegistration} 列表创建并启动
  * 对应的 RabbitMQ 消费者实例。
  * <p>
  * 根据消息约定判断消息类型，分别创建：
@@ -75,7 +75,7 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport) {
+    public void register(Map<String, ChannelRegistration> registrations, String defaultTransport) {
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
 
         var connection = provider.getService(Connection.class)
@@ -87,7 +87,7 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
 
         for (var entry : registrations.entrySet()) {
             var channel = entry.getKey();
-            var messageType = entry.getValue().get(0).messageType();
+            var messageType = entry.getValue().getMessageType();
 
             if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 /* 如果此注册不是针对默认传输，且策略未将其标识为入站类型，则跳过。 */

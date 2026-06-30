@@ -41,16 +41,17 @@ public class MessageBusConfiguration {
             for (var entry : configurator.getRegistrations().entrySet()) {
 
                 String channel = entry.getKey();
+                ChannelRegistration registration = entry.getValue();
 
-                for (var registration : entry.getValue()) {
-                    var isImplementHandlerInterface = Arrays.stream(registration.handlerType().getGenericInterfaces()).anyMatch(type -> {
+                for (var handler : registration.getHandlers()) {
+                    var isImplementHandlerInterface = Arrays.stream(handler.handlerType().getGenericInterfaces()).anyMatch(type -> {
                         if (!(type instanceof ParameterizedType parameterizedType) || parameterizedType.getActualTypeArguments().length != 2) {
                             return false;
                         }
                         if (parameterizedType.getRawType() != Handler.class) {
                             return false;
                         }
-                        if (parameterizedType.getActualTypeArguments()[0] != registration.messageType()) {
+                        if (parameterizedType.getActualTypeArguments()[0] != registration.getMessageType()) {
                             return false;
                         }
                         if (parameterizedType.getActualTypeArguments()[1] != MessageContext.class) {
@@ -63,9 +64,9 @@ public class MessageBusConfiguration {
                         return true;
                     });
                     if (isImplementHandlerInterface) {
-                        genericRegisterMethod.invoke(context, channel, registration.messageType(), registration.handlerType());
+                        genericRegisterMethod.invoke(context, channel, registration.getMessageType(), handler.handlerType());
                     } else {
-                        context.register(channel, registration);
+                        context.register(channel, handler);
                     }
                 }
             }

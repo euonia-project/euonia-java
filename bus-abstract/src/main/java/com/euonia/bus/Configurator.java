@@ -48,7 +48,7 @@ public interface Configurator {
      *
      * @return the map of handler registrations
      */
-    Map<String, List<HandlerRegistration>> getRegistrations();
+    Map<String, ChannelRegistration> getRegistrations();
 
     /**
      * 获取消息约定，可用于消息格式化和验证。

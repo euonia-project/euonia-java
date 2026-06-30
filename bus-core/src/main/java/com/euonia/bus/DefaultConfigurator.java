@@ -3,12 +3,10 @@ package com.euonia.bus;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.euonia.bus.convention.DefaultMessageConventionBuilder;
@@ -27,7 +25,7 @@ import com.euonia.utility.Assert;
 public final class DefaultConfigurator implements Configurator {
     private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, List<HandlerRegistration>> registrations = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ChannelRegistration> registrations = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Class<?>> channelMessageTypeCache = new ConcurrentHashMap<>();
 
     private Supplier<String> defaultTransportSupplier = () -> "";
@@ -69,7 +67,7 @@ public final class DefaultConfigurator implements Configurator {
      * @return 已注册的处理器列表
      */
     @Override
-    public Map<String, List<HandlerRegistration>> getRegistrations() {
+    public Map<String, ChannelRegistration> getRegistrations() {
         return Collections.unmodifiableMap(registrations);
     }
 
@@ -103,38 +101,57 @@ public final class DefaultConfigurator implements Configurator {
     /**
      * 注册处理器。
      *
-     * @param channel      通道名称
-     * @param messageType  消息类型
-     * @param responseType 响应类型
-     * @param handler      处理器函数
-     * @param <T>          消息类型
-     * @param <R>          响应类型
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @param handler     处理器函数
+     * @param <T>         消息类型
+     * @param <R>         响应类型
      * @return 当前配置器实例
      */
-    public <T, R> DefaultConfigurator registerHandler(String channel, Class<T> messageType, Class<R> responseType, BiFunction<T, MessageContext, R> handler) {
-        var registration = new HandlerRegistration(channel, messageType, handler.getClass(), null);
-        return registerHandlers(registration);
+    public <T, R> DefaultConfigurator registerHandler(String channel, Class<T> messageType, BiFunction<T, MessageContext, R> handler) {
+        try {
+            var method = LambdaHandler.class.getDeclaredMethod("handle", Object.class, MessageContext.class);
+            return registerHandlers(channel, messageType, new ChannelHandler(LambdaHandler.class, method, new LambdaHandler<>(handler)));
+        } catch (NoSuchMethodException e) {
+            return this;
+        }
+    }
+
+    public DefaultConfigurator registerHandlers(String channel, Class<?> messageType, ChannelHandler handler) {
+        Assert.notNull(messageType, "Message type cannot be null");
+        Assert.notNull(handler, "Handling cannot be null");
+
+        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
+        if (registration == null) {
+            throw new IllegalStateException("Duplicate handler for channel: " + channel);
+        }
+        if (messageType != registration.getMessageType()) {
+            throw new IllegalStateException("Message type mismatch for channel: " + channel);
+        }
+        registration.addHandler(handler);
+        return this;
     }
 
     /**
      * 注册处理器。
      *
-     * @param registration 处理器注册信息
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @param handling    处理器处理信息列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandlers(HandlerRegistration registration) {
-        Assert.notNull(registration, "Message registration cannot be null");
+    public DefaultConfigurator registerHandlers(String channel, Class<?> messageType, List<ChannelHandler> handling) {
+        Assert.notNull(messageType, "Message type cannot be null");
+        Assert.notEmpty(handling, "Handling cannot be null or empty");
 
-        var channel = registration.channel();
-
-        var registrationsOfChannel = registrations.computeIfAbsent(channel, k -> new java.util.concurrent.CopyOnWriteArrayList<>());
-
-        var messageType = channelMessageTypeCache.putIfAbsent(channel, registration.messageType());
-
-        if (messageType != null && !Objects.equals(messageType, registration.messageType())) {
-            throw new IllegalArgumentException(String.format("Cannot register handler for message type %s on channel %s because there are already handlers registered for different message types on the same channel.", registration.messageType().getName(), registration.channel()));
+        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
+        if (registration == null) {
+            throw new IllegalStateException("Duplicate handling for channel: " + channel);
         }
-        registrationsOfChannel.add(registration);
+        if (messageType != registration.getMessageType()) {
+            throw new IllegalStateException("Message type mismatch for channel: " + channel);
+        }
+        handling.forEach(registration::addHandler);
         return this;
     }
 
@@ -146,12 +163,7 @@ public final class DefaultConfigurator implements Configurator {
      */
     public DefaultConfigurator registerHandlers(List<Class<?>> types) {
         Assert.notEmpty(types, "Types cannot be null or empty");
-        if (!types.isEmpty()) {
-            var handlerTypes = MessageHandlerFinder.find(types.toArray(Class<?>[]::new));
-            for (var registration : handlerTypes) {
-                registerHandlers(registration);
-            }
-        }
+        MessageHandlerFinder.find(this::registerHandlers, types.toArray(Class<?>[]::new));
         return this;
     }
 
@@ -163,13 +175,7 @@ public final class DefaultConfigurator implements Configurator {
      */
     public DefaultConfigurator registerHandlers(Class<?>... types) {
         Assert.notEmpty(types, "Types cannot be null or empty");
-        if (types.length > 0) {
-            var handlerTypes = MessageHandlerFinder.find(types);
-            for (var registration : handlerTypes) {
-                registerHandlers(registration);
-            }
-        }
-
+        MessageHandlerFinder.find(this::registerHandlers, types);
         return this;
     }
 
@@ -181,13 +187,7 @@ public final class DefaultConfigurator implements Configurator {
      */
     public DefaultConfigurator registerHandlers(String... packageNames) {
         Assert.notContains(packageNames, String::isBlank, "Package names cannot contain null or empty values");
-
-        for (String packageName : packageNames) {
-            var handlerTypes = MessageHandlerFinder.find(packageName);
-            for (var registration : handlerTypes) {
-                registerHandlers(registration);
-            }
-        }
+        MessageHandlerFinder.find(this::registerHandlers, packageNames);
         return this;
     }
 

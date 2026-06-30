@@ -15,7 +15,7 @@ import com.euonia.reflection.ServiceProvider;
 import com.euonia.reflection.SyntheticParameterizedType;
 
 /**
- * Kafka 消息接收者注册器，负责根据已注册的 {@link HandlerRegistration} 列表创建并启动
+ * Kafka 消息接收者注册器，负责根据已注册的 {@link ChannelRegistration} 列表创建并启动
  * 对应的 Kafka 消费者实例。
  *
  * @author damon(zhaorong@outlook.com)
@@ -39,7 +39,7 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport) {
+    public void register(Map<String, ChannelRegistration> registrations, String defaultTransport) {
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
         var handlerContext = provider.getService(HandlerContext.class).orElseThrow();
         @SuppressWarnings("null")
@@ -47,7 +47,7 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
 
         for (var entry : registrations.entrySet()) {
             var channel = entry.getKey();
-            var messageType = entry.getValue().get(0).messageType();
+            var messageType = entry.getValue().getMessageType();
 
             if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 continue;

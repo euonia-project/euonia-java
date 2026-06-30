@@ -1,8 +1,7 @@
 package com.euonia.bus.recipient;
 
-import com.euonia.bus.HandlerRegistration;
+import com.euonia.bus.ChannelRegistration;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,5 +18,5 @@ public interface RecipientRegistrar {
      * @param registrations    the handler registrations to register
      * @param defaultTransport the default transport to use
      */
-    void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport);
+    void register(Map<String, ChannelRegistration> registrations, String defaultTransport);
 }

@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  * 默认的消息处理器上下文，使用 Euonia 的 {@link ServiceProvider} 进行依赖解析。
  * <p>
  * 该类管理处理器注册并将传入的消息分派到适当的处理器。
- * 它支持泛型处理器类型注册（通过 DI 解析）和基于反射的注册（通过 {@link HandlerRegistration}） 。
+ * 它支持泛型处理器类型注册（通过 DI 解析）和基于反射的注册（通过 {@link ChannelRegistration}） 。
  *
  * @author damon(zhaorong@outlook.com)
  */
@@ -102,19 +102,19 @@ final class DefaultHandlerContext implements HandlerContext {
     }
 
     /**
-     * 注册由 {@link HandlerRegistration} 描述的处理器。
+     * 注册由 {@link ChannelHandler} 描述的处理器。
      * 该注册包含处理器类型、要调用的方法和通道名称。
      *
-     * @param channel      要注册处理器的通道名称
-     * @param registration 描述要注册的处理器的 {@link HandlerRegistration}
+     * @param channel        要注册处理器的通道名称
+     * @param channelHandler 描述要注册的处理器的 {@link ChannelHandler}
      */
-    public void register(String channel, HandlerRegistration registration) {
+    public void register(String channel, ChannelHandler channelHandler) {
         // 一次性设置 accessible，避免每次消息处理时的重复安全检查
-        var method = registration.method();
+        var method = channelHandler.method();
         method.setAccessible(true);
 
         MessageHandlerFactory factory = sp -> {
-            var handler = sp.getServiceOrCreate(registration.handlerType());
+            var handler = channelHandler.instance() == null ? sp.getServiceOrCreate(channelHandler.handlerType()) : channelHandler.instance();
             return (message, context) -> {
                 var args = resolveArguments(method, message, context);
                 try {
@@ -127,7 +127,7 @@ final class DefaultHandlerContext implements HandlerContext {
         };
 
         concurrentDictionarySafeRegister(channel, factory);
-        publisher.submit(new MessageSubscribedEvent(channel, registration.messageType(), registration.handlerType()));
+        publisher.submit(new MessageSubscribedEvent(channel, null, channelHandler.handlerType()));
     }
 
     // endregion
