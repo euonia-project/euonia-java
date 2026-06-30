@@ -146,9 +146,9 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
     /**
      * 启动接收者，开始监听指定通道的消息。
      *
-     * @param group 要监听的通道/组名称
+     * @param channelName 要监听的通道名称
      */
-    abstract void start(String group);
+    abstract void start(String channelName);
 
     /**
      * 停止接收者，取消消费者并关闭 Channel。

@@ -50,18 +50,18 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
      *   <li>将处理结果（成功响应或异常）通过 replyTo 队列返回给调用者</li>
      * </ol>
      *
-     * @param group 通道组名称，用于生成 RPC 队列名
+     * @param channelName 通道组名称，用于生成 RPC 队列名
      */
     @Override
-    void start(String group) {
+    void start(String channelName) {
         var queuePrefix = StringUtility.collapse(options.getRpcQueuePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
-        var queueName = options.generateQueueName(queuePrefix, group);
+        var queueName = options.generateQueueName(queuePrefix, channelName);
 
         try {
-            channel = connection.createChannel();
-            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
-            channel.queueDeclare(queueName, true, false, false, dlxArgs);
-            channel.basicQos(options.getPrefetchCount());
+            this.channel = connection.createChannel();
+            var dlxArgs = declareDeadLetterInfrastructure(this.channel, channelName);
+            this.channel.queueDeclare(queueName, true, false, false, dlxArgs);
+            this.channel.basicQos(options.getPrefetchCount());
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 var properties = delivery.getProperties();
@@ -90,8 +90,8 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
 
                         var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
 
-                        channel.basicPublish("", properties.getReplyTo(), replyProperties, data.getBytes());
-                        channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                        this.channel.basicPublish("", properties.getReplyTo(), replyProperties, data.getBytes());
+                        this.channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                         raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
                     } catch (IOException exception) {
                         throw new RuntimeException(exception);
@@ -99,7 +99,7 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
                 });
             };
 
-            recipientTag = channel.basicConsume(queueName, false, deliverCallback, ct -> {});
+            recipientTag = this.channel.basicConsume(queueName, false, deliverCallback, ct -> {});
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }

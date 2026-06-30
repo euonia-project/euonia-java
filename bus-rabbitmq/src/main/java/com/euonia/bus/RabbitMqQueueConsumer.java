@@ -51,21 +51,21 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
      *   <li>如果请求包含 correlationId 和 replyTo，将处理结果或异常发送回回复队列</li>
      * </ol>
      *
-     * @param group 通道组名称，用于生成队列名
+     * @param channelName 通道组名称，用于生成队列名
      */
     @Override
-    void start(String group) {
+    void start(String channelName) {
         var queuePrefix = StringUtility.collapse(options.getQueueNamePrefix(), RabbitMqConstants.DEFAULT_QUEUE_NAME_PREFIX);
-        var queueName = options.generateQueueName(queuePrefix, group);
+        var queueName = options.generateQueueName(queuePrefix, channelName);
 
         try {
-            channel = connection.createChannel();
+            this.channel = connection.createChannel();
 
-            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
-            channel.queueDeclare(queueName, true, false, false, dlxArgs);
-            channel.basicQos(0, options.getPrefetchCount(), false);
+            var dlxArgs = declareDeadLetterInfrastructure(this.channel, channelName);
+            this.channel.queueDeclare(queueName, true, false, false, dlxArgs);
+            this.channel.basicQos(0, options.getPrefetchCount(), false);
 
-            var consumer = new DefaultConsumer(channel) {
+            var consumer = new DefaultConsumer(RabbitMqQueueConsumer.this.channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 
@@ -93,8 +93,8 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
                             }
 
                             var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
-                            channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
-                            channel.basicAck(envelope.getDeliveryTag(), false);
+                            RabbitMqQueueConsumer.this.channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
+                            RabbitMqQueueConsumer.this.channel.basicAck(envelope.getDeliveryTag(), false);
                             raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
                         } catch (IOException exception) {
                             // 处理发送回复消息时发生的异常
@@ -105,7 +105,7 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
                 }
             };
 
-            recipientTag = channel.basicConsume(queueName, false, consumer);
+            recipientTag = this.channel.basicConsume(queueName, false, consumer);
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }

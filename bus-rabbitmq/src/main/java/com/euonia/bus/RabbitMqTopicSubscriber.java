@@ -52,21 +52,21 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
      *   <li>处理完成后发送 ACK 确认并触发消息确认事件</li>
      * </ol>
      *
-     * @param group 通道组名称，用于生成交换器和队列名
+     * @param channelName 通道组名称，用于生成交换器和队列名
      */
     @Override
-    void start(String group) {
+    void start(String channelName) {
         try {
-            channel = connection.createChannel();
+            this.channel = connection.createChannel();
 
             var exchangePrefix = StringUtility.collapse(options.getExchangeNamePrefix(), RabbitMqConstants.DEFAULT_EXCHANGE_NAME_PREFIX);
-            var exchangeName = String.format("%s:%s", exchangePrefix, group);
+            var exchangeName = String.format("%s:%s", exchangePrefix, channelName);
 
-            channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
-            var dlxArgs = declareDeadLetterInfrastructure(channel, group);
-            var queueName = channel.queueDeclare(options.generateQueueName(exchangeName, group), true, false, false, dlxArgs).getQueue();
-            channel.queueBind(queueName, exchangeName, "*");
-            var consumer = new DefaultConsumer(channel) {
+            this.channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, true);
+            var dlxArgs = declareDeadLetterInfrastructure(this.channel, channelName);
+            var queueName = this.channel.queueDeclare(options.generateQueueName(exchangeName, channelName), true, false, false, dlxArgs).getQueue();
+            this.channel.queueBind(queueName, exchangeName, "*");
+            var consumer = new DefaultConsumer(RabbitMqTopicSubscriber.this.channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 
@@ -75,7 +75,7 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
                     handleAsync(message, context).whenComplete((result, error) -> {
                         try {
-                            channel.basicAck(envelope.getDeliveryTag(), false);
+                            RabbitMqTopicSubscriber.this.channel.basicAck(envelope.getDeliveryTag(), false);
                             raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
                         } catch (IOException exception) {
                             throw new RuntimeException(exception);
@@ -84,7 +84,7 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
                 }
             };
 
-            recipientTag = channel.basicConsume(queueName, false, consumer);
+            recipientTag = this.channel.basicConsume(queueName, false, consumer);
 
         } catch (IOException exception) {
             throw new RuntimeException(exception);
