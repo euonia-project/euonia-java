@@ -3,8 +3,6 @@ package com.euonia.bus.convention;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.euonia.bus.MessageConventionType;
-
 /**
  * MessageConventionBuilder provides a fluent API for configuring message conventions by allowing users to define custom rules for classifying message types (unicast, multicast, request) based on predicates or custom convention implementations.
  * <p>

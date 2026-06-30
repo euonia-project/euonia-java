@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.euonia.bus.MessageConventionType;
 import com.euonia.utility.Assert;
 
 /**

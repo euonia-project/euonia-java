@@ -1,4 +1,4 @@
-package com.euonia.bus;
+package com.euonia.bus.convention;
 
 /**
  * Defines the convention type for messages in the bus system.
