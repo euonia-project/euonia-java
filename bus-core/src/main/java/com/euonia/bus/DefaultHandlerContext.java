@@ -2,6 +2,7 @@ package com.euonia.bus;
 
 import java.lang.reflect.InvocationTargetException;
 
+import com.euonia.bus.contract.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
@@ -170,16 +171,6 @@ final class DefaultHandlerContext implements HandlerContext {
                 } catch (Exception exception) {
                     future.completeExceptionally(exception);
                 }
-
-//                var task = executeHandlerAsync(factory, message, context);
-//
-//                return task.whenComplete((result, exception) -> {
-//                    if (exception != null) {
-//                        LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, exception.getMessage()), exception);
-//                    } else {
-//                        LOGGER.log(Level.INFO, String.format("Message '%s' is being handled on channel %s with result: %s", context.getMessageId(), channel, result));
-//                    }
-//                });
             } else {
                 // 多个处理器 — 并行执行所有（多播场景）
                 var futures = factories.stream()
