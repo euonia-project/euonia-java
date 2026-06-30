@@ -1,9 +1,14 @@
 package com.euonia.bus;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.euonia.bus.convention.DefaultMessageConventionBuilder;
@@ -18,10 +23,12 @@ import com.euonia.utility.Assert;
  *
  * @author damon(zhaorong@outlook.com)
  */
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public final class DefaultConfigurator implements Configurator {
     private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
-    private final List<HandlerRegistration> registrations = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final ConcurrentMap<String, List<HandlerRegistration>> registrations = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Class<?>> channelMessageTypeCache = new ConcurrentHashMap<>();
 
     private Supplier<String> defaultTransportSupplier = () -> "";
     private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
@@ -62,8 +69,8 @@ public final class DefaultConfigurator implements Configurator {
      * @return 已注册的处理器列表
      */
     @Override
-    public List<HandlerRegistration> getRegistrations() {
-        return registrations;
+    public Map<String, List<HandlerRegistration>> getRegistrations() {
+        return Collections.unmodifiableMap(registrations);
     }
 
     /**
@@ -96,12 +103,38 @@ public final class DefaultConfigurator implements Configurator {
     /**
      * 注册处理器。
      *
+     * @param channel      通道名称
+     * @param messageType  消息类型
+     * @param responseType 响应类型
+     * @param handler      处理器函数
+     * @param <T>          消息类型
+     * @param <R>          响应类型
+     * @return 当前配置器实例
+     */
+    public <T, R> DefaultConfigurator registerHandler(String channel, Class<T> messageType, Class<R> responseType, BiFunction<T, MessageContext, R> handler) {
+        var registration = new HandlerRegistration(channel, messageType, handler.getClass(), null);
+        return registerHandlers(registration);
+    }
+
+    /**
+     * 注册处理器。
+     *
      * @param registration 处理器注册信息
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerHandlers(HandlerRegistration registration) {
         Assert.notNull(registration, "Message registration cannot be null");
-        registrations.add(registration);
+
+        var channel = registration.channel();
+
+        var registrationsOfChannel = registrations.computeIfAbsent(channel, k -> new java.util.concurrent.CopyOnWriteArrayList<>());
+
+        var messageType = channelMessageTypeCache.putIfAbsent(channel, registration.messageType());
+
+        if (messageType != null && !Objects.equals(messageType, registration.messageType())) {
+            throw new IllegalArgumentException(String.format("Cannot register handler for message type %s on channel %s because there are already handlers registered for different message types on the same channel.", registration.messageType().getName(), registration.channel()));
+        }
+        registrationsOfChannel.add(registration);
         return this;
     }
 
@@ -115,7 +148,9 @@ public final class DefaultConfigurator implements Configurator {
         Assert.notEmpty(types, "Types cannot be null or empty");
         if (!types.isEmpty()) {
             var handlerTypes = MessageHandlerFinder.find(types.toArray(Class<?>[]::new));
-            this.registrations.addAll(handlerTypes);
+            for (var registration : handlerTypes) {
+                registerHandlers(registration);
+            }
         }
         return this;
     }
@@ -130,7 +165,9 @@ public final class DefaultConfigurator implements Configurator {
         Assert.notEmpty(types, "Types cannot be null or empty");
         if (types.length > 0) {
             var handlerTypes = MessageHandlerFinder.find(types);
-            this.registrations.addAll(handlerTypes);
+            for (var registration : handlerTypes) {
+                registerHandlers(registration);
+            }
         }
 
         return this;
@@ -147,17 +184,31 @@ public final class DefaultConfigurator implements Configurator {
 
         for (String packageName : packageNames) {
             var handlerTypes = MessageHandlerFinder.find(packageName);
-            this.registrations.addAll(handlerTypes);
+            for (var registration : handlerTypes) {
+                registerHandlers(registration);
+            }
         }
         return this;
     }
 
+    /**
+     * 设置默认传输方式。
+     *
+     * @param defaultTransportSupplier 默认传输方式的提供者
+     * @return 当前配置器实例
+     */
     public DefaultConfigurator setDefaultTransport(Supplier<String> defaultTransportSupplier) {
         Assert.notNull(defaultTransportSupplier, "Default transport supplier cannot be null");
         this.defaultTransportSupplier = defaultTransportSupplier;
         return this;
     }
 
+    /**
+     * 设置是否启用管道行为。
+     *
+     * @param enablePipelineBehaviorsSupplier 启用管道行为的提供者
+     * @return 当前配置器实例
+     */
     public DefaultConfigurator setEnablePipelineBehaviors(Supplier<Boolean> enablePipelineBehaviorsSupplier) {
         Assert.notNull(enablePipelineBehaviorsSupplier, "Enable pipeline behaviors cannot be null");
         this.enablePipelineBehaviorsSupplier = enablePipelineBehaviorsSupplier;

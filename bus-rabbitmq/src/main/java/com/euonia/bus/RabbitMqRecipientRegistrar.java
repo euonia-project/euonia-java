@@ -2,6 +2,7 @@ package com.euonia.bus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +33,9 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
 
     private static final Logger LOGGER = Logger.getLogger(RabbitMqRecipientRegistrar.class.getName());
 
-    /** 已创建的接收者列表，用于生命周期管理 */
+    /**
+     * 已创建的接收者列表，用于生命周期管理
+     */
     private final List<RabbitMqRecipient> recipients = new ArrayList<>();
 
     /**
@@ -72,7 +75,7 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(List<HandlerRegistration> registrations, String defaultTransport) {
+    public void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport) {
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
 
         var connection = provider.getService(Connection.class)
@@ -82,25 +85,28 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
         var serializer = provider.getService(MessageSerializer.class)
                                  .orElseThrow();
 
-        for (var registration : registrations) {
-            if (!isDefaultTransport && (strategy == null || !strategy.incoming(registration.messageType()))) {
+        for (var entry : registrations.entrySet()) {
+            var channel = entry.getKey();
+            var messageType = entry.getValue().get(0).messageType();
+
+            if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 /* 如果此注册不是针对默认传输，且策略未将其标识为入站类型，则跳过。 */
                 continue;
             }
 
             /* 构造 RoutedMessage<MessageType> 的合成参数化类型以获取目标类型 */
-            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, registration.messageType());
+            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, messageType);
 
             RabbitMqRecipient recipient;
 
-            if (convention.isMulticastType(registration.messageType())) {
+            if (convention.isMulticastType(messageType)) {
                 recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, syntheticType);
-            } else if (convention.isUnicastType(registration.messageType())) {
+            } else if (convention.isUnicastType(messageType)) {
                 recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, syntheticType);
-            } else if (convention.isRequestType(registration.messageType())) {
+            } else if (convention.isRequestType(messageType)) {
                 recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, syntheticType);
             } else {
-                throw new IllegalArgumentException("Unsupported message type: " + registration.messageType());
+                throw new IllegalArgumentException("Unsupported message type: " + messageType);
             }
             recipient.onMessageReceived(event -> {
                 LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' received via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
@@ -108,7 +114,7 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
             recipient.onMessageAcknowledged(event -> {
                 LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' acknowledged via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));
             });
-            recipient.start(registration.channel());
+            recipient.start(channel);
             recipients.add(recipient);
         }
     }
