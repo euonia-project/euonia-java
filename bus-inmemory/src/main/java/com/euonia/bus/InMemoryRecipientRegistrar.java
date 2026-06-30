@@ -1,6 +1,7 @@
 package com.euonia.bus;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -68,31 +69,33 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
     }
 
     @Override
-    public void register(List<HandlerRegistration> registrations, String defaultTransport) {
+    public void register(Map<String, List<HandlerRegistration>> registrations, String defaultTransport) {
 
         var isDefaultTransport = Objects.equals(defaultTransport, options.getName());
 
-        for (HandlerRegistration registration : registrations) {
-            if (!isDefaultTransport && (strategy == null || !strategy.incoming(registration.messageType()))) {
+        for (var entry : registrations.entrySet()) {
+            var channel = entry.getKey();
+            var messageType = entry.getValue().get(0).messageType();
+
+            if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
                 /* 如果此注册不是针对默认传输，且策略未将其标识为入站类型，则跳过。 */
                 continue;
             }
 
-            if (convention.isUnicastType(registration.messageType())) {
-                var recipient = getRecipient(InMemoryUnicastRecipient.class);
-                recipient.setDeadLetterOptions(options);
-                StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
-            } else if (convention.isMulticastType(registration.messageType())) {
-                var recipient = getRecipient(InMemoryMulticastRecipient.class);
-                recipient.setDeadLetterOptions(options);
-                StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
-            } else if (convention.isRequestType(registration.messageType())) {
-                var recipient = getRecipient(InMemoryRequestRecipient.class);
-                recipient.setDeadLetterOptions(options);
-                StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, registration.channel());
+            InMemoryRecipient recipient;
+
+            if (convention.isUnicastType(messageType)) {
+                recipient = getRecipient(InMemoryUnicastRecipient.class);
+            } else if (convention.isMulticastType(messageType)) {
+                recipient = getRecipient(InMemoryMulticastRecipient.class);
+            } else if (convention.isRequestType(messageType)) {
+                recipient = getRecipient(InMemoryRequestRecipient.class);
             } else {
-                throw new IllegalStateException("The message type is not identified as unicast or multicast type. Message type: " + registration.messageType().getName());
+                throw new IllegalStateException("The message type is not identified as unicast or multicast type. Message type: " + messageType.getName());
             }
+
+            recipient.setDeadLetterOptions(options);
+            StrongReferenceMessenger.getDefault().register(recipient, MessagePack.class, channel);
         }
     }
 
