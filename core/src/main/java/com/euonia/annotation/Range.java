@@ -49,4 +49,11 @@ public @interface Range {
      * @return 是否包含最大值，默认为 {@code false}
      */
     boolean inclusiveMax() default false;
+
+    /**
+     * 自定义验证失败时的错误消息。默认为空字符串。
+     *
+     * @return 错误消息，默认为空字符串
+     */
+    String message() default "";
 }

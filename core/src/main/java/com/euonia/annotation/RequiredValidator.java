@@ -1,6 +1,7 @@
 package com.euonia.annotation;
 
 import com.euonia.tuple.Duet;
+import com.euonia.utility.StringUtility;
 
 /**
  * RequiredValidator 是一个用于验证对象是否满足 Required 注解约束的验证器类。
@@ -21,11 +22,11 @@ public final class RequiredValidator implements Validator<Required> {
     public Duet<Boolean, String> validate(Required annotation, Object value) {
         Duet<Boolean, String> result;
         if (value == null) {
-            result = new Duet<>(false, annotation.message().isEmpty() ? "Value is required" : annotation.message());
+            result = new Duet<>(false, StringUtility.collapse(annotation.message(), "Value is required"));
         } else if (!annotation.allowEmpty() && value instanceof String string && string.isEmpty()) {
-            result = new Duet<>(false, annotation.message().isEmpty() ? "Value must not be empty" : annotation.message());
+            result = new Duet<>(false, StringUtility.collapse(annotation.message(), "Value must not be empty"));
         } else {
-            result = new Duet<>(true, "");
+            result = new Duet<>(true, null);
         }
         return result;
     }
