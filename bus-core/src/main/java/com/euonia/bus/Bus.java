@@ -33,21 +33,19 @@ import com.euonia.bus.options.SendOptions;
  *
  * // 发送（带回调）
  * bus.send(command, Result.class)
- *     .withCallback(subscriber)
- *     .execute();
+ *    .withCallback(subscriber)
+ *    .execute();
  *
  * // 请求-响应
  * Result result = bus.call(request, Result.class)
- *                     .withChannel("queries")
- *                     .execute()
- *                     .get();
+ *                    .withChannel("queries")
+ *                    .execute()
+ *                    .get();
  * }</pre>
  *
  * @author damon(zhaorong@outlook.com)
  */
 public interface Bus {
-
-    // ──── Builder 入口 ────
 
     /**
      * 创建发布/订阅模式的 Builder。
@@ -97,8 +95,6 @@ public interface Bus {
         return new CallBuilder<>(this, request, responseType);
     }
 
-    // ──── 抽象方法（含全部参数的完整版本） ────
-
     /**
      * 以发布/订阅模式异步发布一条多播消息（完整参数版本）。
      *
@@ -137,20 +133,51 @@ public interface Bus {
      */
     <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior);
 
-    // ──── 便利默认方法 ────
-
+    /**
+     * 以发布/订阅模式异步发布一条多播消息。
+     *
+     * @param message 要发布的消息
+     * @param <T>     消息负载类型
+     * @return 在所有传输实例完成发送后完成的 future
+     */
     default <T> CompletableFuture<Void> publishAsync(T message) {
         return publishAsync(message, new PublishOptions(), null);
     }
 
+    /**
+     * 以发送/命令模式异步发送一条单播消息并等待响应。
+     *
+     * @param message 要发送的消息
+     * @param <T>     消息负载类型
+     * @return 在消息处理完毕时完成的 future
+     */
     default <T> CompletableFuture<Void> sendAsync(T message) {
         return sendAsync(message, Void.class, null, new SendOptions(), null);
     }
 
+    /**
+     * 以发送/命令模式异步发送一条单播消息并等待响应。
+     *
+     * @param message      要发送的消息
+     * @param responseType 期望的响应类型
+     * @param callback     可选的回调，用于接收响应或错误
+     * @param <T>          消息负载类型
+     * @param <R>          响应类型
+     * @return 在消息处理完毕时完成的 future
+     */
     default <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback) {
         return sendAsync(message, responseType, callback, new SendOptions(), null);
     }
 
+    /**
+     * 以请求/响应模式异步发送一条请求消息并期待类型化的响应。
+     *
+     * @param request      请求消息
+     * @param responseType 期望的响应类型
+     * @param <T>          请求类型，必须实现 {@link Request}
+     * @param <R>          响应类型
+     * @return 在收到响应时完成并携带响应结果的 future
+     */
     default <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType) {
         return callAsync(request, responseType, new CallOptions(), null);
     }
