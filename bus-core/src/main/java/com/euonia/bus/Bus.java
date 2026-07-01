@@ -8,7 +8,6 @@ import com.euonia.bus.builder.CallBuilder;
 import com.euonia.bus.builder.PublishBuilder;
 import com.euonia.bus.builder.SendBuilder;
 import com.euonia.bus.contract.Request;
-import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.PublishOptions;
