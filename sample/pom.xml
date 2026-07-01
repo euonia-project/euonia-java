@@ -20,47 +20,47 @@
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>core</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>osba</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>pipeline</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>domain-driven-design</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>spring</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>bus-core</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>bus-abstract</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>bus-inmemory</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
             <artifactId>bus-rabbitmq</artifactId>
-            <version>1.0.0</version>
+            <version>10.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
