@@ -41,7 +41,7 @@
     </developers>
 
     <properties>
-        <revision>1.0.0</revision>
+        <revision>10.0.0</revision>
         <maven.compiler.release>17</maven.compiler.release>
         <project.version>1.0</project.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -70,6 +70,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>dev.failsafe</groupId>
+                <artifactId>failsafe</artifactId>
+                <version>3.3.2</version>
+            </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
