@@ -42,4 +42,15 @@ public interface HandlerContext {
      * @return 表示操作待完成的 {@link CompletableFuture}
      */
     CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context);
+
+    /**
+     * 在指定通道上异步处理消息，并指定接收者。
+     *
+     * @param channel   通道名称
+     * @param recipient 接收者标识
+     * @param envelope  消息封装
+     * @param context   消息上下文
+     * @return 表示操作待完成的 {@link CompletableFuture}
+     */
+    CompletableFuture<Object> handleAsync(String channel, String recipient, MessageEnvelope<?> envelope, MessageContext context);
 }

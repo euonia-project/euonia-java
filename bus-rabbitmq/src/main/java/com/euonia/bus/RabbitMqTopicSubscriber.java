@@ -72,14 +72,15 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
                     MessageEnvelope<?> message = serializer.deserializeEnvelope(new String(body), messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handleAsync(message, context).whenComplete((result, error) -> {
-                        try {
-                            RabbitMqTopicSubscriber.this.channel.basicAck(envelope.getDeliveryTag(), false);
-                            raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
-                        } catch (IOException exception) {
-                            throw new RuntimeException(exception);
-                        }
-                    });
+                    handler.handleAsync(channelName, getName(), message, context)
+                           .whenComplete((result, error) -> {
+                               try {
+                                   RabbitMqTopicSubscriber.this.channel.basicAck(envelope.getDeliveryTag(), false);
+                                   raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                               } catch (IOException exception) {
+                                   throw new RuntimeException(exception);
+                               }
+                           });
                 }
             };
 

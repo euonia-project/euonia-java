@@ -71,35 +71,36 @@ final class RabbitMqQueueConsumer extends RabbitMqRecipient implements Consumer 
                     MessageEnvelope<?> message = serializer.deserializeEnvelope(new String(body), messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handleAsync(message, context).whenComplete((result, error) -> {
-                        if (StringUtility.isNullOrBlank(properties.getCorrelationId()) || StringUtility.isNullOrBlank(properties.getReplyTo())) {
-                            return;
-                        }
+                    handler.handleAsync(channelName, getName(), message, context)
+                           .whenComplete((result, error) -> {
+                               if (StringUtility.isNullOrBlank(properties.getCorrelationId()) || StringUtility.isNullOrBlank(properties.getReplyTo())) {
+                                   return;
+                               }
 
-                        try {
-                            RabbitMqReplyType type;
-                            String data;
+                               try {
+                                   RabbitMqReplyType type;
+                                   String data;
 
-                            if (error != null) {
-                                type = RabbitMqReplyType.EXCEPTION;
-                                data = serializer.serialize(error);
-                            } else if (result != null) {
-                                type = RabbitMqReplyType.MESSAGE;
-                                data = serializer.serialize(result);
-                            } else {
-                                type = RabbitMqReplyType.EMPTY;
-                                data = "";
-                            }
+                                   if (error != null) {
+                                       type = RabbitMqReplyType.EXCEPTION;
+                                       data = serializer.serialize(error);
+                                   } else if (result != null) {
+                                       type = RabbitMqReplyType.MESSAGE;
+                                       data = serializer.serialize(result);
+                                   } else {
+                                       type = RabbitMqReplyType.EMPTY;
+                                       data = "";
+                                   }
 
-                            var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
-                            RabbitMqQueueConsumer.this.channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
-                            RabbitMqQueueConsumer.this.channel.basicAck(envelope.getDeliveryTag(), false);
-                            raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
-                        } catch (IOException exception) {
-                            // 处理发送回复消息时发生的异常
-                            // 可以选择记录日志或其他处理方式
-                        }
-                    });
+                                   var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
+                                   RabbitMqQueueConsumer.this.channel.basicPublish("", properties.getReplyTo(), true, replyProperties, data.getBytes());
+                                   RabbitMqQueueConsumer.this.channel.basicAck(envelope.getDeliveryTag(), false);
+                                   raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                               } catch (IOException exception) {
+                                   // 处理发送回复消息时发生的异常
+                                   // 可以选择记录日志或其他处理方式
+                               }
+                           });
 
                 }
             };

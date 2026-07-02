@@ -1,6 +1,5 @@
 package com.euonia.bus;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -16,7 +15,7 @@ import com.euonia.bus.messenger.Recipient;
  * <p>
  * 此类实现 {@link Recipient}{@code <}{@link MessagePack}{@code >} 并提供
  * 结构化的消息处理管道：当收到 {@link MessagePack} 时，触发
- * {@code messageReceived} 监听器，调用抽象的 {@link #handleAsync} 方法，
+ * {@code messageReceived} 监听器，调用抽象的 {@link HandlerContext#handleAsync} 方法，
  * 然后触发 {@code messageAcknowledged} 监听器。
  *
  * @author damon(zhaorong@outlook.com)
@@ -24,6 +23,8 @@ import com.euonia.bus.messenger.Recipient;
 public abstract class InMemoryRecipient implements Recipient<MessagePack> {
 
     private static final Logger LOGGER = Logger.getLogger(InMemoryRecipient.class.getName());
+
+    private final HandlerContext handler;
 
     /**
      * 收到消息时（处理前）通知的监听器列表。
@@ -42,9 +43,13 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
 
     /**
      * 当前正在处理的路由消息，由 {@link #receive(MessagePack)} 设置，
-     * 供子类在 {@link #handleAsync} 的错误路径中调用 {@link #publishDeadLetter} 时读取。
+     * 供子类在 {@link HandlerContext#handleAsync} 的错误路径中调用 {@link #publishDeadLetter} 时读取。
      */
     protected volatile MessageEnvelope<?> currentMessage;
+
+    protected InMemoryRecipient(HandlerContext handler) {
+        this.handler = handler;
+    }
 
     /**
      * 设置死信队列选项。由 {@link InMemoryRecipientRegistrar} 在创建接收者后调用。
@@ -135,7 +140,12 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
         onMessageReceived(new MessageReceivedEvent(message, context));
 
         try {
-            handleAsync(message.getChannel(), message.getPayload(), context, pack.isAborted());
+            handler.handleAsync(message.getChannel(), getName(), message, context)
+                   .whenComplete((result, error) -> {
+                       if (error != null) {
+                           publishDeadLetter(message.getChannel(), message, error);
+                       }
+                   });
             onMessageAcknowledged(new MessageAcknowledgedEvent(message, context));
         } catch (Exception exception) {
             throw new RuntimeException(String.format("Message '%s' on channel '%s' error: %s", message.getMessageId(), message.getChannel(), exception.getMessage()), exception);
@@ -155,16 +165,5 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
         }
     }
 
-    /**
-     * 异步处理收到的消息。
-     * <p>
-     * 实现应返回一个 {@link CompletableFuture}，在消息完全处理完成后完成。
-     *
-     * @param channel 消息发送的通道（主题/队列）
-     * @param message 消息负载
-     * @param context 消息处理上下文
-     * @param aborted 消息是否已被标记为中止
-     * @return 处理完成后完成的 future
-     */
-    protected abstract CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context, boolean aborted);
+    public abstract String getName();
 }
