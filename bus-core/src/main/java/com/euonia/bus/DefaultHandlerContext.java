@@ -6,7 +6,7 @@ import com.euonia.bus.contract.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
-import com.euonia.bus.message.MessageCache;
+import com.euonia.bus.inbox.InboxStore;
 import com.euonia.bus.message.MessageHandlerFactory;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.reflection.ServiceProvider;
@@ -34,6 +34,7 @@ final class DefaultHandlerContext implements HandlerContext {
     private final SubmissionPublisher<MessageSubscribedEvent> publisher = new SubmissionPublisher<>();
     private final ServiceProvider provider;
     private final MessageConvention convention;
+    private final InboxStore inboxStore;
 
     /**
      * 初始化 {@link DefaultHandlerContext} 的新实例。
@@ -44,6 +45,8 @@ final class DefaultHandlerContext implements HandlerContext {
         this.provider = provider;
         this.convention = this.provider.getService(MessageConvention.class)
                                        .orElse(new BaseMessageConvention());
+        this.inboxStore = this.provider.getService(InboxStore.class)
+                                       .orElse(null);
     }
 
     // region 事件订阅
@@ -88,12 +91,15 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param handlerType 处理器的类
      */
     public <M extends Message, R, H extends Handler<M, R>> void register(String channel, Class<M> messageType, Class<H> handlerType) {
+        @SuppressWarnings("unchecked")
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getRequiredService(handlerType);
             return (message, context) -> {
-                @SuppressWarnings("unchecked")
-                var result = handler.handle((M) message, context);
-                return result;
+                return new IdempotentHandler(channel, (msg, ctx) -> handler.handle((M) msg, ctx))
+                    .withInboxStore(inboxStore)
+                    .withHandler(handlerType.getName())
+                    .withMethod("handle")
+                    .handle(message, context);
             };
         };
 
@@ -115,15 +121,18 @@ final class DefaultHandlerContext implements HandlerContext {
 
         MessageHandlerFactory factory = sp -> {
             var handler = channelHandler.instance() == null ? sp.getServiceOrCreate(channelHandler.handlerType()) : channelHandler.instance();
-            return (message, context) -> {
-                var args = resolveArguments(method, message, context);
+            return (message, context) -> new IdempotentHandler(channel, (msg, ctx) -> {
+                var args = resolveArguments(method, msg, ctx);
                 try {
                     return method.invoke(handler, args);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     var cause = unwrapCause(e);
                     throw new RuntimeException(cause);
                 }
-            };
+            }).withInboxStore(inboxStore)
+              .withHandler(channelHandler.handlerType().getName())
+              .withMethod(method.getName())
+              .handle(message, context);
         };
 
         concurrentDictionarySafeRegister(channel, factory);
@@ -135,23 +144,11 @@ final class DefaultHandlerContext implements HandlerContext {
     // region 消息处理
 
     @Override
-    public CompletableFuture<Object> handleAsync(Object message, MessageContext context) {
-        if (message == null) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("message is null"));
-        }
-
-        var channel = MessageCache.getInstance().getOrAddChannel(message.getClass());
-        return handleAsync(channel, message, context);
-    }
-
-    @Override
-    public CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context) {
+    public CompletableFuture<Object> handleAsync(String channel, String recipient, MessageEnvelope<?> envelope, MessageContext context) {
         var future = new CompletableFuture<>();
 
         try {
-            if (message == null) {
-                throw new IllegalArgumentException("message is null");
-            }
+            var message = envelope.getPayload();
 
             var factories = handlerContainer.get(channel);
 
@@ -174,27 +171,27 @@ final class DefaultHandlerContext implements HandlerContext {
             } else {
                 // 多个处理器 — 并行执行所有（多播场景）
                 var futures = factories.stream()
-                                       .map(factory -> executeHandlerAsync(factory, message, context)
-                                           .thenAccept(result -> { /* 多播 — 结果被丢弃 */ }))
+                                       .map(factory -> executeHandlerAsync(factory, message, context).thenAccept(result -> { /* 多播 — 结果被丢弃 */ }))
                                        .toArray(CompletableFuture[]::new);
 
-                CompletableFuture.allOf(futures).whenComplete((v, exception) -> {
+                CompletableFuture.allOf(futures).whenComplete((result, exception) -> {
                     if (exception != null) {
                         future.completeExceptionally(exception);
                     } else {
-                        future.complete(v);
+                        future.complete(result);
                     }
                 });
             }
         } catch (IllegalArgumentException | IllegalStateException exception) {
-            LOGGER.log(Level.SEVERE, exception.getMessage(), exception);
             future.completeExceptionally(exception);
         }
-        return future.whenComplete((result, exception) -> {
-            if (exception != null) {
-                LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, exception.getMessage()), exception);
+        return future.whenComplete((result, error) -> {
+            if (error != null) {
+                LOGGER.log(Level.SEVERE, String.format("Message '%s' is being handled on channel %s with exception: %s", context.getMessageId(), channel, error.getMessage()), error);
+                context.failure(error);
             } else {
                 LOGGER.log(Level.INFO, String.format("Message '%s' is being handled on channel %s with result: %s", context.getMessageId(), channel, result));
+                context.response(result);
             }
         });
     }

@@ -25,25 +25,6 @@ public interface HandlerContext {
     void onMessageSubscribed(Consumer<MessageSubscribedEvent> listener);
 
     /**
-     * 异步处理消息，根据消息类型自动确定通道。
-     *
-     * @param message 要处理的消息
-     * @param context 消息上下文
-     * @return 表示操作待完成的 {@link CompletableFuture}
-     */
-    CompletableFuture<Object> handleAsync(Object message, MessageContext context);
-
-    /**
-     * 在指定通道上异步处理消息。
-     *
-     * @param channel 通道名称
-     * @param message 要处理的消息
-     * @param context 消息上下文
-     * @return 表示操作待完成的 {@link CompletableFuture}
-     */
-    CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context);
-
-    /**
      * 在指定通道上异步处理消息，并指定接收者。
      *
      * @param channel   通道名称
