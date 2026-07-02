@@ -241,6 +241,21 @@ public class MessageBusConfiguration {
                     throw new RuntimeException("Failed to deserialize message from bytes", e);
                 }
             }
+
+            @Override
+            public <V> String serializeEnvelope(MessageEnvelope<V> envelope) {
+                try {
+                    return mapper.writeValueAsString(envelope);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Failed to serialize message envelope", e);
+                }
+            }
+
+            @Override
+            public <V> MessageEnvelope<V> deserializeEnvelope(String data, Class<V> payloadType) {
+                var javaType = mapper.getTypeFactory().constructParametricType(RoutedMessage.class, payloadType);
+                return deserialize(data, javaType);
+            }
         };
     }
 
