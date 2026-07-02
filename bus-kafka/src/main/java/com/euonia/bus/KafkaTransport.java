@@ -49,7 +49,7 @@ public final class KafkaTransport implements Transport, AutoCloseable {
     }
 
     @Override
-    public <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> publishAsync(MessageEnvelope<M> message) {
         var topicName = options.generateTopicName(message.getChannel());
         var data = serializer.serializeToBytes(message);
 
@@ -61,17 +61,17 @@ public final class KafkaTransport implements Transport, AutoCloseable {
     }
 
     @Override
-    public <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> sendAsync(MessageEnvelope<M> message) {
         return publishAsync(message);
     }
 
     @Override
-    public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> sendAsync(MessageEnvelope<M> message, Class<R> responseType) {
         return callAsync(message, responseType);
     }
 
     @Override
-    public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> callAsync(MessageEnvelope<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
         var topicName = options.generateTopicName(message.getChannel());
         var replyTopic = topicName + ".reply";

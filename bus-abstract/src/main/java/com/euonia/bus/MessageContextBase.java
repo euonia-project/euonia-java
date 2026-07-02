@@ -55,7 +55,7 @@ public final class MessageContextBase implements MessageContext {
      *
      * @param pack 路由消息信封
      */
-    public MessageContextBase(RoutedMessage<?> pack) {
+    public MessageContextBase(MessageEnvelope<?> pack) {
         this.message = pack.getPayload();
         this.user = null; // RoutedMessage does not yet carry user information
         headers.put(MessageHeaders.MESSAGE_ID, pack.getMessageId());

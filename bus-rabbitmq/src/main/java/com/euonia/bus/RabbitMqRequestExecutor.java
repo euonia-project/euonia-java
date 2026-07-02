@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
@@ -35,7 +34,7 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
      * @param serializer  消息序列化器
      * @param messageType 此执行器处理的消息类型
      */
-    public RabbitMqRequestExecutor(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    public RabbitMqRequestExecutor(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(connection, options, handler, serializer, messageType);
     }
 
@@ -66,7 +65,7 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 var properties = delivery.getProperties();
 
-                RoutedMessage<?> message = serializer.deserialize(new String(delivery.getBody()), messageType);
+                MessageEnvelope<?> message = serializer.deserializeEnvelope(new String(delivery.getBody()), messageType);
                 var context = new MessageContextBase(message);
                 raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
                 handleAsync(message, context).whenComplete((result, error) -> {

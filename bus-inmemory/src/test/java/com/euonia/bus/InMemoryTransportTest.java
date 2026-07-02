@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import com.euonia.bus.event.MessageDeliveredEvent;
 import com.euonia.bus.messenger.StrongReferenceMessenger;
 import com.euonia.bus.messenger.WeakReferenceMessenger;
+import com.euonia.core.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +37,7 @@ class InMemoryTransportTest {
         @Test
         @DisplayName("should complete immediately for any message")
         void shouldCompleteImmediately() throws Exception {
-            var msg = new RoutedMessage<>("event", "test-channel");
+            var msg = getMessageEnvelope("event", "test-channel");
             var future = transport.publishAsync(msg);
 
             assertThat(future.get(2, TimeUnit.SECONDS)).isNull();
@@ -48,7 +49,7 @@ class InMemoryTransportTest {
             var delivered = new CompletableFuture<MessageDeliveredEvent>();
             transport.addDeliveredListener(delivered::complete);
 
-            var msg = new RoutedMessage<>("event", "test-channel");
+            var msg = getMessageEnvelope("event", "test-channel");
             transport.publishAsync(msg);
 
             var event = delivered.get(2, TimeUnit.SECONDS);
@@ -63,7 +64,7 @@ class InMemoryTransportTest {
         @Test
         @DisplayName("should return response from handler")
         void shouldReturnResponse() throws Exception {
-            var msg = new RoutedMessage<>("cmd", "send-test");
+            var msg = getMessageEnvelope("cmd", "send-test");
 
             // Register a handler that echoes the message as response
             StrongReferenceMessenger.getDefault().register(
@@ -107,7 +108,7 @@ class InMemoryTransportTest {
         @Test
         @DisplayName("should reset messenger on close")
         void shouldResetOnClose() {
-            var msg = new RoutedMessage<>("test", "close-test");
+            var msg = getMessageEnvelope("test", "close-test");
             StrongReferenceMessenger.getDefault().register(
                 new InMemoryUnicastRecipient(new StubHandlerContext()),
                 MessagePack.class, "close-test");
@@ -116,7 +117,7 @@ class InMemoryTransportTest {
 
             // After close, messenger should be empty
             assertThat(StrongReferenceMessenger.getDefault()
-                .isRegistered(new Object(), MessagePack.class, "close-test")).isFalse();
+                                               .isRegistered(new Object(), MessagePack.class, "close-test")).isFalse();
         }
     }
 
@@ -138,5 +139,75 @@ class InMemoryTransportTest {
         public CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context) {
             return handleAsync(message, context);
         }
+    }
+
+    private <T> MessageEnvelope<T> getMessageEnvelope(T payload, String channel) {
+        var msg = new MessageEnvelope<T>() {
+            String channel;
+            T payload;
+            final String messageId = ObjectId.newRandomId();
+
+            @Override
+            public String getMessageId() {
+                return messageId;
+            }
+
+            @Override
+            public String getCorrelationId() {
+                return "";
+            }
+
+            @Override
+            public String getConversationId() {
+                return "";
+            }
+
+            @Override
+            public String getRequestTrackId() {
+                return "";
+            }
+
+            @Override
+            public String getChannel() {
+                return this.channel;
+            }
+
+            public void setChannel(String channel) {
+                this.channel = channel;
+            }
+
+            @Override
+            public String getAuthorization() {
+                return "";
+            }
+
+            @Override
+            public long getTimestamp() {
+                return 0;
+            }
+
+            @Override
+            public T getPayload() {
+                return this.payload;
+            }
+
+            public void setPayload(T payload) {
+                this.payload = payload;
+            }
+
+            @Override
+            public String getTypeName() {
+                return this.payload.getClass().getName();
+            }
+
+            @Override
+            public MessageMetadata getMetadata() {
+                return null;
+            }
+        };
+
+        msg.setChannel(channel);
+        msg.setPayload(payload);
+        return msg;
     }
 }

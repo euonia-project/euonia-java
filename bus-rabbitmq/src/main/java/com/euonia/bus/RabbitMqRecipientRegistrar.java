@@ -12,7 +12,6 @@ import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.reflection.SyntheticParameterizedType;
 import com.euonia.utility.Assert;
 import com.rabbitmq.client.Connection;
 
@@ -94,17 +93,14 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
                 continue;
             }
 
-            /* 构造 RoutedMessage<MessageType> 的合成参数化类型以获取目标类型 */
-            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, messageType);
-
             RabbitMqRecipient recipient;
 
             if (convention.isMulticastType(messageType)) {
-                recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, syntheticType);
+                recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, messageType);
             } else if (convention.isUnicastType(messageType)) {
-                recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, syntheticType);
+                recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, messageType);
             } else if (convention.isRequestType(messageType)) {
-                recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, syntheticType);
+                recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, messageType);
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + messageType);
             }

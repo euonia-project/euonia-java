@@ -12,7 +12,6 @@ import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.reflection.SyntheticParameterizedType;
 
 /**
  * Kafka 消息接收者注册器，负责根据已注册的 {@link ChannelRegistration} 列表创建并启动
@@ -53,15 +52,14 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
                 continue;
             }
 
-            var syntheticType = SyntheticParameterizedType.withGenerics(RoutedMessage.class, messageType);
             KafkaRecipient recipient;
 
             if (convention.isMulticastType(messageType)) {
-                recipient = new KafkaTopicSubscriber(options, handlerContext, serializer, syntheticType);
+                recipient = new KafkaTopicSubscriber(options, handlerContext, serializer, messageType);
             } else if (convention.isUnicastType(messageType)) {
-                recipient = new KafkaQueueConsumer(options, handlerContext, serializer, syntheticType);
+                recipient = new KafkaQueueConsumer(options, handlerContext, serializer, messageType);
             } else if (convention.isRequestType(messageType)) {
-                recipient = new KafkaRequestExecutor(options, handlerContext, serializer, syntheticType);
+                recipient = new KafkaRequestExecutor(options, handlerContext, serializer, messageType);
             } else {
                 throw new IllegalArgumentException("Unsupported message type: " + messageType);
             }

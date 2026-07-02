@@ -7,7 +7,7 @@ package com.euonia.bus;
  */
 public class MessagePack {
 
-    private final RoutedMessage<?> message;
+    private final MessageEnvelope<?> message;
     private final MessageContext context;
     private boolean aborted;
 
@@ -17,7 +17,7 @@ public class MessagePack {
      * @param message 路由消息信封
      * @param context 消息处理上下文
      */
-    public MessagePack(RoutedMessage<?> message, MessageContext context) {
+    public MessagePack(MessageEnvelope<?> message, MessageContext context) {
         this.message = message;
         this.context = context;
     }
@@ -27,7 +27,7 @@ public class MessagePack {
      *
      * @return 路由消息
      */
-    public RoutedMessage<?> getMessage() {
+    public MessageEnvelope<?> getMessage() {
         return message;
     }
 

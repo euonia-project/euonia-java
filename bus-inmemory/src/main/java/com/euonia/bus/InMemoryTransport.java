@@ -64,7 +64,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      * @return 在分发后立即完成的 future
      */
     @Override
-    public <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> publishAsync(MessageEnvelope<M> message) {
         MessageContextBase context = new MessageContextBase(message);
         MessagePack pack = new MessagePack(message, context);
 
@@ -82,7 +82,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      * @return 在消息处理完毕时完成的 future
      */
     @Override
-    public <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> sendAsync(MessageEnvelope<M> message) {
         LOGGER.info(() -> String.format("Message '%s' send with '%s'", message.getMessageId(), getClass().getName()));
 
         MessageContextBase context = new MessageContextBase(message);
@@ -131,7 +131,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      * @return 在收到响应时完成并携带响应的 future
      */
     @Override
-    public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> sendAsync(MessageEnvelope<M> message, Class<R> responseType) {
 
         LOGGER.info(() -> String.format("Message '%s' send with '%s'", message.getMessageId(), getClass().getName()));
 
@@ -186,7 +186,7 @@ public class InMemoryTransport implements Transport, AutoCloseable {
      * @return 在收到响应时完成并携带响应的 future
      */
     @Override
-    public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> callAsync(MessageEnvelope<M> message, Class<R> responseType) {
         return sendAsync(message, responseType);
     }
 

@@ -44,7 +44,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
      * 当前正在处理的路由消息，由 {@link #receive(MessagePack)} 设置，
      * 供子类在 {@link #handleAsync} 的错误路径中调用 {@link #publishDeadLetter} 时读取。
      */
-    protected volatile RoutedMessage<?> currentMessage;
+    protected volatile MessageEnvelope<?> currentMessage;
 
     /**
      * 设置死信队列选项。由 {@link InMemoryRecipientRegistrar} 在创建接收者后调用。
@@ -128,7 +128,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
      */
     @Override
     public void receive(MessagePack pack) {
-        RoutedMessage<?> message = pack.getMessage();
+        MessageEnvelope<?> message = pack.getMessage();
         this.currentMessage = message;
         MessageContext context = pack.getContext();
 
@@ -149,7 +149,7 @@ public abstract class InMemoryRecipient implements Recipient<MessagePack> {
      * @param message 原始消息负载
      * @param error   处理过程中抛出的异常
      */
-    protected void publishDeadLetter(String channel, RoutedMessage<?> message, Throwable error) {
+    protected void publishDeadLetter(String channel, MessageEnvelope<?> message, Throwable error) {
         if (deadLetterOptions != null && deadLetterOptions.isDeadLetterEnabled()) {
             InMemoryDeadLetterQueue.getInstance().publish(channel, new DeadLetterMessage<>(message, error));
         }
