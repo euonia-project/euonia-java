@@ -12,10 +12,10 @@ import com.euonia.reflection.PropertyInfo;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public class RequiredRule extends RuleBase {
+public class RequiredRule<T> extends RuleBase {
 
-    private final PropertyInfo<?> property;
-    private final Function<Object, String> messageFactory;
+    private final PropertyInfo<T> property;
+    private Function<Object, String> messageFactory;
 
     /**
      * 使用指定的属性和错误消息创建 RequiredRule 类的新实例。
@@ -23,7 +23,7 @@ public class RequiredRule extends RuleBase {
      * @param property 需要验证的属性
      * @param message  错误消息
      */
-    public RequiredRule(PropertyInfo<?> property, String message) {
+    public RequiredRule(PropertyInfo<T> property, String message) {
         this(property, x -> message);
     }
 
@@ -33,7 +33,7 @@ public class RequiredRule extends RuleBase {
      * @param property       需要验证的属性
      * @param messageFactory 消息工厂函数，根据属性值生成适当的错误消息
      */
-    public RequiredRule(PropertyInfo<?> property, Function<Object, String> messageFactory) {
+    public RequiredRule(PropertyInfo<T> property, Function<Object, String> messageFactory) {
         super(property);
         this.property = property;
         this.messageFactory = messageFactory;
@@ -61,5 +61,38 @@ public class RequiredRule extends RuleBase {
             context.addErrorResult(exception.getMessage());
         }
         return CompletableFuture.completedFuture(null);
+    }
+
+    /**
+     * 设置自定义的错误消息字符串，用于在验证失败时返回给用户。
+     *
+     * @param message 自定义的错误消息字符串
+     * @return 当前的 RequiredRule 实例，以便进行链式调用
+     */
+    public RequiredRule<T> message(String message) {
+        this.messageFactory = x -> message;
+        return this;
+    }
+
+    /**
+     * 设置自定义的消息工厂函数，用于根据属性值生成适当的错误消息。
+     *
+     * @param messageFactory 一个函数，接受属性值作为输入，并返回相应的错误消息字符串。
+     * @return 当前的 RequiredRule 实例，以便进行链式调用。
+     */
+    public RequiredRule<T> message(Function<Object, String> messageFactory) {
+        this.messageFactory = messageFactory;
+        return this;
+    }
+
+    /**
+     * 创建一个新的 RequiredRule 实例，绑定到指定的属性。
+     *
+     * @param property 要验证的属性信息
+     * @param <T>      属性的类型
+     * @return 一个新的 RequiredRule 实例
+     */
+    public static <T> RequiredRule<T> of(PropertyInfo<T> property) {
+        return new RequiredRule<>(property, x -> String.format("Property '%s' is required.", property.getName()));
     }
 }

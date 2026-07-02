@@ -11,12 +11,7 @@ import java.util.function.Supplier;
 
 import com.euonia.osba.abstracts.RuleCheckable;
 import com.euonia.osba.abstracts.UseBusinessContext;
-import com.euonia.osba.rules.BrokenRuleCollection;
-import com.euonia.osba.rules.LambdaRule;
-import com.euonia.osba.rules.Rule;
-import com.euonia.osba.rules.RuleContext;
-import com.euonia.osba.rules.RuleManager;
-import com.euonia.osba.rules.Rules;
+import com.euonia.osba.rules.*;
 import com.euonia.reflection.FieldDataManager;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.reflection.PropertyInfoManager;
@@ -147,7 +142,7 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
      * @param <V>      属性类型
      */
     protected <V> void addRule(PropertyInfo<V> property, BiFunction<V, RuleContext, Boolean> rule, String message) {
-        getRules().addRule(new LambdaRule<>(property, rule, message));
+        addRule(LambdaRule.of(property).check(rule).message(message));
     }
 
     /**
@@ -159,7 +154,29 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
      * @param <V>            属性类型
      */
     protected <V> void addRule(PropertyInfo<V> property, BiFunction<V, RuleContext, Boolean> rule, Function<V, String> messageFactory) {
-        getRules().addRule(new LambdaRule<>(property, rule, messageFactory));
+        addRule(LambdaRule.of(property).check(rule).message(messageFactory));
+    }
+
+    /**
+     * 添加必填规则到规则管理器。
+     *
+     * @param property 属性信息
+     * @param message  错误消息
+     * @param <V>      属性类型
+     */
+    protected <V> void addRequiredRule(PropertyInfo<V> property, String message) {
+        addRule(RequiredRule.of(property).message(message));
+    }
+
+    /**
+     * 添加必填规则到规则管理器。
+     *
+     * @param property       属性信息
+     * @param messageFactory 错误消息工厂
+     * @param <V>            属性类型
+     */
+    protected <V> void addRequiredRule(PropertyInfo<V> property, Function<Object, String> messageFactory) {
+        addRule(RequiredRule.of(property).message(messageFactory));
     }
 
     /**
@@ -172,9 +189,9 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
     protected void checkPropertyRules(PropertyInfo<?> propertyInfo, Object oldValue, Object newValue) {
         var properties = getRules().checkObjectRulesAsync()
                                    .thenApply(brokenProperties ->
-                                       brokenProperties.stream()
-                                                       .filter(p -> p.equals(propertyInfo.getName()))
-                                                       .toList())
+                                                  brokenProperties.stream()
+                                                                  .filter(p -> p.equals(propertyInfo.getName()))
+                                                                  .toList())
                                    .join();
         onPropertyChanged(propertyInfo, oldValue, newValue);
     }

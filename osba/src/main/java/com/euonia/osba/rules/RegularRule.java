@@ -15,10 +15,15 @@ import com.euonia.reflection.PropertyInfo;
 public class RegularRule extends RuleBase {
 
     private final PropertyInfo<String> property;
-    private final Function<String, String> messageFactory;
-    private final String expression;
+    private Function<String, String> messageFactory;
+    private String expression;
 
     private boolean ignoreNullValue = true;
+
+    public RegularRule(PropertyInfo<String> property) {
+        super(property);
+        this.property = property;
+    }
 
     /**
      * 使用指定的属性、正则表达式和错误消息创建 RegularRule 类的新实例。
@@ -28,7 +33,9 @@ public class RegularRule extends RuleBase {
      * @param message    错误消息
      */
     public RegularRule(PropertyInfo<String> property, String expression, String message) {
-        this(property, expression, x -> message);
+        this(property);
+        this.expression = expression;
+        this.messageFactory = x -> message;
     }
 
     /**
@@ -39,8 +46,7 @@ public class RegularRule extends RuleBase {
      * @param messageFactory 消息工厂函数，根据属性值生成适当的错误消息
      */
     public RegularRule(PropertyInfo<String> property, String expression, Function<String, String> messageFactory) {
-        super(property);
-        this.property = property;
+        this(property);
         this.expression = expression;
         this.messageFactory = messageFactory;
     }
@@ -100,5 +106,29 @@ public class RegularRule extends RuleBase {
             context.addErrorResult(exception.getMessage());
         }
         return CompletableFuture.completedFuture(null);
+    }
+
+    public RegularRule expression(String expression) {
+        this.expression = expression;
+        return this;
+    }
+
+    public RegularRule message(Function<String, String> messageFactory) {
+        this.messageFactory = messageFactory;
+        return this;
+    }
+
+    public RegularRule message(String message) {
+        this.messageFactory = (x) -> message;
+        return this;
+    }
+
+    public RegularRule ignoreNullValue(boolean ignoreNullValue) {
+        this.ignoreNullValue = ignoreNullValue;
+        return this;
+    }
+
+    public static RegularRule of(PropertyInfo<String> property) {
+        return new RegularRule(property);
     }
 }
