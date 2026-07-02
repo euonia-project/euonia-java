@@ -29,6 +29,9 @@ public class User extends EditableObjectBase<User, Long> {
     @DisplayName("User age")
     private final PropertyInfo<Integer> age = registerProperty(Integer.class, "age");
 
+    @DisplayName("User email")
+    private final PropertyInfo<String> email = registerProperty(String.class, "email");
+
     @Override
     public Long getId() {
         return getProperty(id);
@@ -55,11 +58,20 @@ public class User extends EditableObjectBase<User, Long> {
         setProperty(this.age, age);
     }
 
+    public String getEmail() {
+        return getProperty(email);
+    }
+
+    public void setEmail(String email) {
+        setProperty(this.email, email);
+    }
+
     @Override
     protected void addRules() {
         super.addRules();
         addRule(new UserNameRule(this.name));
         addRule(this.age, (age, context) -> age != null && age >= 18, "Age must be at least 18");
+        addRule(this.email, (email, context) -> email != null && email.contains("@"), "Email must be valid");
     }
 
     @FactoryCreate
