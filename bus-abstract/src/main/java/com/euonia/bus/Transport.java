@@ -32,7 +32,7 @@ public interface Transport {
      * @param message 要发布的消息
      * @return 在消息成功发布后完成的 {@link CompletableFuture}
      */
-    <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message);
+    <M> CompletableFuture<Void> publishAsync(MessageEnvelope<M> message);
 
     /**
      * 向指定目标发送消息。此方法通常用于发送期望响应的命令或消息。
@@ -43,7 +43,7 @@ public interface Transport {
      * @param message 要发送的消息
      * @return 在消息成功发送后完成的 {@link CompletableFuture}
      */
-    <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message);
+    <M> CompletableFuture<Void> sendAsync(MessageEnvelope<M> message);
 
     /**
      * 发送请求消息并等待响应。此方法通常用于请求-响应通信模式。
@@ -58,7 +58,7 @@ public interface Transport {
      * @param responseType 期望的响应消息类型
      * @return 在收到响应时完成的 {@link CompletableFuture}
      */
-    <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType);
+    <M, R> CompletableFuture<R> sendAsync(MessageEnvelope<M> message, Class<R> responseType);
 
     /**
      * 发送请求消息并等待响应。此方法通常用于 RPC 调用模式。
@@ -71,5 +71,5 @@ public interface Transport {
      * @param responseType 期望的响应消息类型，允许传输层适当处理反序列化和类型转换
      * @return 在收到响应时完成的 {@link CompletableFuture}
      */
-    <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType);
+    <M, R> CompletableFuture<R> callAsync(MessageEnvelope<M> message, Class<R> responseType);
 }

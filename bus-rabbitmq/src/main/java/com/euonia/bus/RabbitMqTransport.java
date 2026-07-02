@@ -26,9 +26,9 @@ import dev.failsafe.RetryPolicy;
  * <p>
  * 支持三种消息发送模式：
  * <ul>
- *   <li>{@link #publishAsync(RoutedMessage)} —— 多播发布到扇出交换器</li>
- *   <li>{@link #sendAsync(RoutedMessage, Class)} —— 单播发送到指定队列并等待响应</li>
- *   <li>{@link #callAsync(RoutedMessage, Class)} —— RPC 调用并等待响应</li>
+ *   <li>{@link #publishAsync(MessageEnvelope)} —— 多播发布到扇出交换器</li>
+ *   <li>{@link #sendAsync(MessageEnvelope, Class)} —— 单播发送到指定队列并等待响应</li>
+ *   <li>{@link #callAsync(MessageEnvelope, Class)} —— RPC 调用并等待响应</li>
  * </ul>
  * 内置基于 Failsafe 的重试策略，处理 IOException 和 TimeoutException。
  *
@@ -90,7 +90,7 @@ public final class RabbitMqTransport implements Transport {
      * @return 发布完成后的异步结果
      */
     @Override
-    public <M> CompletableFuture<Void> publishAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> publishAsync(MessageEnvelope<M> message) {
         try {
             var channel = connection.createChannel();
             var typeName = message.getTypeName();
@@ -127,7 +127,7 @@ public final class RabbitMqTransport implements Transport {
      * @return 发送完成后的异步结果
      */
     @Override
-    public <M> CompletableFuture<Void> sendAsync(RoutedMessage<M> message) {
+    public <M> CompletableFuture<Void> sendAsync(MessageEnvelope<M> message) {
         return sendAsync(message, Void.class);
     }
 
@@ -144,7 +144,7 @@ public final class RabbitMqTransport implements Transport {
      * @return 包含响应的异步结果
      */
     @Override
-    public <M, R> CompletableFuture<R> sendAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> sendAsync(MessageEnvelope<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
 
         try {
@@ -175,7 +175,7 @@ public final class RabbitMqTransport implements Transport {
 
                 try {
                     if (responseType.equals(Void.class)) {
-                        future.complete((R) null);
+                        future.complete(null);
                     } else {
                         var responseData = new String(delivery.getBody());
                         LOGGER.info(() -> String.format("Message '%s' Received response: %s", message.getMessageId(), responseData));
@@ -185,7 +185,7 @@ public final class RabbitMqTransport implements Transport {
                                 var exception = serializer.deserialize(responseData, RuntimeException.class);
                                 future.completeExceptionally(exception);
                             }
-                            case EMPTY -> future.complete((R) null);
+                            case EMPTY -> future.complete(null);
                             case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                             default ->
                                 future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));
@@ -239,7 +239,7 @@ public final class RabbitMqTransport implements Transport {
     /**
      * 以 RPC 模式调用消息，发送请求到指定队列并等待响应。
      * <p>
-     * 与 {@link #sendAsync(RoutedMessage, Class)} 相比，此方法额外设置了 AMQP
+     * 与 {@link #sendAsync(MessageEnvelope, Class)} 相比，此方法额外设置了 AMQP
      * {@code replyTo} 属性，使服务端可以将响应发送回调用者声明的临时队列。
      *
      * @param <M>          消息类型
@@ -249,7 +249,7 @@ public final class RabbitMqTransport implements Transport {
      * @return 包含响应的异步结果
      */
     @Override
-    public <M, R> CompletableFuture<R> callAsync(RoutedMessage<M> message, Class<R> responseType) {
+    public <M, R> CompletableFuture<R> callAsync(MessageEnvelope<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();
 
         try {
@@ -288,7 +288,7 @@ public final class RabbitMqTransport implements Transport {
                             var exception = serializer.deserialize(responseData, RuntimeException.class);
                             future.completeExceptionally(exception);
                         }
-                        case EMPTY -> future.complete((R) null);
+                        case EMPTY -> future.complete(null);
                         case MESSAGE -> future.complete(serializer.deserialize(responseData, responseType));
                         default ->
                             future.completeExceptionally(new MessageTransportException("Unknown response type: " + repliedProperties.getType()));

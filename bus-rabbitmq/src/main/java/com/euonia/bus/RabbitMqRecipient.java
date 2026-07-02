@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +54,7 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
     /**
      * 此接收者处理的消息类型
      */
-    protected final Type messageType;
+    protected final Class<?> messageType;
     /**
      * 消息接收事件监听器列表
      */
@@ -74,7 +73,7 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
      * @param serializer  消息序列化器
      * @param messageType 此接收者处理的消息类型
      */
-    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    protected RabbitMqRecipient(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         this.connection = connection;
         this.options = options;
         this.handler = handler;
@@ -132,8 +131,8 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
      * @param context 消息上下文
      * @return 处理完成后的异步结果
      */
-    protected CompletableFuture<Object> handleAsync(RoutedMessage<?> message, MessageContext context) {
-        return handler.handleAsync(message.getPayload(), context)
+    protected CompletableFuture<Object> handleAsync(MessageEnvelope<?> message, MessageContext context) {
+        return handler.handleAsync(message.getChannel(), message.getPayload(), context)
                       .whenComplete((result, error) -> {
                           if (error != null) {
                               context.failure(error);

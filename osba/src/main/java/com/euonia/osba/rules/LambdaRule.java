@@ -15,16 +15,22 @@ import com.euonia.reflection.PropertyInfo;
  */
 public class LambdaRule<T> extends RuleBase {
     private final PropertyInfo<T> property;
-    private final BiFunction<T, RuleContext, Boolean> function;
-    private final Function<T, String> messageFactory;
+    private BiFunction<T, RuleContext, Boolean> function;
+    private Function<T, String> messageFactory;
+
+    public LambdaRule(PropertyInfo<T> property) {
+        super(property);
+        this.property = property;
+    }
 
     public LambdaRule(PropertyInfo<T> property, BiFunction<T, RuleContext, Boolean> function, String message) {
-        this(property, function, x -> message);
+        this(property);
+        this.function = function;
+        this.messageFactory = (x) -> message;
     }
 
     public LambdaRule(PropertyInfo<T> property, BiFunction<T, RuleContext, Boolean> function, Function<T, String> messageFactory) {
-        super(property);
-        this.property = property;
+        this(property);
         this.function = function;
         this.messageFactory = messageFactory;
     }
@@ -51,5 +57,47 @@ public class LambdaRule<T> extends RuleBase {
             context.addErrorResult(exception.getMessage());
         }
         return CompletableFuture.completedFuture(null);
+    }
+
+    /**
+     * 创建一个新的 LambdaRule 实例，绑定到指定的属性。
+     *
+     * @param property 要验证的属性信息
+     * @param <T>      属性的类型
+     * @return 一个新的 LambdaRule 实例
+     */
+    public static <T> LambdaRule<T> of(PropertyInfo<T> property) {
+        return new LambdaRule<>(property);
+    }
+
+    /**
+     * 设置验证规则的逻辑函数。
+     * <p>
+     * 该方法接受一个 BiFunction，允许在验证过程中访问被验证的属性值和规则上下文。函数应返回一个布尔值，指示验证是否通过。
+     *
+     * @param function 一个 BiFunction，接受属性值和规则上下文，返回布尔值
+     * @return 当前 LambdaRule 实例，以便进行链式调用
+     */
+    public LambdaRule<T> check(BiFunction<T, RuleContext, Boolean> function) {
+        this.function = function;
+        return this;
+    }
+
+    /**
+     * 设置验证失败时的错误消息生成器。
+     * <p>
+     * 该方法接受一个 lambda 函数，该函数根据被验证的属性值生成错误消息。这样可以根据不同的属性值动态生成适当的错误消息。
+     *
+     * @param messageFactory 一个函数，接受属性值并返回错误消息字符串
+     * @return 当前 LambdaRule 实例，以便进行链式调用
+     */
+    public LambdaRule<T> message(Function<T, String> messageFactory) {
+        this.messageFactory = messageFactory;
+        return this;
+    }
+
+    public LambdaRule<T> message(String message) {
+        this.messageFactory = (x) -> message;
+        return this;
     }
 }

@@ -1,6 +1,5 @@
 package com.euonia.bus;
 
-import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
@@ -20,7 +19,7 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
 
     private KafkaConsumer<String, byte[]> consumer;
 
-    public KafkaTopicSubscriber(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    public KafkaTopicSubscriber(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(options, handler, serializer, messageType);
     }
 
@@ -35,7 +34,7 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
                 var records = consumer.poll(Duration.ofSeconds(1));
                 for (var record : records) {
                     var body = new String(record.value());
-                    RoutedMessage<?> message = serializer.deserialize(body, messageType);
+                    MessageEnvelope<?> message = serializer.deserializeEnvelope(body, messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
                     handleAsync(message, context).whenComplete((result, error) -> {

@@ -2,7 +2,7 @@ package com.euonia.bus.dlq;
 
 import java.time.Instant;
 
-import com.euonia.bus.RoutedMessage;
+import com.euonia.bus.MessageEnvelope;
 
 /**
  * 死信消息包装器，记录被移入死信队列的原始消息及失败原因。
@@ -15,7 +15,7 @@ public final class DeadLetterMessage<T> {
     /**
      * 原始消息
      */
-    private final RoutedMessage<T> originalMessage;
+    private final MessageEnvelope<T> originalMessage;
     /**
      * 失败原因
      */
@@ -39,7 +39,7 @@ public final class DeadLetterMessage<T> {
      * @param originalMessage 原始消息
      * @param error           异常信息
      */
-    public DeadLetterMessage(RoutedMessage<T> originalMessage, Throwable error) {
+    public DeadLetterMessage(MessageEnvelope<T> originalMessage, Throwable error) {
         this.originalMessage = originalMessage;
         this.reason = error != null ? error.getMessage() : "unknown";
         this.exceptionType = error != null ? error.getClass().getName() : null;
@@ -52,7 +52,7 @@ public final class DeadLetterMessage<T> {
      *
      * @return 原始消息
      */
-    public RoutedMessage<T> getOriginalMessage() {
+    public MessageEnvelope<T> getOriginalMessage() {
         return originalMessage;
     }
 

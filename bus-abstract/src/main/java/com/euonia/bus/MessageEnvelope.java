@@ -8,7 +8,7 @@ package com.euonia.bus;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public interface MessageEnvelope {
+public interface MessageEnvelope<T> {
     /**
      * 获取消息唯一标识符。
      *
@@ -43,4 +43,39 @@ public interface MessageEnvelope {
      * @return 通道名称
      */
     String getChannel();
+
+    /**
+     * 获取消息的授权令牌，用于验证消息发送者的身份和权限。
+     *
+     * @return 授权令牌
+     */
+    String getAuthorization();
+
+    /**
+     * 获取消息的时间戳，表示消息创建的时间，通常以 Unix 毫秒表示。
+     *
+     * @return 消息时间戳
+     */
+    long getTimestamp();
+
+    /**
+     * 获取消息负载对象。
+     *
+     * @return 消息负载
+     */
+    T getPayload();
+
+    /**
+     * 获取消息类型名称，通常用于在消息系统中标识消息的类型。
+     *
+     * @return 消息类型名称
+     */
+    String getTypeName();
+
+    /**
+     * 获取消息的元数据对象，包含消息的附加信息和属性。
+     *
+     * @return 消息元数据
+     */
+    MessageMetadata getMetadata();
 }

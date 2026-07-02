@@ -1,6 +1,5 @@
 package com.euonia.bus;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,11 +22,11 @@ public abstract class KafkaRecipient implements AutoCloseable {
     protected final KafkaBusOptions options;
     protected final HandlerContext handler;
     protected final MessageSerializer serializer;
-    protected final Type messageType;
+    protected final Class<?> messageType;
     private final List<Consumer<MessageReceivedEvent>> messageReceivedListeners = new ArrayList<>();
     private final List<Consumer<MessageAcknowledgedEvent>> messageAcknowledgedListeners = new ArrayList<>();
 
-    protected KafkaRecipient(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    protected KafkaRecipient(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         this.options = options;
         this.handler = handler;
         this.serializer = serializer;
@@ -54,7 +53,7 @@ public abstract class KafkaRecipient implements AutoCloseable {
         }
     }
 
-    protected CompletableFuture<Object> handleAsync(RoutedMessage<?> message, MessageContext context) {
+    protected CompletableFuture<Object> handleAsync(MessageEnvelope<?> message, MessageContext context) {
         return handler.handleAsync(message.getPayload(), context)
                       .whenComplete((result, error) -> {
                           if (error != null) {

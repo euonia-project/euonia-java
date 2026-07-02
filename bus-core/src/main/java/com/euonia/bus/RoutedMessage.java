@@ -13,7 +13,7 @@ import com.euonia.utility.Assert;
  * @param <T> 消息中包含的负载类型
  * @author damon(zhaorong@outlook.com)
  */
-public final class RoutedMessage<T> implements MessageEnvelope {
+public final class RoutedMessage<T> implements MessageEnvelope<T> {
     /**
      * 元数据中存储类型名称所用的键
      */
@@ -131,6 +131,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
         this.channel = channel;
     }
 
+    @Override
     public String getAuthorization() {
         return authorization;
     }
@@ -139,6 +140,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
         this.authorization = authorization;
     }
 
+    @Override
     public long getTimestamp() {
         return timestamp;
     }
@@ -193,6 +195,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
      *
      * @return 消息负载
      */
+    @Override
     public T getPayload() {
         return payload;
     }
@@ -214,6 +217,7 @@ public final class RoutedMessage<T> implements MessageEnvelope {
      *
      * @return 消息类型名称
      */
+    @Override
     public String getTypeName() {
         return metadata.get(MESSAGE_TYPE_KEY, String.class);
     }

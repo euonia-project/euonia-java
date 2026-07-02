@@ -25,7 +25,7 @@ final class KafkaQueueConsumer extends KafkaRecipient implements Consumer {
     private KafkaConsumer<String, byte[]> consumer;
     private KafkaProducer<String, byte[]> replyProducer;
 
-    public KafkaQueueConsumer(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    public KafkaQueueConsumer(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(options, handler, serializer, messageType);
     }
 
@@ -41,7 +41,7 @@ final class KafkaQueueConsumer extends KafkaRecipient implements Consumer {
                 var records = consumer.poll(Duration.ofSeconds(1));
                 for (var record : records) {
                     var body = new String(record.value());
-                    RoutedMessage<?> message = serializer.deserialize(body, messageType);
+                    MessageEnvelope<?> message = serializer.deserializeEnvelope(body, messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
                     handleAsync(message, context).whenComplete((result, error) -> {
@@ -81,7 +81,7 @@ final class KafkaQueueConsumer extends KafkaRecipient implements Consumer {
     }
 
     private void sendReply(KafkaProducer<String, byte[]> producer, org.apache.kafka.clients.consumer.ConsumerRecord<String, byte[]> request,
-                           RoutedMessage<?> message, Object result, Throwable error) {
+                           MessageEnvelope<?> message, Object result, Throwable error) {
         var replyTo = request.headers().lastHeader("replyTo");
         if (replyTo == null) {
             return;

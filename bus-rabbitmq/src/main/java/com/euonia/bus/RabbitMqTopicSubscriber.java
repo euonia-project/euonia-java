@@ -1,7 +1,6 @@
 package com.euonia.bus;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 import com.euonia.bus.event.MessageAcknowledgedEvent;
 import com.euonia.bus.event.MessageReceivedEvent;
@@ -37,7 +36,7 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
      * @param serializer  消息序列化器
      * @param messageType 此订阅者处理的消息类型
      */
-    public RabbitMqTopicSubscriber(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Type messageType) {
+    public RabbitMqTopicSubscriber(Connection connection, RabbitMqBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(connection, options, handler, serializer, messageType);
     }
 
@@ -70,7 +69,7 @@ final class RabbitMqTopicSubscriber extends RabbitMqRecipient implements Subscri
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 
-                    RoutedMessage<?> message = serializer.deserialize(new String(body), messageType);
+                    MessageEnvelope<?> message = serializer.deserializeEnvelope(new String(body), messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
                     handleAsync(message, context).whenComplete((result, error) -> {
