@@ -71,4 +71,11 @@ public interface MessageEnvelope<T> {
      * @return 消息类型名称
      */
     String getTypeName();
+
+    /**
+     * 获取消息的元数据对象，包含消息的附加信息和属性。
+     *
+     * @return 消息元数据
+     */
+    MessageMetadata getMetadata();
 }
