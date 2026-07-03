@@ -11,6 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
+/**
+ * ChannelRegistrar 是一个用于注册和管理通道处理器的类。
+ * 它提供了注册通道处理器、获取已注册的通道处理器列表以及获取指定通道的注册信息的方法。
+ * 该类使用单例模式，确保在整个应用程序中只有一个实例。
+ */
 public class ChannelRegistrar {
 
     private final ConcurrentMap<String, ChannelRegistration> registrations = new ConcurrentHashMap<>();
@@ -93,6 +98,41 @@ public class ChannelRegistrar {
     }
 
     /**
+     * 注册通道。
+     *
+     * @param types 处理器类型列表
+     * @return ChannelRegistrar 实例
+     */
+    public ChannelRegistrar registrar(List<Class<?>> types) {
+        Assert.notEmpty(types, "Types cannot be null or empty");
+        return registrar(types.toArray(Class<?>[]::new));
+    }
+
+    /**
+     * 注册通道。
+     *
+     * @param types 处理器类型数组
+     * @return ChannelRegistrar 实例
+     */
+    public ChannelRegistrar registrar(Class<?>... types) {
+        Assert.notEmpty(types, "Types cannot be null or empty");
+        MessageHandlerFinder.find(this::register, types);
+        return this;
+    }
+
+    /**
+     * 注册通道。
+     *
+     * @param packageNames 包名数组
+     * @return ChannelRegistrar 实例
+     */
+    public ChannelRegistrar registrar(String... packageNames) {
+        Assert.notEmpty(packageNames, "Package names cannot be null or empty");
+        MessageHandlerFinder.find(this::register, packageNames);
+        return this;
+    }
+
+    /**
      * 注册一个通道处理器。
      *
      * @param channel     通道名称
@@ -110,6 +150,4 @@ public class ChannelRegistrar {
             return this;
         }
     }
-
-
 }

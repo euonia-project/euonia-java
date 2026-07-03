@@ -75,9 +75,9 @@ public class MessageBusConfiguration {
         return new DefaultConfigurator().setConvention(c -> {
                                             c.add(DefaultMessageConvention.class);
                                             c.add(AnnotationMessageConvention.class);
-                                            c.evaluateUnicast(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
-                                            c.evaluateMulticast(t -> t.getPackageName().startsWith(packageName) && (t.getSimpleName().endsWith("Event") || t.getSimpleName().endsWith("Eto")));
-                                            c.evaluateRequest(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Query"));
+                                            c.evaluateUnicast(t -> t.startsWith(packageName) && t.endsWith("Command"));
+                                            c.evaluateMulticast(t -> t.startsWith(packageName) && (t.endsWith("Event") || t.endsWith("Eto")));
+                                            c.evaluateRequest(t -> t.startsWith(packageName) && t.endsWith("Query"));
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("InMemoryMessageBusTransport"));
@@ -89,7 +89,7 @@ public class MessageBusConfiguration {
                                             s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                             s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                         })
-                                        .registerHandler(packageName + ".application.handler")
+                                        .registerChannel(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))
                                         .setEnablePipelineBehaviors(() -> environment.getProperty("euonia.bus.enable-pipeline-behaviors", Boolean.class, true));
     }

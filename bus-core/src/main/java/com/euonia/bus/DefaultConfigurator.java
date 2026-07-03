@@ -1,6 +1,5 @@
 package com.euonia.bus;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +25,6 @@ public final class DefaultConfigurator implements Configurator {
     private final MessageConventionBuilder conventionBuilder = new DefaultMessageConventionBuilder();
     private final ConcurrentMap<String, TransportStrategyBuilder> strategyBuilders = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ChannelRegistration> registrations = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Class<?>> channelMessageTypeCache = new ConcurrentHashMap<>();
 
     private Supplier<String> defaultTransportSupplier = () -> "";
     private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
@@ -68,7 +66,7 @@ public final class DefaultConfigurator implements Configurator {
      */
     @Override
     public Map<String, ChannelRegistration> getRegistrations() {
-        return Collections.unmodifiableMap(registrations);
+        return ChannelRegistrar.getRegistrations();
     }
 
     /**
@@ -108,13 +106,9 @@ public final class DefaultConfigurator implements Configurator {
      * @param <R>         响应类型
      * @return 当前配置器实例
      */
-    public <T, R> DefaultConfigurator registerHandler(String channel, Class<T> messageType, BiFunction<T, MessageContext, R> handler) {
-        try {
-            var method = LambdaHandler.class.getDeclaredMethod("handle", Object.class, MessageContext.class);
-            return registerHandler(channel, messageType, new ChannelHandler(LambdaHandler.class, method, new LambdaHandler<>(handler)));
-        } catch (NoSuchMethodException e) {
-            return this;
-        }
+    public <T, R> DefaultConfigurator registerChannel(String channel, Class<T> messageType, BiFunction<T, MessageContext, R> handler) {
+        ChannelRegistrar.instance().register(channel, messageType, handler);
+        return this;
     }
 
     /**
@@ -125,18 +119,8 @@ public final class DefaultConfigurator implements Configurator {
      * @param handler     处理器处理信息列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandler(String channel, Class<?> messageType, ChannelHandler handler) {
-        Assert.notNull(messageType, "Message type cannot be null");
-        Assert.notNull(handler, "Handling cannot be null");
-
-        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
-        if (registration == null) {
-            throw new IllegalStateException("Duplicate handler for channel: " + channel);
-        }
-        if (messageType != registration.getMessageType()) {
-            throw new IllegalStateException("Message type mismatch for channel: " + channel);
-        }
-        registration.addHandler(handler);
+    public DefaultConfigurator registerChannel(String channel, Class<?> messageType, ChannelHandler handler) {
+        ChannelRegistrar.instance().register(channel, messageType, handler);
         return this;
     }
 
@@ -148,18 +132,8 @@ public final class DefaultConfigurator implements Configurator {
      * @param handling    处理器处理信息列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandler(String channel, Class<?> messageType, List<ChannelHandler> handling) {
-        Assert.notNull(messageType, "Message type cannot be null");
-        Assert.notEmpty(handling, "Handling cannot be null or empty");
-
-        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
-        if (registration == null) {
-            throw new IllegalStateException("Duplicate handling for channel: " + channel);
-        }
-        if (messageType != registration.getMessageType()) {
-            throw new IllegalStateException("Message type mismatch for channel: " + channel);
-        }
-        handling.forEach(registration::addHandler);
+    public DefaultConfigurator registerChannel(String channel, Class<?> messageType, List<ChannelHandler> handling) {
+        ChannelRegistrar.instance().register(channel, messageType, handling);
         return this;
     }
 
@@ -169,9 +143,8 @@ public final class DefaultConfigurator implements Configurator {
      * @param types 处理器类型列表
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandler(List<Class<?>> types) {
-        Assert.notEmpty(types, "Types cannot be null or empty");
-        MessageHandlerFinder.find(this::registerHandler, types.toArray(Class<?>[]::new));
+    public DefaultConfigurator registerChannel(List<Class<?>> types) {
+        ChannelRegistrar.instance().registrar(types);
         return this;
     }
 
@@ -181,9 +154,8 @@ public final class DefaultConfigurator implements Configurator {
      * @param types 处理器类型数组
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandler(Class<?>... types) {
-        Assert.notEmpty(types, "Types cannot be null or empty");
-        MessageHandlerFinder.find(this::registerHandler, types);
+    public DefaultConfigurator registerChannel(Class<?>... types) {
+        ChannelRegistrar.instance().registrar(types);
         return this;
     }
 
@@ -193,9 +165,9 @@ public final class DefaultConfigurator implements Configurator {
      * @param packageNames 包名数组
      * @return 当前配置器实例
      */
-    public DefaultConfigurator registerHandler(String... packageNames) {
+    public DefaultConfigurator registerChannel(String... packageNames) {
         Assert.notContains(packageNames, String::isBlank, "Package names cannot contain null or empty values");
-        MessageHandlerFinder.find(this::registerHandler, packageNames);
+        ChannelRegistrar.instance().registrar(packageNames);
         return this;
     }
 
