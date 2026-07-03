@@ -92,8 +92,8 @@ public abstract class ObjectUtility {
             try {
                 return returnType.cast(method.invoke(obj, args));
             } catch (IllegalAccessException | InvocationTargetException exception) {
-                return null;
+                throw new RuntimeException("Failed to invoke method: " + methodName, exception);
             }
-        }).orElse(null);
+        }).orElseThrow(() -> new RuntimeException("Method not found: " + methodName));
     }
 }
