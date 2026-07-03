@@ -102,8 +102,62 @@ class MessageContextBaseTest {
         @Test
         @DisplayName("should copy metadata from routed message")
         void shouldCopyMetadata() {
-            var rm = new RoutedMessage<>(new TestPayload("payload"), "orders");
-            rm.setAuthorization("Bearer abc");
+
+            var rm = new MessageEnvelope<>() {
+
+                @Override
+                public String getMessageId() {
+                    return "";
+                }
+
+                @Override
+                public String getCorrelationId() {
+                    return "";
+                }
+
+                @Override
+                public String getConversationId() {
+                    return "";
+                }
+
+                @Override
+                public String getRequestTrackId() {
+                    return "";
+                }
+
+                @Override
+                public String getChannel() {
+                    return "orders";
+                }
+
+                @Override
+                public String getAuthorization() {
+                    return "Bearer abc";
+                }
+
+                @Override
+                public long getTimestamp() {
+                    return 0;
+                }
+
+                @Override
+                public Object getPayload() {
+                    return new TestPayload("payload");
+                }
+
+                @Override
+                public String getTypeName() {
+                    return "";
+                }
+
+                @Override
+                public MessageMetadata getMetadata() {
+                    return null;
+                }
+            };
+
+            //var rm = new RoutedMessage<>(new TestPayload("payload"), "orders");
+            //rm.setAuthorization("Bearer abc");
 
             var ctx = new MessageContextBase(rm);
 
