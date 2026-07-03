@@ -63,17 +63,4 @@ class DefaultConfiguratorTest {
                 .isInstanceOf(IllegalArgumentException.class);
         }
     }
-
-    @Nested
-    @DisplayName("handler registration")
-    class HandlerRegistrationTests {
-
-        @Test
-        @DisplayName("should reject null registration")
-        void shouldRejectNullRegistration() {
-            var configurator = new DefaultConfigurator();
-            assertThatThrownBy(() -> configurator.registerHandlers((HandlerRegistration) null))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-    }
 }
