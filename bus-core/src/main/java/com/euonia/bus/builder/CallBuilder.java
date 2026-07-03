@@ -28,7 +28,7 @@ import com.euonia.utility.Assert;
  * @param <R> 响应类型
  * @author damon(zhaorong@outlook.com)
  */
-public final class CallBuilder<T extends Request<R>, R> {
+public final class CallBuilder<T, R> {
 
     private final Bus bus;
     private final T request;
