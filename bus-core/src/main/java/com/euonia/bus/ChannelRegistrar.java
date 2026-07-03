@@ -1,8 +1,5 @@
 package com.euonia.bus;
 
-import com.euonia.core.Singleton;
-import com.euonia.utility.Assert;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +8,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
+import com.euonia.core.Singleton;
+import com.euonia.utility.Assert;
+
 /**
  * ChannelRegistrar 是一个用于注册和管理通道处理器的类。
  * 它提供了注册通道处理器、获取已注册的通道处理器列表以及获取指定通道的注册信息的方法。
  * 该类使用单例模式，确保在整个应用程序中只有一个实例。
  */
+@SuppressWarnings("UnusedReturnValue")
 public class ChannelRegistrar {
 
     private final ConcurrentMap<String, ChannelRegistration> registrations = new ConcurrentHashMap<>();
@@ -63,10 +64,7 @@ public class ChannelRegistrar {
         Assert.notNull(messageType, "Message type cannot be null");
         Assert.notNull(handler, "Handling cannot be null");
 
-        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
-        if (registration == null) {
-            throw new IllegalStateException("Duplicate handler for channel: " + channel);
-        }
+        var registration = registrations.computeIfAbsent(channel, k -> new ChannelRegistration(messageType));
         if (messageType != registration.getMessageType()) {
             throw new IllegalStateException("Message type mismatch for channel: " + channel);
         }
@@ -86,10 +84,7 @@ public class ChannelRegistrar {
         Assert.notNull(messageType, "Message type cannot be null");
         Assert.notEmpty(handling, "Handling cannot be null or empty");
 
-        var registration = registrations.putIfAbsent(channel, new ChannelRegistration(messageType));
-        if (registration == null) {
-            throw new IllegalStateException("Duplicate handling for channel: " + channel);
-        }
+        var registration = registrations.computeIfAbsent(channel, k -> new ChannelRegistration(messageType));
         if (messageType != registration.getMessageType()) {
             throw new IllegalStateException("Message type mismatch for channel: " + channel);
         }
