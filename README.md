@@ -149,7 +149,7 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 
 | 类 / 接口 | 作用 |
 |-------------------|---------|
-| `MessageConvention` | 契约：`isUnicastType`、`isMulticastType`、`isRequestType` |
+| `MessageConvention` | 契约：`isUnicast(String channel)`、`isMulticast(String channel)`、`isRequest(String channel)` |
 | `DefaultMessageConvention` | 基于接口标记的约定：实现 `Unicast` / `Multicast` / `Request<R>` 接口 |
 | `AnnotationMessageConvention` | 基于注解的约定：标注 `@Unicast` / `@Multicast` / `@Request` |
 | `BaseMessageConvention` | 组合约定引擎：聚合多个约定，带 `ConcurrentHashMap` 缓存 |
