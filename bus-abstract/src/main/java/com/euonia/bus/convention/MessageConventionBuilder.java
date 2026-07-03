@@ -26,7 +26,7 @@ public interface MessageConventionBuilder {
      * @param predicate the predicate to evaluate the unicast message type
      * @return the current instance of MessageConventionBuilder
      */
-    MessageConventionBuilder evaluateUnicast(Predicate<Class<?>> predicate);
+    MessageConventionBuilder evaluateUnicast(Predicate<String> predicate);
 
 
     /**
@@ -35,7 +35,7 @@ public interface MessageConventionBuilder {
      * @param predicate the predicate to evaluate the multicast message type
      * @return the current instance of MessageConventionBuilder
      */
-    MessageConventionBuilder evaluateMulticast(Predicate<Class<?>> predicate);
+    MessageConventionBuilder evaluateMulticast(Predicate<String> predicate);
 
     /**
      * Adds a message convention that will be used to evaluate whether a type is a request message.
@@ -43,7 +43,7 @@ public interface MessageConventionBuilder {
      * @param predicate the predicate to evaluate the request message type
      * @return the current instance of MessageConventionBuilder
      */
-    MessageConventionBuilder evaluateRequest(Predicate<Class<?>> predicate);
+    MessageConventionBuilder evaluateRequest(Predicate<String> predicate);
 
     /**
      * Adds a message convention that will be used to evaluate whether a type is a unicast, multicast, or request message.
@@ -51,7 +51,7 @@ public interface MessageConventionBuilder {
      * @param convention the function to evaluate the message type
      * @return the current instance of MessageConventionBuilder
      */
-    MessageConventionBuilder evaluate(Function<Class<?>, MessageConventionType> convention);
+    MessageConventionBuilder evaluate(Function<String, MessageConventionType> convention);
 
     /**
      * Adds a message convention that will be used to evaluate whether a type is a unicast, multicast, or request message.

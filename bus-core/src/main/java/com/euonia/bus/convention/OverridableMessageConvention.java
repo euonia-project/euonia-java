@@ -4,9 +4,9 @@ import java.util.function.Predicate;
 
 class OverridableMessageConvention implements MessageConvention {
     private final MessageConvention innerConvention;
-    private Predicate<Class<?>> unicastPredicate;
-    private Predicate<Class<?>> multicastPredicate;
-    private Predicate<Class<?>> requestPredicate;
+    private Predicate<String> unicastPredicate;
+    private Predicate<String> multicastPredicate;
+    private Predicate<String> requestPredicate;
 
     OverridableMessageConvention(MessageConvention innerConvention) {
         this.innerConvention = innerConvention;
@@ -18,41 +18,41 @@ class OverridableMessageConvention implements MessageConvention {
     }
 
     @Override
-    public boolean isUnicastType(Class<?> messageType) {
+    public boolean isUnicast(String channel) {
         if (unicastPredicate == null) {
-            return innerConvention.isUnicastType(messageType);
+            return innerConvention.isUnicast(channel);
         } else {
-            return unicastPredicate.test(messageType);
+            return unicastPredicate.test(channel);
         }
     }
 
     @Override
-    public boolean isMulticastType(Class<?> messageType) {
+    public boolean isMulticast(String channel) {
         if (multicastPredicate == null) {
-            return innerConvention.isMulticastType(messageType);
+            return innerConvention.isMulticast(channel);
         } else {
-            return multicastPredicate.test(messageType);
+            return multicastPredicate.test(channel);
         }
     }
 
     @Override
-    public boolean isRequestType(Class<?> messageType) {
+    public boolean isRequest(String channel) {
         if (requestPredicate == null) {
-            return innerConvention.isRequestType(messageType);
+            return innerConvention.isRequest(channel);
         } else {
-            return requestPredicate.test(messageType);
+            return requestPredicate.test(channel);
         }
     }
 
-    public void setUnicastPredicate(Predicate<Class<?>> unicastPredicate) {
+    public void setUnicastPredicate(Predicate<String> unicastPredicate) {
         this.unicastPredicate = unicastPredicate;
     }
 
-    public void setMulticastPredicate(Predicate<Class<?>> multicastPredicate) {
+    public void setMulticastPredicate(Predicate<String> multicastPredicate) {
         this.multicastPredicate = multicastPredicate;
     }
 
-    public void setRequestPredicate(Predicate<Class<?>> requestPredicate) {
+    public void setRequestPredicate(Predicate<String> requestPredicate) {
         this.requestPredicate = requestPredicate;
     }
 }

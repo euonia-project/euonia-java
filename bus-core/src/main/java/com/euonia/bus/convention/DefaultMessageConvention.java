@@ -1,8 +1,10 @@
 package com.euonia.bus.convention;
 
+import com.euonia.bus.ChannelRegistrar;
 import com.euonia.bus.contract.Unicast;
 import com.euonia.bus.contract.Request;
 import com.euonia.bus.contract.Multicast;
+import com.euonia.bus.exception.ChannelNotRegisterException;
 
 /**
  * DefaultMessageConvention is a simple implementation of the MessageConvention interface that uses class type checks to determine the message type.
@@ -16,17 +18,23 @@ public class DefaultMessageConvention implements MessageConvention {
     }
 
     @Override
-    public boolean isUnicastType(Class<?> messageType) {
-        return Unicast.class.isAssignableFrom(messageType) && messageType != Unicast.class;
+    public boolean isUnicast(String channel) {
+        var registration = ChannelRegistrar.instance().getRegistration(channel)
+                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        return Unicast.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Unicast.class;
     }
 
     @Override
-    public boolean isMulticastType(Class<?> messageType) {
-        return Multicast.class.isAssignableFrom(messageType) && messageType != Multicast.class;
+    public boolean isMulticast(String channel) {
+        var registration = ChannelRegistrar.instance().getRegistration(channel)
+                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        return Multicast.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Multicast.class;
     }
 
     @Override
-    public boolean isRequestType(Class<?> messageType) {
-        return Request.class.isAssignableFrom(messageType) && messageType != Request.class;
+    public boolean isRequest(String channel) {
+        var registration = ChannelRegistrar.instance().getRegistration(channel)
+                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        return Request.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Request.class;
     }
 }
