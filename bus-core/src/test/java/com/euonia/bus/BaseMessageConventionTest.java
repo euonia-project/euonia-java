@@ -2,39 +2,25 @@ package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.euonia.bus.convention.MessageConventionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.euonia.bus.annotation.Multicast;
-import com.euonia.bus.annotation.Request;
-import com.euonia.bus.annotation.Unicast;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.convention.MessageConvention;
+import com.euonia.bus.convention.MessageConventionType;
 
 /**
- * 测试 {@link BaseMessageConvention} 的类型分类和缓存逻辑。
+ * 测试 {@link BaseMessageConvention} 的通道分类和缓存逻辑。
  */
-@SuppressWarnings("unused")
 @DisplayName("BaseMessageConvention")
 class BaseMessageConventionTest {
 
-    @Unicast
-    static class UnicastMsg {
-    }
-
-    @Multicast
-    static class MulticastMsg {
-    }
-
-    @Request(responseType = String.class)
-    static class RequestMsg implements com.euonia.bus.contract.Request<String> {
-    }
-
-    static class UnknownMsg {
-    }
+    // 测试用通道名
+    static final String UNICAST_CHANNEL = "unicast-demo-channel";
+    static final String MULTICAST_CHANNEL = "multicast-demo-channel";
+    static final String REQUEST_CHANNEL = "request-demo-channel";
+    static final String UNKNOWN_CHANNEL = "unknown-channel";
 
     @Nested
     @DisplayName("default convention")
@@ -49,12 +35,12 @@ class BaseMessageConventionTest {
         }
 
         @Test
-        @DisplayName("should reject null message type")
+        @DisplayName("should reject null channel")
         void shouldRejectNull() {
             var conv = new BaseMessageConvention();
 
-            assertThatThrownBy(() -> conv.isUnicastType(null))
-                .isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> conv.isUnicast(null))
+                    .isInstanceOf(NullPointerException.class);
         }
     }
 
@@ -66,46 +52,46 @@ class BaseMessageConventionTest {
         @DisplayName("should classify using defineUnicastTypeConvention")
         void shouldUseDefineUnicast() {
             var conv = new BaseMessageConvention();
-            conv.defineUnicastTypeConvention(t -> t == UnknownMsg.class);
+            conv.defineUnicastTypeConvention(channel -> channel.startsWith("unicast"));
 
-            assertThat(conv.isUnicastType(UnknownMsg.class)).isTrue();
-            assertThat(conv.isUnicastType(String.class)).isFalse();
+            assertThat(conv.isUnicast("unicast-event")).isTrue();
+            assertThat(conv.isUnicast("other-channel")).isFalse();
         }
 
         @Test
         @DisplayName("should classify using defineMulticastTypeConvention")
         void shouldUseDefineMulticast() {
             var conv = new BaseMessageConvention();
-            conv.defineMulticastTypeConvention(t -> t == UnknownMsg.class);
+            conv.defineMulticastTypeConvention(channel -> channel.startsWith("multicast"));
 
-            assertThat(conv.isMulticastType(UnknownMsg.class)).isTrue();
-            assertThat(conv.isMulticastType(String.class)).isFalse();
+            assertThat(conv.isMulticast("multicast-event")).isTrue();
+            assertThat(conv.isMulticast("other-channel")).isFalse();
         }
 
         @Test
         @DisplayName("should classify using defineRequestTypeConvention")
         void shouldUseDefineRequest() {
             var conv = new BaseMessageConvention();
-            conv.defineRequestTypeConvention(t -> t == UnknownMsg.class);
+            conv.defineRequestTypeConvention(channel -> channel.startsWith("request"));
 
-            assertThat(conv.isRequestType(UnknownMsg.class)).isTrue();
-            assertThat(conv.isRequestType(String.class)).isFalse();
+            assertThat(conv.isRequest("request-get")).isTrue();
+            assertThat(conv.isRequest("other-channel")).isFalse();
         }
 
         @Test
         @DisplayName("should classify using defineTypeConvention")
         void shouldUseDefineTypeConvention() {
             var conv = new BaseMessageConvention();
-            conv.defineTypeConvention(t -> {
-                if (t == UnicastMsg.class) return MessageConventionType.UNICAST;
-                if (t == MulticastMsg.class) return MessageConventionType.MULTICAST;
-                if (t == RequestMsg.class) return MessageConventionType.REQUEST;
+            conv.defineTypeConvention(channel -> {
+                if (channel.contains("unicast")) return MessageConventionType.UNICAST;
+                if (channel.contains("multicast")) return MessageConventionType.MULTICAST;
+                if (channel.contains("request")) return MessageConventionType.REQUEST;
                 return MessageConventionType.NONE;
             });
 
-            assertThat(conv.isUnicastType(UnicastMsg.class)).isTrue();
-            assertThat(conv.isMulticastType(MulticastMsg.class)).isTrue();
-            assertThat(conv.isRequestType(RequestMsg.class)).isTrue();
+            assertThat(conv.isUnicast("my.unicast.event")).isTrue();
+            assertThat(conv.isMulticast("my.multicast.event")).isTrue();
+            assertThat(conv.isRequest("my.request.event")).isTrue();
         }
     }
 
@@ -119,19 +105,28 @@ class BaseMessageConventionTest {
             var conv = new BaseMessageConvention();
             conv.add(new MessageConvention() {
                 @Override
-                public String getName() { return "test"; }
+                public String getName() {
+                    return "test";
+                }
 
                 @Override
-                public boolean isUnicastType(Class<?> t) { return t == UnknownMsg.class; }
+                public boolean isUnicast(String channel) {
+                    return "custom-unicast".equals(channel);
+                }
 
                 @Override
-                public boolean isMulticastType(Class<?> t) { return false; }
+                public boolean isMulticast(String channel) {
+                    return false;
+                }
 
                 @Override
-                public boolean isRequestType(Class<?> t) { return false; }
+                public boolean isRequest(String channel) {
+                    return false;
+                }
             });
 
-            assertThat(conv.isUnicastType(UnknownMsg.class)).isTrue();
+            assertThat(conv.isUnicast("custom-unicast")).isTrue();
+            assertThat(conv.isUnicast("other")).isFalse();
         }
 
         @Test
@@ -140,7 +135,7 @@ class BaseMessageConventionTest {
             var conv = new BaseMessageConvention();
 
             assertThatThrownBy(() -> conv.add((MessageConvention[]) null))
-                .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
