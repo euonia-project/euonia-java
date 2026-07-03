@@ -1,10 +1,9 @@
 package com.euonia.bus.convention;
 
 import com.euonia.bus.ChannelRegistrar;
-import com.euonia.bus.contract.Unicast;
-import com.euonia.bus.contract.Request;
 import com.euonia.bus.contract.Multicast;
-import com.euonia.bus.exception.ChannelNotRegisterException;
+import com.euonia.bus.contract.Request;
+import com.euonia.bus.contract.Unicast;
 
 /**
  * DefaultMessageConvention is a simple implementation of the MessageConvention interface that uses class type checks to determine the message type.
@@ -19,22 +18,28 @@ public class DefaultMessageConvention implements MessageConvention {
 
     @Override
     public boolean isUnicast(String channel) {
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
-                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
+        if (registration == null) {
+            return false;
+        }
         return Unicast.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Unicast.class;
     }
 
     @Override
     public boolean isMulticast(String channel) {
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
-                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
+        if (registration == null) {
+            return false;
+        }
         return Multicast.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Multicast.class;
     }
 
     @Override
     public boolean isRequest(String channel) {
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
-                                           .orElseThrow(() -> new ChannelNotRegisterException(channel));
+        var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
+        if (registration == null) {
+            return false;
+        }
         return Request.class.isAssignableFrom(registration.getMessageType()) && registration.getMessageType() != Request.class;
     }
 }

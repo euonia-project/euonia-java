@@ -32,8 +32,8 @@ public class ChannelRegistrar {
      *
      * @return 已注册的通道处理器列表
      */
-    public Map<String, ChannelRegistration> getRegistrations() {
-        return Collections.unmodifiableMap(registrations);
+    public static Map<String, ChannelRegistration> getRegistrations() {
+        return Collections.unmodifiableMap(instance().registrations);
     }
 
     /**
@@ -42,8 +42,8 @@ public class ChannelRegistrar {
      * @param channel 通道名称
      * @return 指定通道的注册信息，如果不存在则返回空的 Optional
      */
-    public Optional<ChannelRegistration> getRegistration(String channel) {
-        return Optional.ofNullable(registrations.get(channel));
+    public static Optional<ChannelRegistration> getRegistration(String channel) {
+        return Optional.ofNullable(instance().registrations.get(channel));
     }
 
     /**

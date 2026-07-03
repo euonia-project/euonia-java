@@ -22,7 +22,7 @@ public class AnnotationMessageConvention implements MessageConvention {
     @Override
     public boolean isUnicast(String channel) {
         Assert.notNull(channel, MESSAGE_TYPE_NULL_ERROR);
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
+        var registration = ChannelRegistrar.getRegistration(channel)
                                            .orElseThrow(() -> new ChannelNotRegisterException(channel));
         return registration.getMessageType().getAnnotation(Unicast.class) != null;
     }
@@ -30,7 +30,7 @@ public class AnnotationMessageConvention implements MessageConvention {
     @Override
     public boolean isMulticast(String channel) {
         Assert.notNull(channel, MESSAGE_TYPE_NULL_ERROR);
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
+        var registration = ChannelRegistrar.getRegistration(channel)
                                            .orElseThrow(() -> new ChannelNotRegisterException(channel));
         return registration.getMessageType().getAnnotation(Multicast.class) != null;
     }
@@ -38,7 +38,7 @@ public class AnnotationMessageConvention implements MessageConvention {
     @Override
     public boolean isRequest(String channel) {
         Assert.notNull(channel, MESSAGE_TYPE_NULL_ERROR);
-        var registration = ChannelRegistrar.instance().getRegistration(channel)
+        var registration = ChannelRegistrar.getRegistration(channel)
                                            .orElseThrow(() -> new ChannelNotRegisterException(channel));
         return registration.getMessageType().getAnnotation(Request.class) != null;
     }
