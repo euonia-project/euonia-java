@@ -264,7 +264,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是请求类型
      */
     @Override
-    public <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new CallOptions();
         }

@@ -91,7 +91,7 @@ public interface Bus {
      * @param responseType 期望的响应类型
      * @return {@link CallBuilder} 实例
      */
-    default <T extends Request<R>, R> CallBuilder<T, R> call(T request, Class<R> responseType) {
+    default <T, R> CallBuilder<T, R> call(T request, Class<R> responseType) {
         return new CallBuilder<>(this, request, responseType);
     }
 
@@ -131,7 +131,7 @@ public interface Bus {
      * @param behavior     可选的管道行为配置回调，可以为 {@code null}
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior);
+    <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior);
 
     /**
      * 以发布/订阅模式异步发布一条多播消息。
@@ -178,7 +178,7 @@ public interface Bus {
      * @param <R>          响应类型
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    default <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType) {
+    default <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType) {
         return callAsync(request, responseType, new CallOptions(), null);
     }
 }
