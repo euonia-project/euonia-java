@@ -316,7 +316,10 @@ public final class MessageBus implements Bus {
 
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
 
-        if (!options.isEnablePipelineBehaviors() && !configurator.isEnablePipelineBehaviors()) {
+        // 优先使用 options 中的配置，如果未设置，则使用 configurator 的全局配置
+        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() == null ? configurator.isEnablePipelineBehaviors() : options.isEnablePipelineBehaviors();
+
+        if (!isEnablePipelineBehaviors) {
             return CompletableFuture.completedFuture(pack);
         }
 
