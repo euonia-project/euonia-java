@@ -61,13 +61,6 @@ public final class CallBuilder<T, R> {
     }
 
     /**
-     * 指定调用选项。
-     */
-    public CallBuilder<T, R> withOptions(CallOptions options) {
-        return this;
-    }
-
-    /**
      * 配置元数据设置器。
      */
     public CallBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {

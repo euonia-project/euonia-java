@@ -75,13 +75,6 @@ public final class SendBuilder<T, R> {
     }
 
     /**
-     * 指定发送选项。
-     */
-    public SendBuilder<T, R> withOptions(SendOptions options) {
-        return this;
-    }
-
-    /**
      * 配置元数据设置器。
      */
     public SendBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {
