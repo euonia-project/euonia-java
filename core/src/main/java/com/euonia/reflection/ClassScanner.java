@@ -6,8 +6,10 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 /**
@@ -33,7 +35,7 @@ public final class ClassScanner {
      * @return 包中找到的 {@link Class} 对象列表
      */
     public static List<Class<?>> scan(String packageName) {
-        var classes = new ArrayList<Class<?>>();
+        var classes = new LinkedHashSet<Class<?>>();
         var path = packageName.replace('.', '/');
         var classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
@@ -56,13 +58,16 @@ public final class ClassScanner {
             throw new RuntimeException("扫描包失败: " + packageName, e);
         }
 
-        return classes;
+        // 模块系统补充扫描：同时从模块层中扫描类
+        scanModuleLayer(packageName, classes);
+
+        return new ArrayList<>(classes);
     }
 
     /**
      * 递归扫描目录中的 {@code .class} 文件。
      */
-    private static void scanDirectory(File directory, String packageName, List<Class<?>> classes) {
+    private static void scanDirectory(File directory, String packageName, Set<Class<?>> classes) {
         if (!directory.exists()) {
             return;
         }
@@ -92,7 +97,7 @@ public final class ClassScanner {
     /**
      * 扫描 JAR 文件中给定包下的类。
      */
-    private static void scanJar(URL resource, String packagePath, List<Class<?>> classes) {
+    private static void scanJar(URL resource, String packagePath, Set<Class<?>> classes) {
         var jarPath = resource.getPath();
         // 去除 "file:" 前缀和 "!/..." 后缀以获取 JAR 文件路径
         var separatorIndex = jarPath.indexOf("!/");
@@ -126,6 +131,46 @@ public final class ClassScanner {
             }
         } catch (IOException exception) {
             throw new RuntimeException(String.format(bundle.getString("ClassScanner.JarScanFailed"), jarPath), exception);
+        }
+    }
+
+    /**
+     * 从模块层中扫描指定包下的类（JPMS 模块系统补充扫描）。
+     * 当 classloader 扫描未找到类时作为回退机制。
+     */
+    private static void scanModuleLayer(String packageName, Set<Class<?>> classes) {
+        var layer = ClassScanner.class.getModule().getLayer();
+        if (layer == null) {
+            return;
+        }
+        var packagePath = packageName.replace('.', '/');
+        for (var module : layer.modules()) {
+            if (module.isNamed() && module.getDescriptor() != null
+                    && module.getDescriptor().packages().stream()
+                    .anyMatch(p -> p.equals(packageName) || p.startsWith(packageName + "."))) {
+                try (var reader = module.getLayer().configuration()
+                        .findModule(module.getName())
+                        .orElseThrow()
+                        .reference()
+                        .open()) {
+                    reader.list()
+                            .filter(r -> r.startsWith(packagePath + "/") && r.endsWith(".class"))
+                            .forEach(resource -> {
+                                var className = resource.substring(0, resource.length() - 6)
+                                        .replace('/', '.');
+                                try {
+                                    var cls = Class.forName(module, className);
+                                    if (!cls.isSynthetic() && !cls.isAnonymousClass()) {
+                                        classes.add(cls);
+                                    }
+                                } catch (LinkageError ignored) {
+                                    // skip
+                                }
+                            });
+                } catch (IOException ignored) {
+                    // skip modules that can't be opened
+                }
+            }
         }
     }
 }
