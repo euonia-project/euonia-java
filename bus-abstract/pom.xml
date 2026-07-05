@@ -11,6 +11,7 @@
 
     <artifactId>bus-abstract</artifactId>
     <name>euonia service bus abstract library</name>
+    <description>Abstract service bus library with common transport interfaces</description>
 
     <dependencies>
         <dependency>

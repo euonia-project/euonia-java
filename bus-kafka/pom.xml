@@ -11,6 +11,7 @@
 
     <artifactId>bus-kafka</artifactId>
     <name>euonia service bus Kafka transport implementation</name>
+    <description>Service bus implementation using Apache Kafka transport</description>
 
     <dependencies>
         <dependency>

@@ -11,6 +11,7 @@
 
     <artifactId>bus-rabbitmq</artifactId>
     <name>euonia service bus rabbitmq implementation</name>
+    <description>Service bus implementation using RabbitMQ transport</description>
 
     <dependencies>
         <dependency>

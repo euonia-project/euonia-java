@@ -11,6 +11,7 @@
 
     <artifactId>bus-inmemory</artifactId>
     <name>euonia service bus in-memory implementation</name>
+    <description>Service bus implementation using in-memory transport</description>
 
     <dependencies>
         <dependency>
