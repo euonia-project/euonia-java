@@ -1,6 +1,6 @@
 package com.euonia.domain.command;
 
-import com.euonia.bus.contract.Unicast;
+import com.euonia.bus.message.Unicast;
 
 public interface Command extends Unicast {
 }

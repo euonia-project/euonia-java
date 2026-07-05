@@ -10,12 +10,12 @@ public class LocalMessageTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
+    public boolean allowOutgoing(String channel, Class<?> messageType) {
         return messageType.getAnnotation(LocalMessage.class) != null;
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
+    public boolean allowIncoming(String channel, Class<?> messageType) {
         return messageType.getAnnotation(LocalMessage.class) != null;
     }
 }

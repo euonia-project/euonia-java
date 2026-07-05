@@ -2,7 +2,7 @@
 
 > *Eunoia* —— 源自希腊语 *εὔνοια*：美好的思维、善意、心态平和。
 
-Euonia 是一个用于构建企业级 Java 应用的开发框架。它将**面向对象可扩展业务架构（OSBA）**与**领域驱动设计（DDD）**理念结合起来，为构建健壮、可维护的业务系统提供完整基础设施。该框架基于 **Java 17+**，并可与 **Spring Boot** 无缝集成。
+Euonia 是一个用于构建企业级 Java 应用的开发框架。它将**面向对象可扩展业务架构（OSBA）**与**领域驱动设计（DDD）**理念结合起来，为构建健壮、可维护的业务系统提供完整基础设施。该框架基于 **Java 17+**，可与 **Spring Boot 4.x / Spring Framework 7.x** 无缝集成。
 
 Euonia 同时提供 **[.NET 版本](https://github.com/euonia-project/euonia-dotnet)**，本仓库为 **Java 版本**。
 
@@ -66,7 +66,7 @@ graph TD
 | `com.euonia.reflection` | `TypeHelper`、`GenericType<T>`、`@DisplayName` |
 
 ### DDD（euonia-domain-driven-design）
-> 领域驱动设计抽象：实体、聚合、值对象、领域事件、应用服务、用例与审计支持。
+> 领域驱动设计抽象：实体、聚合、值对象、领域事件、命令、应用服务、用例与审计支持。
 
 | 包 | 类 | 作用 |
 |---------|-------|---------|
@@ -78,6 +78,7 @@ graph TD
 | `com.euonia.domain.event` | `DomainEvent` / `DomainEventBase` | 领域事件，支持聚合挂载与 `EventAggregate` 映射 |
 | `com.euonia.domain.event` | `ApplicationEvent` / `ApplicationEventBase` | 应用层（集成）事件基类 |
 | `com.euonia.domain.event` | `EventAggregate` | 聚合形态的事件数据：id、eventId、typeName、originator、timestamp、sequence |
+| `com.euonia.domain.command` | `Command` / `CommandBase` | 命令模式抽象：`Command` 继承 `Unicast`（消息总线集成），`CommandBase` 提供基类实现 |
 | `com.euonia.domain.auditing` | `@Audited` / `AuditRecord` / `AuditStore` | 领域对象变更审计支持 |
 | `com.euonia.application` | `ApplicationService` / `BaseApplicationService` | 应用服务标记接口与含依赖解析的基类 |
 | `com.euonia.usecase` | `UseCase<I,O>` / `UseCasePresenter` | 输入/输出用例契约与响应式结果发布 |
@@ -126,14 +127,13 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 ```
 
 ### Bus Abstract（euonia-bus-abstract）
-> 消息总线抽象契约层：定义消息信封、上下文、约定、传输策略、注解与抽象传输接口。所有总线模块的扩展基础。依赖 `core`。
+> 消息总线抽象契约层：定义消息信封、上下文、约定、传输策略、注解、抽象传输接口、收件箱/发件箱/死信队列抽象。所有总线模块的扩展基础。依赖 `core`。
 
 **核心契约**
 
 | 类 / 接口 | 作用 |
 |-------------------|---------|
-| `RoutedMessage<T>` | 传输信封：负载 + messageId / correlationId / conversationId / requestTrackId / channel / authorization / timestamp / metadata |
-| `MessageEnvelope` | 信封契约接口（messageId、correlationId、conversationId、requestTrackId、channel） |
+| `MessageEnvelope<T>` | 信封契约接口（messageId、correlationId、conversationId、requestTrackId、channel、payload） |
 | `MessageContext` | 运行时上下文：消息访问、响应发送（`response`）、失败通知（`failure`）、完成回调（`complete`） |
 | `MessageContextBase` | `MessageContext` 默认实现：基于 `SubmissionPublisher` 的响应/完成事件流 |
 | `MessageMetadata` | 强类型元数据映射（`Map<String,Object>`），支持 `get(key, Class<T>)` |
@@ -143,39 +143,18 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 | `Configurator` | 全局配置契约：约定构建器、策略构建器（按传输名）、处理器注册列表 |
 | `Dispatcher` | 分发器契约：`List<String> determine(Class<?>)` — 消息类型 → 传输名列表 |
 | `MessageConventionType` | 枚举：`NONE`、`UNICAST`、`MULTICAST`、`REQUEST` |
-| `MessageSerializer` | 消息序列化契约（预留接口） |
+| `MessageSerializer` | 消息序列化契约接口 |
 
-**约定系统（消息类型分类）**
-
-| 类 / 接口 | 作用 |
-|-------------------|---------|
-| `MessageConvention` | 契约：`isUnicast(String channel)`、`isMulticast(String channel)`、`isRequest(String channel)` |
-| `DefaultMessageConvention` | 基于接口标记的约定：实现 `Unicast` / `Multicast` / `Request<R>` 接口 |
-| `AnnotationMessageConvention` | 基于注解的约定：标注 `@Unicast` / `@Multicast` / `@Request` |
-| `BaseMessageConvention` | 组合约定引擎：聚合多个约定，带 `ConcurrentHashMap` 缓存 |
-| `OverridableMessageConvention` | 包装约定，支持谓词覆写分类结果 |
-| `MessageConventionBuilder` | 流式构建器 |
-
-**传输策略（消息路由）**
+**收件箱 / 发件箱 / 死信队列（inbox / outbox / dlq）**
 
 | 类 / 接口 | 作用 |
 |-------------------|---------|
-| `TransportStrategy` | 契约：`outgoing(Class<?>)`、`incoming(Class<?>)` |
-| `BaseTransportStrategy` | 组合策略引擎：聚合多个策略，带缓存 |
-| `DefaultTransportStrategy` | 中性默认策略（始终返回 `false`） |
-| `AnnotationTransportStrategy` | 匹配 `@DispatchIn` / `@ReceiveIn` 注解 |
-| `LocalMessageTransportStrategy` | 匹配 `@LocalMessage` 标注的类型 |
-| `DistributedMessageTransportStrategy` | 匹配 `@DistributedMessage` 标注的类型 |
-| `OverridableTransportStrategy` | 包装策略，支持谓词覆写 |
-
-**契约接口（标记）**
-
-| 接口 | 作用 |
-|-----------|---------|
-| `Unicast` | 标记接口：点对点单播消息 |
-| `Multicast` | 标记接口：发布-订阅多播消息 |
-| `Request<R>` | 标记接口：请求-响应消息，响应类型为 `R` |
-| `Transport` | 传输抽象：`getName()`、`publishAsync`、`sendAsync`（void/typed）、`requestAsync` |
+| `InboxStore` | 收件箱持久化接口，用于消息去重（幂等性），支持 `insert` / `markAsSuccess` / `markAsFailed` |
+| `InboxEntry` | 收件箱条目：messageId、channel、messageType、handles、createdAt |
+| `InboxHandle` | 处理器状态记录：handler 名称、状态（PENDING / SUCCESS / FAILED）、重试次数 |
+| `OutboxStore` | 发件箱持久化接口：`insert` / `markAsPublished`、事务性消息保证 |
+| `OutboxEntry` | 发件箱条目：messageId、channel、payload、状态、创建/更新时间 |
+| `DeadLetterMessage` | 死信消息实体：原始消息、错误信息、失败时间、重试次数 |
 
 **接收者（Recipient）**
 
@@ -185,6 +164,15 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 | `Executor` | 标记子接口：单播/请求执行者 |
 | `Subscriber` | 标记子接口：多播订阅者 |
 | `RecipientRegistrar` | 接收者注册器：`register(List<HandlerRegistration>, defaultTransport)` |
+
+**契约接口（标记）**
+
+| 接口 | 作用 |
+|-----------|---------|
+| `Unicast` | 标记接口：点对点单播消息 |
+| `Multicast` | 标记接口：发布-订阅多播消息 |
+| `Request<R>` | 标记接口：请求-响应消息，响应类型为 `R` |
+| `Transport` | 传输抽象：`getName()`、`publishAsync`、`sendAsync`、`callAsync` |
 
 **注解（十种）**
 
@@ -224,27 +212,63 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 | `MessageTransportException` | 传输层失败 |
 
 ### Bus Core（euonia-bus-core）
-> 消息总线运行时编排层：处理器发现、注册、分发与总线 API。依赖 `bus-abstract` 和 `pipeline`，将所有抽象契约组合为可用的消息总线引擎。
+> 消息总线运行时编排层：处理器发现、注册、分发、约定实现、策略实现、路由消息与总线 API。依赖 `bus-abstract` 和 `pipeline`，将所有抽象契约组合为可用的消息总线引擎。
 
 **核心类**
 
 | 类 / 接口 | 作用 |
 |-------------------|---------|
-| `Bus` | 顶层总线接口：`publishAsync`（多播）、`sendAsync`（单播/回调）、`callAsync`（请求-响应） |
+| `Bus` | 顶层总线接口：`publishAsync`（多播）、`sendAsync`（单播）、`callAsync`（请求-响应），以及流式构建器 `publish()` / `send()` / `call()` |
 | `MessageBus` | `Bus` 实现 — 编排引擎：类型校验 → 上下文解析 → 信封构建 → 管道执行 → 分发决策 → 传输投递 |
+| `RoutedMessage<T>` | 传输信封：负载 + messageId / correlationId / conversationId / requestTrackId / channel / authorization / timestamp / metadata |
 | `Handler<M,R>` | 类型化处理器：`R handle(M message, MessageContext context)` |
 | `StrategicDispatcher` | `Dispatcher` 实现：策略匹配 + 基数校验 + 缓存，未匹配时回退到 `defaultTransport` |
 | `DefaultHandlerContext` | `HandlerContext` 实现：通道维度处理器注册、异步调用（单处理器→响应/失败，多处理器→并行扇出） |
 | `DefaultConfigurator` | `Configurator` 实现：流式配置约定/策略/处理器（四种注册方式：直接、类型、列表、包名） |
 | `MessageHandlerFinder` | 自动发现：`@Subscribe` 注解方法 + `Handler<M,R>` 接口实现 |
+| `ChannelRegistrar` | 通道注册器：按通道名管理 `MessageHandlerContext` 列表，支持多处理器并行 |
+
+**约定与策略实现**
+
+| 类 / 接口 | 作用 |
+|-------------------|---------|
+| `MessageConvention` | 契约：`isUnicast(String channel)`、`isMulticast(String channel)`、`isRequest(String channel)` |
+| `DefaultMessageConvention` | 基于接口标记的约定：实现 `Unicast` / `Multicast` / `Request<R>` 接口 |
+| `AnnotationMessageConvention` | 基于注解的约定：标注 `@Unicast` / `@Multicast` / `@Request` |
+| `BaseMessageConvention` | 组合约定引擎：聚合多个约定，带 `ConcurrentHashMap` 缓存 |
+| `OverridableMessageConvention` | 包装约定，支持谓词覆写分类结果 |
+| `DefaultMessageConventionBuilder` | 流式构建器 |
+| `TransportStrategy` | 契约：`outgoing(Class<?>)`、`incoming(Class<?>)` |
+| `BaseTransportStrategy` | 组合策略引擎：聚合多个策略，带缓存 |
+| `DefaultTransportStrategy` | 中性默认策略（始终返回 `false`） |
+| `AnnotationTransportStrategy` | 匹配 `@DispatchIn` / `@ReceiveIn` 注解 |
+| `LocalMessageTransportStrategy` | 匹配 `@LocalMessage` 标注的类型 |
+| `DistributedMessageTransportStrategy` | 匹配 `@DistributedMessage` 标注的类型 |
+| `OverridableTransportStrategy` | 包装策略，支持谓词覆写 |
+| `DefaultTransportStrategyBuilder` | 策略流式构建器 |
+
+**幂等性 & 管道行为**
+
+| 类 | 作用 |
+|----|------|
+| `IdempotentHandler` | 幂等处理器装饰器：处理消息前检查 `InboxStore`，防止重复处理；内置定时重试已失败消息 |
+| `InboxPipelineBehavior` | 管道行为：消息处理后自动更新收件箱状态（成功/失败） |
+
+**流式构建器**
+
+| 类 | 作用 |
+|----|------|
+| `SendBuilder` | 单播发送构建器：`withCorrelationId()` → `withChannel()` → `executeAsync()` |
+| `PublishBuilder` | 多播发布构建器：`withChannel()` → `executeAsync()` |
+| `CallBuilder` | 请求-响应构建器：`withCorrelationId()` → `withChannel()` → `executeAsync()` |
 
 **消息总线三类操作**
 
 | 操作 | 方法 | 消息类型 | 传输策略 | 返回值 |
 |------|------|----------|----------|--------|
-| **发布** | `publishAsync` | `Multicast` | 多个传输并行发送 | `CompletableFuture<Void>` |
-| **发送** | `sendAsync` | `Unicast` | 单个传输 | `CompletableFuture<Void>` 或含 `Flow.Subscriber<R>` |
-| **调用** | `callAsync` | `Request<R>` | 单个传输 | `CompletableFuture<R>` |
+| **发布** | `publishAsync` / `publish()` | `Multicast` | 多个传输并行发送 | `CompletableFuture<Void>` |
+| **发送** | `sendAsync` / `send()` | `Unicast` | 单个传输 | `CompletableFuture<Void>` 或含 `Flow.Subscriber<R>` |
+| **调用** | `callAsync` / `call()` | `Request<R>` | 单个传输 | `CompletableFuture<R>` |
 
 **辅助类型**
 
@@ -263,7 +287,9 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 - 通过 `@Subscribe` 方法或 `Handler<M,R>` 接口自动发现处理器
 - 单处理器通道支持请求/响应（Unicast / Request）；多处理器通道并行执行（Multicast）
 - `TransportStrategy` 系统映射消息类型到传输方式（Local vs Distributed）
-- 与 `Pipeline` 集成，支持中间件风格的消息处理（日志、验证、转换等）
+- 与 `Pipeline` 集成，支持中间件风格的消息处理（日志、验证、转换、幂等）
+- 内置 `IdempotentHandler` + `InboxPipelineBehavior` 实现消息去重与幂等消费
+- 流式构建器 API（`bus.publish(msg).withChannel("orders").executeAsync()`）
 
 ### Bus InMemory（euonia-bus-inmemory）
 > 进程内内存传输适配器 — 完整的 `Transport` 实现。提供无需外部中间件的纯内存消息分发，适用于开发测试、单进程集成及超低延迟场景。依赖 `bus-abstract` 和 `core`。
@@ -290,15 +316,41 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 **映射规则：** `Unicast` → `InMemoryUnicastRecipient` → StrongMessenger；`Multicast` → `InMemoryMulticastRecipient` → WeakMessenger；`Request` → `InMemoryRequestRecipient` → StrongMessenger。
 
 ### Bus RabbitMQ（euonia-bus-rabbitmq）
-> RabbitMQ 传输适配器（脚手架阶段）。声明 `RabbitMqTransport implements Transport`，持有 `com.rabbitmq.client.ConnectionFactory`。依赖 `bus-abstract`、`core` 和 `com.rabbitmq:amqp-client:5.31.0`。
+> RabbitMQ 传输适配器 — 完整的 `Transport` 实现。通过 RabbitMQ 代理提供分布式消息分发，支持队列、交换器、路由键映射与基于 Failsafe 的重试策略。依赖 `bus-abstract`、`core` 和 `com.rabbitmq:amqp-client:5.31.0`。
 
-| 状态 | 说明 |
-|------|------|
-| ✅ 已实现 | `getName()` 返回类名；`ConnectionFactory` 字段初始化 |
-| 🚧 待实现 | `publishAsync` / `sendAsync` / `requestAsync` 返回 null；缺少队列/交换器/路由键映射、消息序列化、连接生命周期管理、请求-响应关联 |
+**核心类**
+
+| 类 | 作用 |
+|----|------|
+| `RabbitMqTransport` | `Transport` 实现：`publishAsync` → 扇出交换器广播；`sendAsync` → 队列单播；`callAsync` → RPC 调用并等待响应；内置 Failsafe 重试 |
+| `RabbitMqRecipientRegistrar` | `RecipientRegistrar` 实现：按 `MessageConvention` 分类，将处理器注册映射为队列消费者 + 主题订阅者 |
+| `RabbitMqRecipient` | 接收者基类：接收消息 → 触发事件 → 异步处理 → 确认 |
+| `RabbitMqQueueConsumer` | 队列消费者：监听指定队列，反序列化消息并交付处理 |
+| `RabbitMqTopicSubscriber` | 主题订阅者：绑定交换器与路由键，接收多播消息 |
+| `RabbitMqRequestExecutor` | RPC 执行器：处理请求-响应模式，支持 `replyTo` 回调 |
+| `RabbitMqBusOptions` | RabbitMQ 特定选项：连接工厂、交换器名、队列前缀、重试策略配置 |
+| `RabbitMqConstants` | 常量定义：默认交换器名、队列前缀、超时时间、重试参数 |
+| `RabbitMqReplyType` | 响应类型枚举 |
+
+**映射规则：** `Unicast` → `RabbitMqQueueConsumer`；`Multicast` → `RabbitMqTopicSubscriber`；`Request` → `RabbitMqRequestExecutor`。
 
 ### Bus Kafka（euonia-bus-kafka）
-> Kafka 传输适配器（占位模块）。声明 `bus-abstract` 依赖，无 Java 源码，无 Kafka 客户端依赖。待实现 `Transport` 接口并通过 Apache Kafka 提供分布式消息分发。
+> Kafka 传输适配器 — 完整的 `Transport` 实现。通过 Apache Kafka 代理提供分布式消息分发，支持主题、消费者组与基于 Failsafe 的重试策略。依赖 `bus-abstract`、`core` 和 `org.apache.kafka:kafka-clients`。
+
+**核心类**
+
+| 类 | 作用 |
+|----|------|
+| `KafkaTransport` | `Transport` 实现：`publishAsync` → 主题广播；`sendAsync` → 主题单播（分区键路由）；`callAsync` → RPC 调用并等待响应；内置 Failsafe 重试 |
+| `KafkaRecipientRegistrar` | `RecipientRegistrar` 实现：按 `MessageConvention` 分类，将处理器注册映射为主题消费者 + 请求执行者 |
+| `KafkaRecipient` | 接收者基类：接收消息 → 触发事件 → 异步处理 → 确认 |
+| `KafkaTopicSubscriber` | 主题订阅者：加入消费者组，接收多播消息 |
+| `KafkaQueueConsumer` | 队列消费者：监听主题，反序列化消息并交付处理 |
+| `KafkaRequestExecutor` | RPC 执行器：处理请求-响应模式 |
+| `KafkaBusOptions` | Kafka 特定选项：Bootstrap Server、消费者组、重试策略配置 |
+| `KafkaConstants` | 常量定义：默认主题前缀、消费者组、超时时间、重试参数 |
+
+**映射规则：** `Unicast` → `KafkaQueueConsumer`；`Multicast` → `KafkaTopicSubscriber`；`Request` → `KafkaRequestExecutor`。
 
 ### Spring（euonia-spring）
 > Spring 集成模块。通过 `ApplicationContext` 与 `ServiceProvider` 建立桥接，为 Pipeline 及其它 Euonia 组件提供无缝依赖注入。
@@ -359,26 +411,41 @@ protected void addRules() {
 
 ## 示例应用
 
-`sample` 模块演示了 **Euonia 与 Spring Boot 4.0 的集成**：
+`sample` 模块演示了 **Euonia 与 Spring Boot 4.1 的完整集成**，包含 CQRS 命令查询职责分离与消息总线：
 
 | 组件 | 说明 |
 |-----------|-------------|
-| **`User` 聚合** | 基于 `EditableObject<User>`，使用 `@FactoryCreate`、自定义规则（`UserNameRule`、`LambdaRule`）与 Snowflake ID |
-| **`OsbaConfiguration`** | 将 `BusinessObjectFactory` 绑定到 Spring `ApplicationContext` |
-| **`UserController`** | REST API：`POST /api/user`、`GET /api/user/{id}`，通过 `ObjectFactory` 创建/查询聚合 |
+| **`SampleApplication`** | Spring Boot 入口 |
+| **`User` 聚合** | 基于 `EditableObject<User>`，使用 `@FactoryCreate`、自定义规则与 Snowflake ID |
+| **`UserCreateCommand` / `UserUpdateCommand`** | CQRS 命令对象，继承 `CommandBase`（通过消息总线单播发送） |
+| **`UserCreateCommandHandler` / `UserUpdateCommandHandler`** | 命令处理器，通过 `@Subscribe` 注解注册到消息总线 |
+| **`UserCreatedEvent`（领域事件）** | 聚合内领域事件 |
+| **`UserCreatedEto`（集成事件）** | 跨服务集成事件（Event Transfer Object），通过 RabbitMQ 发布 |
+| **`UserCreatedEventHandler`** | 集成事件处理器 |
+| **`UserApplicationService`** | 应用服务契约接口 |
+| **`UserApplicationServiceImpl`** | 应用服务实现，通过 `Bus.send()` 发送命令 |
+| **`UserController`** | REST API：`POST /api/user`、`GET /api/user/{id}` |
+| **`PipelineController`** | Pipeline 演示端点 |
+| **`MessageBusConfiguration`** | 消息总线 Spring 配置：注册 RabbitMQ + InMemory 双传输、Jackson JSON 序列化器、消息约定/策略/处理器 |
+| **`HttpContextFilter`** | 请求上下文过滤器 |
+| **`GlobalExceptionHandler`** | 全局异常处理 |
+| **`UserRepository`** | Spring Data JPA 仓储 |
 
 ### 技术栈
 
 | 类别 | 技术 |
 |----------|-----------|
 | **语言** | Java 17+（sample 使用 Java 25） |
-| **框架** | Spring Boot 4.0（Spring MVC、Spring Data JPA、Spring Framework 7.0） |
+| **框架** | Spring Boot 4.1（Spring MVC、Spring Data JPA、Spring Framework 7.0） |
 | **数据库** | MySQL、H2（内存模式） |
+| **消息系统** | RabbitMQ（分布式）、InMemory（本地）双传输 |
 | **API 文档** | SpringDoc OpenAPI 3.0 |
 | **构建** | Maven |
 | **ID 生成** | Snowflake、UUID、ULID |
 | **Pipeline** | 自定义中间件管道（责任链 / middleware 模式） |
 | **DI 集成** | 基于 `ServiceProvider` 的 Spring `ApplicationContext` 集成 |
+| **CQRS** | 命令（Command）/ 事件（Event）分离，通过消息总线分发 |
+| **幂等性** | 基于 `InboxStore` 的 `IdempotentHandler` 消息去重 |
 
 ---
 
@@ -391,70 +458,70 @@ protected void addRules() {
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>core</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- Pipeline 中间件 -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>pipeline</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- Spring 集成 -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>spring</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 业务对象（OSBA） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>osba</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 领域驱动设计（DDD） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>domain-driven-design</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 消息总线（抽象层） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-abstract</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 消息总线（核心运行时） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-core</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 消息总线（内存传输） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-inmemory</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 消息总线（RabbitMQ 传输） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-rabbitmq</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 
 <!-- 消息总线（Kafka 传输） -->
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-kafka</artifactId>
-    <version>1.0.0</version>
+    <version>10.0.0</version>
 </dependency>
 ```
 

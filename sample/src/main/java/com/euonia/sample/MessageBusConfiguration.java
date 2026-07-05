@@ -87,13 +87,13 @@ public class MessageBusConfiguration {
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("InMemoryMessageBusTransport"));
-                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
-                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
+                                            s.evaluateOutgoing((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
+                                            s.evaluateIncoming((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
                                         })
                                         .setStrategy("RabbitMqMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("RabbitMqMessageBusTransport"));
-                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
-                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
+                                            s.evaluateIncoming((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
+                                            s.evaluateOutgoing((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
                                         })
                                         .registerChannel(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))

@@ -1,6 +1,6 @@
 package com.euonia.sample.domain.event;
 
-import com.euonia.bus.contract.Multicast;
+import com.euonia.bus.message.Multicast;
 import lombok.Data;
 
 @Data

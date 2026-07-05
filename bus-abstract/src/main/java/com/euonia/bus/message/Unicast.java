@@ -1,4 +1,4 @@
-package com.euonia.bus.contract;
+package com.euonia.bus.message;
 
 /**
  * Unicast is a marker interface to indicate that a message is intended for a single recipient.

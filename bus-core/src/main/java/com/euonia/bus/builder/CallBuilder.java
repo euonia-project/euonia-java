@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
-import com.euonia.bus.contract.Request;
-import com.euonia.bus.message.PipelineMessage;
+import com.euonia.bus.message.Request;
+import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.utility.Assert;
 

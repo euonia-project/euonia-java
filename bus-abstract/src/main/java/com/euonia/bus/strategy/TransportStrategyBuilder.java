@@ -1,13 +1,14 @@
 package com.euonia.bus.strategy;
 
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
+@SuppressWarnings("UnusedReturnValue")
 public interface TransportStrategyBuilder {
     TransportStrategy getStrategy();
 
-    TransportStrategyBuilder evaluateOutgoing(Predicate<Class<?>> predicate);
+    TransportStrategyBuilder evaluateOutgoing(BiPredicate<String, Class<?>> predicate);
 
-    TransportStrategyBuilder evaluateIncoming(Predicate<Class<?>> predicate);
+    TransportStrategyBuilder evaluateIncoming(BiPredicate<String, Class<?>> predicate);
 
     <S extends TransportStrategy> TransportStrategyBuilder add(S strategy);
 

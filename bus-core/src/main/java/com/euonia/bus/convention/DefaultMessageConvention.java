@@ -1,9 +1,9 @@
 package com.euonia.bus.convention;
 
 import com.euonia.bus.ChannelRegistrar;
-import com.euonia.bus.contract.Multicast;
-import com.euonia.bus.contract.Request;
-import com.euonia.bus.contract.Unicast;
+import com.euonia.bus.message.Multicast;
+import com.euonia.bus.message.Request;
+import com.euonia.bus.message.Unicast;
 
 /**
  * DefaultMessageConvention is a simple implementation of the MessageConvention interface that uses class type checks to determine the message type.

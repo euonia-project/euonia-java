@@ -1,4 +1,4 @@
-package com.euonia.bus.contract;
+package com.euonia.bus.message;
 
 /**
  * Multicast represents a logical channel for message distribution.

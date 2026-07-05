@@ -1,4 +1,4 @@
-package com.euonia.bus;
+package com.euonia.bus.handle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.euonia.bus.MessageContext;
+import com.euonia.bus.MessageEnvelope;
 import com.euonia.bus.inbox.InboxStore;
-import com.euonia.bus.message.MessageHandlerContext;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.pipeline.DefaultPipelineFactory;
 import com.euonia.pipeline.Pipeline;
@@ -22,31 +23,30 @@ import com.euonia.reflection.ServiceProvider;
 import com.euonia.tuple.Duet;
 
 /**
- * 幂等处理器装饰器，在处理消息前检查 {@link InboxStore} 是否已处理该消息。
+ * 收件箱处理器，在处理消息前检查 {@link InboxStore} 是否已处理该消息以确保幂等性，
+ * 并对失败消息进行定时重试。
  * <p>
  * 用法：
  *
  * <pre>{@code
- * var realHandler = new CreateOrderHandler();
- * var idempotentHandler = new IdempotentHandler<>(realHandler, inboxStore);
- *
- * // 注册到总线
- * handlerContext.register(OrderCmd.class, IdempotentHandler.class);
+ * var inboxStore = new InMemoryInboxStore();
+ * var processor = new IdempotentHandler(provider, handlerContainer);
+ * processor.start();
  * }</pre>
  *
  * @author damon(zhaorong@outlook.com)
  */
-public final class IdempotentHandler {
+final class IdempotentHandler {
 
     private static final Logger LOGGER = Logger.getLogger(IdempotentHandler.class.getName());
     private final InboxStore inboxStore;
     private final ScheduledExecutorService scheduler;
     private final ServiceProvider provider;
     private final PipelineFactory pipelineFactory;
-    private final Map<String, List<MessageHandlerContext>> handlerContainer;
+    private final Map<String, List<HandlerRegistration>> handlerContainer;
     private final AtomicInteger runningLock = new AtomicInteger(0);
 
-    public IdempotentHandler(ServiceProvider provider, Map<String, List<MessageHandlerContext>> handlerContainer) {
+    IdempotentHandler(ServiceProvider provider, Map<String, List<HandlerRegistration>> handlerContainer) {
         this.inboxStore = provider.getService(InboxStore.class).orElse(null);
         this.provider = provider;
         this.handlerContainer = handlerContainer;
@@ -59,7 +59,7 @@ public final class IdempotentHandler {
         });
     }
 
-    public void start() {
+    void start() {
         if (inboxStore == null) {
             return;
         }
@@ -107,37 +107,37 @@ public final class IdempotentHandler {
     }
 
     /**
-     * 在给定的服务范围内异步执行单个处理器工厂。
+     * 在给定的服务范围内异步执行单个处理器注册项。
      * 对于请求/单播消息类型，异常会被重新抛出。
      * 对于多播消息类型，异常会被吞没并作为结果返回。
      *
-     * @param factory 处理器工厂
-     * @param message 消息对象
-     * @param context 消息上下文
+     * @param registration 处理器注册项
+     * @param message      消息对象
+     * @param context      消息上下文
      * @return 异步处理结果
      */
-    public CompletableFuture<Object> executeHandlerAsync(MessageHandlerContext factory, MessageEnvelope<?> message, MessageContext context) {
+    public CompletableFuture<Object> executeHandlerAsync(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
         Pipeline<Duet<String, MessageEnvelope<?>>, Object> pipeline = pipelineFactory.create();
         if (inboxStore != null) {
-            pipeline.use(InboxPipelineBehavior.class, inboxStore);
+            pipeline.use(InboxCompletionBehavior.class, inboxStore);
         }
-        return pipeline.runAsync(new Duet<>(factory.handlerType().getTypeName(), message), ctx -> CompletableFuture.supplyAsync(() -> executeHandler(factory, message, context), customExecutor))
+        return pipeline.runAsync(new Duet<>(registration.handlerType().getTypeName(), message), ctx -> CompletableFuture.supplyAsync(() -> executeHandler(registration, message, context), customExecutor))
                        .toCompletableFuture();
     }
 
     /**
-     * 在给定的服务范围内执行单个处理器工厂。
+     * 在给定的服务范围内执行单个处理器注册项。
      * 对于请求/单播消息类型，异常会被重新抛出。
      * 对于多播消息类型，异常会被吞没并作为结果返回。
      *
-     * @param factory 处理器工厂
-     * @param message 消息对象
-     * @param context 消息上下文
+     * @param registration 处理器注册项
+     * @param message      消息对象
+     * @param context      消息上下文
      * @return 处理结果
      */
-    public Object executeHandler(MessageHandlerContext factory, MessageEnvelope<?> message, MessageContext context) {
-        var handler = factory.factory().createHandler(provider);
-        return handler.handle(message.getPayload(), context);
+    public Object executeHandler(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
+        var delegate = registration.factory().createDelegate(provider);
+        return delegate.handle(message.getPayload(), context);
     }
 }

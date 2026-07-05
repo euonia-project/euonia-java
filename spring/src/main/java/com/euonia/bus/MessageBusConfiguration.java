@@ -1,5 +1,6 @@
 package com.euonia.bus;
 
+import com.euonia.bus.handle.DefaultHandlerContext;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.utility.Assert;
@@ -24,8 +25,7 @@ public class MessageBusConfiguration {
                 registrar.register(configurator.getRegistrations(), configurator.getDefaultTransport());
             }
         }
-        var dispatcher = new StrategicDispatcher(configurator);
-        return new MessageBus(provider, dispatcher, configurator);
+        return new MessageBus(provider, configurator);
     }
 
     @Bean

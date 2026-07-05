@@ -224,7 +224,7 @@ ExtendableOptions (抽象基类)
 ### 定义消息与处理器
 
 ```java
-import com.euonia.bus.contract.Unicast;
+import com.euonia.bus.message.Unicast;
 import com.euonia.bus.annotation.Subscribe;
 
 // 消息

@@ -7,13 +7,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.annotation.Channel;
-import com.euonia.bus.contract.Message;
-import com.euonia.bus.contract.Request;
-import com.euonia.bus.exception.ChannelNotRegisterException;
+import com.euonia.bus.message.Message;
+import com.euonia.bus.message.Request;
 import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.ExtendableOptions;
 import com.euonia.bus.options.PublishOptions;
@@ -87,13 +85,12 @@ public final class MessageBus implements Bus {
      * 使用指定的参数创建消息总线实例。
      *
      * @param provider     服务提供者
-     * @param dispatcher   消息分发器
      * @param configurator 消息总线配置选项
      */
-    public MessageBus(ServiceProvider provider, Dispatcher dispatcher, Configurator configurator) {
-        this.dispatcher = dispatcher;
+    public MessageBus(ServiceProvider provider, Configurator configurator) {
         this.provider = provider;
         this.configurator = configurator;
+        this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
@@ -137,7 +134,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transports = dispatcher.determine(messageType);
+                    var transports = dispatcher.determine(channelName, messageType);
 
                     var tasks = transports.stream()
                                           .map(transport -> {
@@ -200,7 +197,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transports = dispatcher.determine(messageType);
+                    var transports = dispatcher.determine(channelName, messageType);
 
                     if (transports.isEmpty()) {
                         throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
@@ -289,7 +286,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transportNames = dispatcher.determine(messageType);
+                    var transportNames = dispatcher.determine(channelName, messageType);
                     if (transportNames.isEmpty()) {
                         throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
                     }
@@ -311,7 +308,7 @@ public final class MessageBus implements Bus {
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
 
         // 优先使用 options 中的配置，如果未设置，则使用 configurator 的全局配置
-        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() == null ? configurator.isEnablePipelineBehaviors() : options.isEnablePipelineBehaviors();
+        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() != null ? options.isEnablePipelineBehaviors() : configurator.isEnablePipelineBehaviors();
 
         if (!isEnablePipelineBehaviors) {
             return CompletableFuture.completedFuture(pack);
@@ -355,12 +352,6 @@ public final class MessageBus implements Bus {
             channelName = messageType.getName();
         } else {
             throw new MessageTypeException(String.format("The message type '%s' is not registered and does not implement the Message interface. Please specify a channel name in the options.", messageType.getName()));
-        }
-
-        var registration = ChannelRegistrar.getRegistration(channelName)
-                                           .orElseThrow(() -> new ChannelNotRegisterException(channelName));
-        if (registration.getMessageType() != messageType && messageType.isAssignableFrom(registration.getMessageType())) {
-            throw new MessageTypeException(String.format("The channel '%s' is registered for message type '%s', but the provided message type is '%s'.", channelName, registration.getMessageType().getName(), messageType.getName()));
         }
         return channelName;
     }

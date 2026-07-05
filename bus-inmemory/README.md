@@ -8,7 +8,7 @@ Euonia 消息总线的进程内传输适配器。基于 `bus-abstract` 的抽象
 
 ```
                           InMemoryTransport
-                    (实现 com.euonia.bus.contract.Transport)
+                    (实现 com.euonia.bus.message.Transport)
                                   │
                     ┌─────────────┼─────────────┐
                     │             │             │
@@ -59,7 +59,7 @@ UnicastRec.  RequestRec.   MulticastRecipient
 
 ### InMemoryTransport — 进程内传输实现
 
-实现 `com.euonia.bus.contract.Transport` 接口，是整个模块的入口点。
+实现 `com.euonia.bus.message.Transport` 接口，是整个模块的入口点。
 
 | 方法 | 信使 | 异步模型 |
 |------|------|----------|

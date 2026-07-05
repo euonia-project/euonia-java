@@ -20,12 +20,12 @@ class BaseTransportStrategyTest {
     class DefaultStrategy {
 
         @Test
-        @DisplayName("should return false for any type by default")
+        @DisplayName("should return false for any channel by default")
         void shouldReturnFalseByDefault() {
             var strategy = new BaseTransportStrategy();
 
-            assertThat(strategy.outgoing(String.class)).isFalse();
-            assertThat(strategy.incoming(String.class)).isFalse();
+            assertThat(strategy.allowOutgoing("java.lang.String", String.class)).isFalse();
+            assertThat(strategy.allowIncoming("java.lang.String", String.class)).isFalse();
         }
     }
 
@@ -37,20 +37,20 @@ class BaseTransportStrategyTest {
         @DisplayName("should use defineOutgoingStrategy")
         void shouldUseDefineOutgoing() {
             var strategy = new BaseTransportStrategy();
-            strategy.defineOutgoingStrategy(t -> t == Integer.class);
+            strategy.defineOutgoingStrategy((ch, mt) -> mt == Integer.class);
 
-            assertThat(strategy.outgoing(Integer.class)).isTrue();
-            assertThat(strategy.outgoing(String.class)).isFalse();
+            assertThat(strategy.allowOutgoing("java.lang.Integer", Integer.class)).isTrue();
+            assertThat(strategy.allowOutgoing("java.lang.String", String.class)).isFalse();
         }
 
         @Test
         @DisplayName("should use defineIncomingStrategy")
         void shouldUseDefineIncoming() {
             var strategy = new BaseTransportStrategy();
-            strategy.defineIncomingStrategy(t -> t == Integer.class);
+            strategy.defineIncomingStrategy((ch, mt) -> mt == Integer.class);
 
-            assertThat(strategy.incoming(Integer.class)).isTrue();
-            assertThat(strategy.incoming(String.class)).isFalse();
+            assertThat(strategy.allowIncoming("java.lang.Integer", Integer.class)).isTrue();
+            assertThat(strategy.allowIncoming("java.lang.String", String.class)).isFalse();
         }
 
         @Test
@@ -62,13 +62,13 @@ class BaseTransportStrategyTest {
                 public String getName() { return "test"; }
 
                 @Override
-                public boolean outgoing(Class<?> t) { return t == Long.class; }
+                public boolean allowOutgoing(String ch, Class<?> mt) { return mt == Long.class; }
 
                 @Override
-                public boolean incoming(Class<?> t) { return false; }
+                public boolean allowIncoming(String ch, Class<?> mt) { return false; }
             });
 
-            assertThat(strategy.outgoing(Long.class)).isTrue();
+            assertThat(strategy.allowOutgoing("java.lang.Long", Long.class)).isTrue();
         }
     }
 
@@ -80,11 +80,11 @@ class BaseTransportStrategyTest {
         @DisplayName("should cache repeated lookups")
         void shouldCacheLookups() {
             var strategy = new BaseTransportStrategy();
-            strategy.defineOutgoingStrategy(t -> true);
+            strategy.defineOutgoingStrategy((ch, mt) -> true);
 
             // Two calls should both return true from cache
-            assertThat(strategy.outgoing(String.class)).isTrue();
-            assertThat(strategy.outgoing(String.class)).isTrue();
+            assertThat(strategy.allowOutgoing("java.lang.String", String.class)).isTrue();
+            assertThat(strategy.allowOutgoing("java.lang.String", String.class)).isTrue();
         }
     }
 }
