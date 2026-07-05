@@ -215,9 +215,9 @@ bus-abstract  (本模块 — 契约层)
 ### 定义消息类型
 
 ```java
-import com.euonia.bus.contract.Unicast;
-import com.euonia.bus.contract.Multicast;
-import com.euonia.bus.contract.Request;
+import com.euonia.bus.message.Unicast;
+import com.euonia.bus.message.Multicast;
+import com.euonia.bus.message.Request;
 
 // 单播命令
 public class CreateOrderCommand implements Unicast {

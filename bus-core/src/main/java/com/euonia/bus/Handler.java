@@ -1,6 +1,6 @@
 package com.euonia.bus;
 
-import com.euonia.bus.contract.Message;
+import com.euonia.bus.message.Message;
 
 /**
  * 定义处理特定类型消息并返回响应的契约。

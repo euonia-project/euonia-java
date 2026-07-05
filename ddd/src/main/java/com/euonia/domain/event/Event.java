@@ -1,6 +1,6 @@
 package com.euonia.domain.event;
 
-import com.euonia.bus.contract.Multicast;
+import com.euonia.bus.message.Multicast;
 
 /**
  * The Event interface represents a generic event in the domain model. It defines the basic properties and methods that all events should have.

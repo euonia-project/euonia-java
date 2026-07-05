@@ -7,8 +7,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.annotation.Channel;
-import com.euonia.bus.contract.Message;
-import com.euonia.bus.contract.Request;
+import com.euonia.bus.message.Message;
+import com.euonia.bus.message.Request;
 import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.exception.MessageTypeException;

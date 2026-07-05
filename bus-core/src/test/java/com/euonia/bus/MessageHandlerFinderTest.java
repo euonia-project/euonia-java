@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.euonia.bus.annotation.Channel;
 import com.euonia.bus.annotation.Subscribe;
-import com.euonia.bus.contract.Message;
+import com.euonia.bus.message.Message;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

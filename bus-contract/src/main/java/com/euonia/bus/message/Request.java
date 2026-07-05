@@ -1,4 +1,4 @@
-package com.euonia.bus.contract;
+package com.euonia.bus.message;
 
 /**
  * Represents a request that can be sent through the bus.

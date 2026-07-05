@@ -3,7 +3,7 @@ package com.euonia.bus.handle;
 import java.lang.reflect.InvocationTargetException;
 
 import com.euonia.bus.*;
-import com.euonia.bus.contract.Message;
+import com.euonia.bus.message.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;

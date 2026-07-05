@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import com.euonia.bus.annotation.Channel;
 import com.euonia.bus.annotation.Subscribe;
-import com.euonia.bus.contract.Message;
+import com.euonia.bus.message.Message;
 import com.euonia.core.PriorityValueFinder;
 import com.euonia.reflection.ClassScanner;
 import com.euonia.utility.StringUtility;
