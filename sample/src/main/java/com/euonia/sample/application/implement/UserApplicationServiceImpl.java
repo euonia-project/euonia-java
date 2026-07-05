@@ -28,6 +28,7 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
     public CompletableFuture<Long> createAsync(UserCreateDto data) {
         var command = new UserCreateCommand();
         command.setName(data.getUsername());
+        command.setEmail(data.getEmail());
 
         CompletableFuture<Long> future = new CompletableFuture<>();
 

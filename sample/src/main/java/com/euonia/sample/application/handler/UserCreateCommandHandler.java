@@ -26,6 +26,7 @@ public class UserCreateCommandHandler implements Handler<UserCreateCommand, Long
     @Override
     public Long handle(UserCreateCommand message, MessageContext context) {
         var user = factory.create(User.class, message.getName() == null ? "" : message.getName());
+        user.setEmail(message.getEmail());
         try (user) {
             user.onSaved((args) -> {
                 var events = ((User) args.getNewObject()).getEvents();
