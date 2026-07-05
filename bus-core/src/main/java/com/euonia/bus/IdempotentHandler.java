@@ -36,7 +36,7 @@ import com.euonia.tuple.Duet;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public final class IdempotentHandler {
+final class IdempotentHandler {
 
     private static final Logger LOGGER = Logger.getLogger(IdempotentHandler.class.getName());
     private final InboxStore inboxStore;
@@ -46,7 +46,7 @@ public final class IdempotentHandler {
     private final Map<String, List<MessageHandlerContext>> handlerContainer;
     private final AtomicInteger runningLock = new AtomicInteger(0);
 
-    public IdempotentHandler(ServiceProvider provider, Map<String, List<MessageHandlerContext>> handlerContainer) {
+    IdempotentHandler(ServiceProvider provider, Map<String, List<MessageHandlerContext>> handlerContainer) {
         this.inboxStore = provider.getService(InboxStore.class).orElse(null);
         this.provider = provider;
         this.handlerContainer = handlerContainer;
@@ -59,7 +59,7 @@ public final class IdempotentHandler {
         });
     }
 
-    public void start() {
+    void start() {
         if (inboxStore == null) {
             return;
         }

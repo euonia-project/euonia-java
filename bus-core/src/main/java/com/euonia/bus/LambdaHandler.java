@@ -2,7 +2,7 @@ package com.euonia.bus;
 
 import java.util.function.BiFunction;
 
-public class LambdaHandler<T, R> {
+class LambdaHandler<T, R> {
     private final BiFunction<T, MessageContext, R> handler;
 
     public LambdaHandler(BiFunction<T, MessageContext, R> handler) {

@@ -13,7 +13,7 @@ import com.euonia.bus.message.MessageCache;
  *
  * @author damon(zhaorong@outlook.com)
  */
-public class StrategicDispatcher implements Dispatcher {
+class StrategicDispatcher implements Dispatcher {
     private final ConcurrentHashMap<Class<?>, List<String>> transportCache = new ConcurrentHashMap<>();
     private final Configurator configurator;
 
@@ -22,7 +22,7 @@ public class StrategicDispatcher implements Dispatcher {
      *
      * @param configurator 消息总线配置器
      */
-    public StrategicDispatcher(Configurator configurator) {
+    StrategicDispatcher(Configurator configurator) {
         this.configurator = configurator;
     }
 

@@ -7,10 +7,10 @@ import com.euonia.tuple.Duet;
 
 import java.util.concurrent.CompletionStage;
 
-public class InboxPipelineBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
+class InboxPipelineBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
     private final InboxStore inboxStore;
 
-    public InboxPipelineBehavior(InboxStore inboxStore) {
+    InboxPipelineBehavior(InboxStore inboxStore) {
         this.inboxStore = inboxStore;
     }
 

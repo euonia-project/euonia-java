@@ -24,8 +24,7 @@ public class MessageBusConfiguration {
                 registrar.register(configurator.getRegistrations(), configurator.getDefaultTransport());
             }
         }
-        var dispatcher = new StrategicDispatcher(configurator);
-        return new MessageBus(provider, dispatcher, configurator);
+        return new MessageBus(provider, configurator);
     }
 
     @Bean

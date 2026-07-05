@@ -87,13 +87,12 @@ public final class MessageBus implements Bus {
      * 使用指定的参数创建消息总线实例。
      *
      * @param provider     服务提供者
-     * @param dispatcher   消息分发器
      * @param configurator 消息总线配置选项
      */
-    public MessageBus(ServiceProvider provider, Dispatcher dispatcher, Configurator configurator) {
-        this.dispatcher = dispatcher;
+    public MessageBus(ServiceProvider provider, Configurator configurator) {
         this.provider = provider;
         this.configurator = configurator;
+        this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
     }
 
