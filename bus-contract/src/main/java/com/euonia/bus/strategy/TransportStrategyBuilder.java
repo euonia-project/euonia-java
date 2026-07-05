@@ -2,6 +2,7 @@ package com.euonia.bus.strategy;
 
 import java.util.function.BiPredicate;
 
+@SuppressWarnings("UnusedReturnValue")
 public interface TransportStrategyBuilder {
     TransportStrategy getStrategy();
 

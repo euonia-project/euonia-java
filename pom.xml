@@ -16,7 +16,7 @@
         <module>spring</module>
         <module>sample</module>
         <module>bus-core</module>
-        <module>bus-abstract</module>
+        <module>bus-contract</module>
         <module>bus-rabbitmq</module>
         <module>bus-inmemory</module>
         <module>bus-kafka</module>

@@ -45,7 +45,7 @@
 
         <dependency>
             <groupId>com.euonia</groupId>
-            <artifactId>bus-abstract</artifactId>
+            <artifactId>bus-contract</artifactId>
             <version>${revision}</version>
         </dependency>
 

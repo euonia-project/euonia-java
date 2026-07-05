@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
-            <artifactId>bus-abstract</artifactId>
+            <artifactId>bus-contract</artifactId>
             <version>10.0.0</version>
         </dependency>
         <dependency>
