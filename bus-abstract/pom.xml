@@ -9,7 +9,7 @@
           <version>${revision}</version>
     </parent>
 
-    <artifactId>bus-contract</artifactId>
+    <artifactId>bus-abstract</artifactId>
     <name>euonia service bus abstract library</name>
 
     <dependencies>

@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.euonia</groupId>
-            <artifactId>bus-contract</artifactId>
+            <artifactId>bus-abstract</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
