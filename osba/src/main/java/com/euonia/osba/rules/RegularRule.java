@@ -1,6 +1,5 @@
 package com.euonia.osba.rules;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import com.euonia.osba.BusinessObject;
@@ -83,10 +82,9 @@ public class RegularRule extends RuleBase {
      * 如果验证失败，则将带有适当消息的错误结果添加到上下文中。
      *
      * @param context 规则上下文，包含有关规则执行环境的信息，如目标对象和属性值。
-     * @return 一个表示异步操作的 CompletableFuture 对象
      */
     @Override
-    public CompletableFuture<Void> executeAsync(RuleContext context) {
+    public void execute(RuleContext context) {
         try {
             if (context.getTarget() instanceof BusinessObject<?> businessObject) {
 
@@ -105,7 +103,6 @@ public class RegularRule extends RuleBase {
         } catch (Exception exception) {
             context.addErrorResult(exception.getMessage());
         }
-        return CompletableFuture.completedFuture(null);
     }
 
     public RegularRule expression(String expression) {

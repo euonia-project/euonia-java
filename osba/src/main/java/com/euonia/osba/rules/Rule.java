@@ -1,7 +1,6 @@
 package com.euonia.osba.rules;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import com.euonia.reflection.PropertyInfo;
 
@@ -46,11 +45,10 @@ public interface Rule {
     int getPriority();
 
     /**
-     * 异步执行规则，根据提供的上下文执行必要的检查或操作。此方法的实现应包含评估规则的逻辑，
+     * 执行规则，根据提供的上下文执行必要的检查或操作。此方法的实现应包含评估规则的逻辑，
      * 并在规则被违反时可能修改上下文或抛出异常。
      *
      * @param context 执行规则的上下文，包含规则评估的相关信息和状态
-     * @return 一个在规则执行完成时完成的 CompletableFuture，允许异步处理以及处理规则对上下文的影响
      */
-    CompletableFuture<Void> executeAsync(RuleContext context);
+    void execute(RuleContext context);
 }
