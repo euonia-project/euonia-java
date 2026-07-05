@@ -70,7 +70,7 @@ public class GetOrderQuery { ... }
 
 | 类 / 接口 | 描述 |
 |-----------|------|
-| `MessageConvention` | 分类契约接口：`isUnicastType()`、`isMulticastType()`、`isRequestType()` |
+| `MessageConvention` | 分类契约接口：`isUnicast(String)`、`isMulticast(String)`、`isRequest(String)` |
 | `BaseMessageConvention` | 组合引擎 — 聚合多个约定，带结果缓存 |
 | `DefaultMessageConvention` | 基于 `Unicast` / `Multicast` / `Request` 接口的约定 |
 | `AnnotationMessageConvention` | 基于 `@Unicast` / `@Multicast` / `@Request` 注解的约定 |
@@ -261,21 +261,21 @@ import com.euonia.bus.strategy.*;
 
 // 构建消息约定
 MessageConvention convention = new MessageConventionBuilder()
-        .add(new DefaultMessageConvention())       // 接口标记
-        .add(new AnnotationMessageConvention())     // 注解标记
-        .getConvention();
+    .add(new DefaultMessageConvention())       // 接口标记
+    .add(new AnnotationMessageConvention())     // 注解标记
+    .getConvention();
 
-// 构建传输策略
-TransportStrategy strategy = new TransportStrategyBuilder()
+    // 构建传输策略
+    TransportStrategy strategy = new TransportStrategyBuilder()
         .add(new AnnotationTransportStrategy())
         .add(new LocalMessageTransportStrategy())
         .add(new DistributedMessageTransportStrategy())
         .getStrategy();
 
-// 判断消息类型
-boolean isUnicast = convention.isUnicastType(CreateOrderCommand.class);     // true
-boolean isMulticast = convention.isMulticastType(OrderCreatedEvent.class);  // true
-boolean isRequest = convention.isRequestType(GetOrderQuery.class);          // true
+    // 判断消息类型（通过通道名）
+    boolean isUnicast = convention.isUnicast("orders");     // true
+    boolean isMulticast = convention.isMulticast("events");  // true
+    boolean isRequest = convention.isRequest("queries");     // true
 ```
 
 ---

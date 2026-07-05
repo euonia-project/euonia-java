@@ -1,5 +1,6 @@
 package com.euonia.pipeline;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,11 +17,14 @@ class DefaultPipelineProviderTests {
     void should_run_attribute_behavior_before_accumulate() {
         DefaultPipelineProvider<TraceContext, Void> pipeline = new DefaultPipelineProvider<>(new SimpleServiceProvider());
         TraceContext context = new TraceContext();
-
+        System.out.println(Thread.currentThread().getName());
         pipeline.runAsync(context, ignored -> {
             context.trace.add("accumulate");
+            System.out.println(Thread.currentThread().getName());
             return CompletableFuture.completedFuture(null);
-        }).toCompletableFuture().join();
+        }).toCompletableFuture().whenComplete((v,e)->{
+            System.out.println(Thread.currentThread().getName());
+        }).join();
 
         assertEquals(List.of("behavior", "accumulate"), context.trace);
     }

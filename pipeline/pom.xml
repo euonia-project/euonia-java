@@ -4,36 +4,36 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-          <groupId>com.euonia</groupId>
-          <artifactId>parent</artifactId>
-          <version>${revision}</version>
+        <groupId>com.euonia</groupId>
+        <artifactId>parent</artifactId>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>pipeline</artifactId>
     <name>euonia pipeline module</name>
 
-      <dependencies>
-            <dependency>
-                <groupId>com.euonia</groupId>
-                <artifactId>core</artifactId>
-                <version>${revision}</version>
-            </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>com.euonia</groupId>
+            <artifactId>core</artifactId>
+            <version>${revision}</version>
+        </dependency>
 
-            <dependency>
-                  <groupId>org.junit.jupiter</groupId>
-                  <artifactId>junit-jupiter</artifactId>
-                  <scope>test</scope>
-            </dependency>
-      </dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-      <build>
-            <plugins>
-                  <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.5.3</version>
-                  </plugin>
-            </plugins>
-      </build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

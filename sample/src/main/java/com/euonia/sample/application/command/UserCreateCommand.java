@@ -4,6 +4,7 @@ import com.euonia.domain.command.CommandBase;
 
 public class UserCreateCommand extends CommandBase {
     private String name;
+    private String email;
 
     public UserCreateCommand() {
     }
@@ -18,5 +19,13 @@ public class UserCreateCommand extends CommandBase {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

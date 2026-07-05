@@ -1,7 +1,5 @@
 package com.euonia.bus;
 
-import java.util.concurrent.CompletableFuture;
-
 import com.euonia.bus.recipient.Consumer;
 
 /**
@@ -15,17 +13,12 @@ import com.euonia.bus.recipient.Consumer;
 public class InMemoryUnicastRecipient extends InMemoryRecipient implements Consumer {
 
     /**
-     * 处理器上下文，用于将消息分发给实际的消息处理器。
-     */
-    private final HandlerContext handler;
-
-    /**
      * 创建单播接收者实例。
      *
      * @param handler 处理器上下文
      */
     public InMemoryUnicastRecipient(HandlerContext handler) {
-        this.handler = handler;
+        super(handler);
     }
 
     /**
@@ -36,30 +29,5 @@ public class InMemoryUnicastRecipient extends InMemoryRecipient implements Consu
     @Override
     public String getName() {
         return getClass().getSimpleName();
-    }
-
-    /**
-     * 异步处理接收到的单播消息。
-     * <p>
-     * 将消息通过 {@link HandlerContext} 分发给实际的消息处理器。
-     * 如果处理过程中发生异常，会记录警告日志但不会中断处理流程。
-     *
-     * @param channel 消息通道
-     * @param message 消息体
-     * @param context 消息上下文
-     * @param aborted 消息是否已被中止
-     * @return 表示异步处理完成的 {@link CompletableFuture}
-     */
-    @Override
-    protected CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context, boolean aborted) {
-        return handler.handleAsync(channel, message, context)
-                      .whenComplete((result, error) -> {
-                          if (error != null) {
-                              publishDeadLetter(channel, currentMessage, error);
-                              context.failure(error);
-                          } else {
-                              context.response(result);
-                          }
-                      });
     }
 }

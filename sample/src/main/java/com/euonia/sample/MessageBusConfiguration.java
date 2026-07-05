@@ -1,6 +1,9 @@
 package com.euonia.sample;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -8,6 +11,9 @@ import com.euonia.bus.*;
 import com.euonia.bus.Transport;
 import com.euonia.bus.convention.AnnotationMessageConvention;
 import com.euonia.bus.convention.DefaultMessageConvention;
+import com.euonia.bus.inbox.InboxEntry;
+import com.euonia.bus.inbox.InboxHandle;
+import com.euonia.bus.inbox.InboxStore;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.AnnotationTransportStrategy;
@@ -75,9 +81,9 @@ public class MessageBusConfiguration {
         return new DefaultConfigurator().setConvention(c -> {
                                             c.add(DefaultMessageConvention.class);
                                             c.add(AnnotationMessageConvention.class);
-                                            c.evaluateUnicast(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
-                                            c.evaluateMulticast(t -> t.getPackageName().startsWith(packageName) && (t.getSimpleName().endsWith("Event") || t.getSimpleName().endsWith("Eto")));
-                                            c.evaluateRequest(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Query"));
+                                            c.evaluateUnicast(t -> t.startsWith(packageName) && t.endsWith("Command"));
+                                            c.evaluateMulticast(t -> t.startsWith(packageName) && (t.endsWith("Event") || t.endsWith("Eto")));
+                                            c.evaluateRequest(t -> t.startsWith(packageName) && t.endsWith("Query"));
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("InMemoryMessageBusTransport"));
@@ -89,7 +95,7 @@ public class MessageBusConfiguration {
                                             s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                             s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
                                         })
-                                        .registerHandler(packageName + ".application.handler")
+                                        .registerChannel(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))
                                         .setEnablePipelineBehaviors(() -> environment.getProperty("euonia.bus.enable-pipeline-behaviors", Boolean.class, true));
     }
@@ -337,5 +343,57 @@ public class MessageBusConfiguration {
         if (next != null) {
             next.accept(value);
         }
+    }
+
+    @Bean
+    public InboxStore inboxStore() {
+        return new InboxStore() {
+            private List<InboxEntry> entries = Collections.synchronizedList(new ArrayList<InboxEntry>());
+
+            @Override
+            public boolean insert(InboxEntry entry) {
+                var exists = entries.stream().anyMatch(e -> e.getMessageId().equals(entry.getMessageId()));
+                if (exists) {
+                    return false;
+                } else {
+                    entries.add(entry);
+                    return true;
+                }
+            }
+
+            @Override
+            public void markAsSuccess(String messageId, String handler) {
+                var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
+                                   .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
+                var handle = entry.getHandles().stream().filter(h -> h.getHandler().equals(handler)).findFirst()
+                                  .orElseThrow(() -> new RuntimeException("No handle found for handler " + handler));
+                handle.setStatus(InboxHandle.Status.SUCCESS.getValue());
+                System.out.println("Message " + messageId + " handled successfully by " + handler);
+            }
+
+            @Override
+            public void markAsFailed(String messageId, String handler, String errorMessage) {
+                var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
+                                   .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
+                var handle = entry.getHandles().stream().filter(h -> h.getHandler().equals(handler)).findFirst()
+                                  .orElseThrow(() -> new RuntimeException("No handle found for handler " + handler));
+                handle.setStatus(InboxHandle.Status.FAILED.getValue());
+                handle.setError(errorMessage);
+                handle.setRetryAttempts(handle.getRetryAttempts() + 1);
+            }
+
+            @Override
+            public InboxEntry get(String messageId) {
+                return entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst().orElse(null);
+            }
+
+            @Override
+            public List<InboxHandle> getFailedMessages() {
+                return entries.stream()
+                              .flatMap(e -> e.getHandles().stream())
+                              .filter(h -> h.getStatus() == InboxHandle.Status.FAILED.getValue())
+                              .toList();
+            }
+        };
     }
 }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,8 +20,7 @@ import com.rabbitmq.client.Connection;
  * RabbitMQ 消息接收者的抽象基类，封装了与 RabbitMQ 交互的公共逻辑。
  * <p>
  * 提供消息接收/确认事件的监听器管理、消息异步处理以及 AMQP 回复属性构建等公共功能。
- * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式，以及 {@link #stop()}
- * 方法来停止监听并释放资源。
+ * 子类需实现 {@link #start(String)} 方法以启动具体的消费模式，以及 {@link #stop()} 方法来停止监听并释放资源。
  * <p>
  * 实现 {@link AutoCloseable}，调用 {@link #close()} 将:
  * <ol>
@@ -119,27 +117,6 @@ public abstract class RabbitMqRecipient implements AutoCloseable {
         for (Consumer<MessageAcknowledgedEvent> listener : messageAcknowledgedListeners) {
             listener.accept(event);
         }
-    }
-
-    /**
-     * 异步处理接收到的路由消息，将其负载分派到处理器上下文。
-     * <p>
-     * 处理完成后，如果发生错误则调用 {@code context.failure()}，
-     * 否则调用 {@code context.response()} 设置响应结果。
-     *
-     * @param message 路由消息
-     * @param context 消息上下文
-     * @return 处理完成后的异步结果
-     */
-    protected CompletableFuture<Object> handleAsync(MessageEnvelope<?> message, MessageContext context) {
-        return handler.handleAsync(message.getChannel(), message.getPayload(), context)
-                      .whenComplete((result, error) -> {
-                          if (error != null) {
-                              context.failure(error);
-                          } else {
-                              context.response(result);
-                          }
-                      });
     }
 
     /**

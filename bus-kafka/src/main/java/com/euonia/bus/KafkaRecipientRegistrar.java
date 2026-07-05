@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.convention.MessageConvention;
+import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.TransportStrategy;
@@ -54,14 +55,14 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
 
             KafkaRecipient recipient;
 
-            if (convention.isMulticastType(messageType)) {
+            if (convention.isMulticast(channel)) {
                 recipient = new KafkaTopicSubscriber(options, handlerContext, serializer, messageType);
-            } else if (convention.isUnicastType(messageType)) {
+            } else if (convention.isUnicast(channel)) {
                 recipient = new KafkaQueueConsumer(options, handlerContext, serializer, messageType);
-            } else if (convention.isRequestType(messageType)) {
+            } else if (convention.isRequest(channel)) {
                 recipient = new KafkaRequestExecutor(options, handlerContext, serializer, messageType);
             } else {
-                throw new IllegalArgumentException("Unsupported message type: " + messageType);
+                throw new MessageConventionException("Unsupported message type: " + messageType);
             }
 
             recipient.start(channel);

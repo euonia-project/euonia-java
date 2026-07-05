@@ -30,7 +30,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      * @return the current instance of DefaultMessageConventionBuilder
      */
     @Override
-    public MessageConventionBuilder evaluateUnicast(Predicate<Class<?>> predicate) {
+    public MessageConventionBuilder evaluateUnicast(Predicate<String> predicate) {
         Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineUnicastTypeConvention(predicate);
         return this;
@@ -43,7 +43,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      * @return the current instance of MessageConventionBuilder
      */
     @Override
-    public MessageConventionBuilder evaluateMulticast(Predicate<Class<?>> predicate) {
+    public MessageConventionBuilder evaluateMulticast(Predicate<String> predicate) {
         Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineMulticastTypeConvention(predicate);
         return this;
@@ -56,7 +56,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      * @return the current instance of MessageConventionBuilder
      */
     @Override
-    public MessageConventionBuilder evaluateRequest(Predicate<Class<?>> predicate) {
+    public MessageConventionBuilder evaluateRequest(Predicate<String> predicate) {
         Assert.notNull(predicate, "predicate cannot be null.");
         this.convention.defineRequestTypeConvention(predicate);
         return this;
@@ -69,7 +69,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      * @return the current instance of MessageConventionBuilder
      */
     @Override
-    public MessageConventionBuilder evaluate(Function<Class<?>, MessageConventionType> convention) {
+    public MessageConventionBuilder evaluate(Function<String, MessageConventionType> convention) {
         Assert.notNull(convention, "convention cannot be null.");
         this.convention.defineTypeConvention(convention);
         return this;

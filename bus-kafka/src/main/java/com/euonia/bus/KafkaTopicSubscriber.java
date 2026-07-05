@@ -24,9 +24,9 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
     }
 
     @Override
-    void start(String group) {
-        var topicName = options.generateTopicName(group);
-        consumer = createConsumer(group);
+    void start(String channelName) {
+        var topicName = options.generateTopicName(channelName);
+        consumer = createConsumer(channelName);
         consumer.subscribe(Collections.singletonList(topicName));
 
         new Thread(() -> {
@@ -37,16 +37,17 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
                     MessageEnvelope<?> message = serializer.deserializeEnvelope(body, messageType);
                     var context = new MessageContextBase(message);
                     raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                    handleAsync(message, context).whenComplete((result, error) -> {
-                        consumer.commitSync();
-                        raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
-                    });
+                    handler.handleAsync(channelName, getName(), message, context)
+                           .whenComplete((result, error) -> {
+                               consumer.commitSync();
+                               raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                           });
                 }
             }
         });
     }
 
-    private KafkaConsumer<String, byte[]> createConsumer(String group) {
+    private KafkaConsumer<String, byte[]> createConsumer(String channelName) {
         var props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, options.getGroupId());

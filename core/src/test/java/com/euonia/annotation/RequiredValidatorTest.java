@@ -52,7 +52,7 @@ class RequiredValidatorTest {
         Duet<Boolean, String> result = validator.validate(annotation, "");
 
         assertTrue(result.value1());
-        assertEquals("", result.value2());
+        assertNull(result.value2());
     }
 
     @Test
@@ -74,7 +74,7 @@ class RequiredValidatorTest {
         Duet<Boolean, String> result = validator.validate(annotation, "abc");
 
         assertTrue(result.value1());
-        assertEquals("", result.value2());
+        assertNull(result.value2());
     }
 }
 

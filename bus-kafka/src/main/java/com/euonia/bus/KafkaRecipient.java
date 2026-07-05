@@ -2,7 +2,6 @@ package com.euonia.bus;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -53,18 +52,7 @@ public abstract class KafkaRecipient implements AutoCloseable {
         }
     }
 
-    protected CompletableFuture<Object> handleAsync(MessageEnvelope<?> message, MessageContext context) {
-        return handler.handleAsync(message.getPayload(), context)
-                      .whenComplete((result, error) -> {
-                          if (error != null) {
-                              context.failure(error);
-                          } else {
-                              context.response(result);
-                          }
-                      });
-    }
-
-    abstract void start(String group);
+    abstract void start(String channelName);
 
     public String getName() {
         return getClass().getSimpleName();

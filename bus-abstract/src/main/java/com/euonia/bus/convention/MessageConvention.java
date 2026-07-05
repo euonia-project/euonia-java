@@ -12,26 +12,26 @@ public interface MessageConvention {
     String getName();
 
     /**
-     * Determines if the given message type is a unicast message. A unicast message is a message that is sent to a single recipient.
+     * Determines if the given channel is a unicast. A unicast message is a message that is sent to a single recipient.
      *
-     * @param messageType the type of the message
+     * @param channel the name of the channel
      * @return true if the message type is a unicast message, false otherwise
      */
-    boolean isUnicastType(Class<?> messageType);
+    boolean isUnicast(String channel);
 
     /**
-     * Determines if the given message type is a multicast message. A multicast message is a message that is sent to multiple recipients.
+     * Determines if the given channel is a multicast. A multicast message is a message that is sent to multiple recipients.
      *
-     * @param messageType the type of the message
+     * @param channel the name of the channel
      * @return true if the message type is a multicast message, false otherwise
      */
-    boolean isMulticastType(Class<?> messageType);
+    boolean isMulticast(String channel);
 
     /**
-     * Determines if the given message type is a request message. A request message is a message that expects a response.
+     * Determines if the given channel is a request. A request message is a message that expects a response.
      *
-     * @param messageType the type of the message
+     * @param channel the name of the channel
      * @return true if the message type is a request message, false otherwise
      */
-    boolean isRequestType(Class<?> messageType);
+    boolean isRequest(String channel);
 }

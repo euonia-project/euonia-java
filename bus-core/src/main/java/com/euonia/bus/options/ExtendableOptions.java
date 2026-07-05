@@ -16,7 +16,7 @@ public abstract class ExtendableOptions {
     private String channel;
     private String queue;
     private int priority;
-    private boolean enablePipelineBehaviors = true;
+    private Boolean enablePipelineBehaviors = null;
     private boolean attachDefaultPipelineBehaviors = true;
     private long delay, timeout;
     private Consumer<MessageMetadata> metadataSetter;
@@ -98,7 +98,7 @@ public abstract class ExtendableOptions {
      *
      * @return 如果管道行为已启用则返回 true，否则返回 false
      */
-    public boolean isEnablePipelineBehaviors() {
+    public Boolean isEnablePipelineBehaviors() {
         return enablePipelineBehaviors;
     }
 
@@ -107,7 +107,7 @@ public abstract class ExtendableOptions {
      *
      * @param enablePipelineBehaviors true 表示启用管道行为，false 表示禁用
      */
-    public void setEnablePipelineBehaviors(boolean enablePipelineBehaviors) {
+    public void setEnablePipelineBehaviors(Boolean enablePipelineBehaviors) {
         this.enablePipelineBehaviors = enablePipelineBehaviors;
     }
 

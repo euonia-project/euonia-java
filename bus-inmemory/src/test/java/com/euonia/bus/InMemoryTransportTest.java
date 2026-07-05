@@ -130,14 +130,13 @@ class InMemoryTransportTest {
         }
 
         @Override
-        public CompletableFuture<Object> handleAsync(Object message, MessageContext context) {
-            context.response(message);
-            return CompletableFuture.completedFuture(message);
+        public CompletableFuture<Object> handleAsync(String channel, String recipient, MessageEnvelope<?> envelope, MessageContext context) {
+            return handleAsync(channel, envelope.getPayload(), context);
         }
 
-        @Override
         public CompletableFuture<Object> handleAsync(String channel, Object message, MessageContext context) {
-            return handleAsync(message, context);
+            context.response(message);
+            return CompletableFuture.completedFuture(message);
         }
     }
 

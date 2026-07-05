@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.convention.MessageConvention;
+import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.serialization.MessageSerializer;
 import com.euonia.bus.strategy.TransportStrategy;
@@ -95,14 +96,14 @@ public class RabbitMqRecipientRegistrar implements RecipientRegistrar {
 
             RabbitMqRecipient recipient;
 
-            if (convention.isMulticastType(messageType)) {
+            if (convention.isMulticast(channel)) {
                 recipient = new RabbitMqTopicSubscriber(connection, options, handlerContext, serializer, messageType);
-            } else if (convention.isUnicastType(messageType)) {
+            } else if (convention.isUnicast(channel)) {
                 recipient = new RabbitMqQueueConsumer(connection, options, handlerContext, serializer, messageType);
-            } else if (convention.isRequestType(messageType)) {
+            } else if (convention.isRequest(channel)) {
                 recipient = new RabbitMqRequestExecutor(connection, options, handlerContext, serializer, messageType);
             } else {
-                throw new IllegalArgumentException("Unsupported message type: " + messageType);
+                throw new MessageConventionException("Unsupported message type: " + messageType);
             }
             recipient.onMessageReceived(event -> {
                 LOGGER.log(Level.INFO, () -> String.format("[%s] Message '%s' received via %s", event.getContext().getRequestTraceId(), event.getContext().getMessageId(), recipient.getName()));

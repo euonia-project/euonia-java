@@ -53,14 +53,6 @@ public final class PublishBuilder<T> {
     }
 
     /**
-     * 指定发布选项。
-     */
-    public PublishBuilder<T> withOptions(PublishOptions options) {
-        //this.options = options;
-        return this;
-    }
-
-    /**
      * 配置元数据设置器。
      */
     public PublishBuilder<T> withMetadata(Consumer<MessageMetadata> metadataSetter) {

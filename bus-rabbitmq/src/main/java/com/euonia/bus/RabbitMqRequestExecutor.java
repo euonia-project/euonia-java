@@ -68,37 +68,39 @@ final class RabbitMqRequestExecutor extends RabbitMqRecipient implements Executo
                 MessageEnvelope<?> message = serializer.deserializeEnvelope(new String(delivery.getBody()), messageType);
                 var context = new MessageContextBase(message);
                 raiseMessageReceived(new MessageReceivedEvent(message.getPayload(), context));
-                handleAsync(message, context).whenComplete((result, error) -> {
-                    if (StringUtility.isNullOrBlank(properties.getCorrelationId()) || StringUtility.isNullOrBlank(properties.getReplyTo())) {
-                        return;
-                    }
-                    try {
-                        RabbitMqReplyType type;
-                        String data;
+                handler.handleAsync(channelName, getName(), message, context)
+                       .whenComplete((result, error) -> {
+                           if (StringUtility.isNullOrBlank(properties.getCorrelationId()) || StringUtility.isNullOrBlank(properties.getReplyTo())) {
+                               return;
+                           }
+                           try {
+                               RabbitMqReplyType type;
+                               String data;
 
-                        if (error != null) {
-                            type = RabbitMqReplyType.EXCEPTION;
-                            data = serializer.serialize(error);
-                        } else if (result != null) {
-                            type = RabbitMqReplyType.MESSAGE;
-                            data = serializer.serialize(result);
-                        } else {
-                            type = RabbitMqReplyType.EMPTY;
-                            data = "";
-                        }
+                               if (error != null) {
+                                   type = RabbitMqReplyType.EXCEPTION;
+                                   data = serializer.serialize(error);
+                               } else if (result != null) {
+                                   type = RabbitMqReplyType.MESSAGE;
+                                   data = serializer.serialize(result);
+                               } else {
+                                   type = RabbitMqReplyType.EMPTY;
+                                   data = "";
+                               }
 
-                        var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
+                               var replyProperties = createReplyProperties(properties.getCorrelationId(), type);
 
-                        this.channel.basicPublish("", properties.getReplyTo(), replyProperties, data.getBytes());
-                        this.channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                        raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
-                    } catch (IOException exception) {
-                        throw new RuntimeException(exception);
-                    }
-                });
+                               this.channel.basicPublish("", properties.getReplyTo(), replyProperties, data.getBytes());
+                               this.channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                               raiseMessageAcknowledged(new MessageAcknowledgedEvent(message.getPayload(), context));
+                           } catch (IOException exception) {
+                               throw new RuntimeException(exception);
+                           }
+                       });
             };
 
-            recipientTag = this.channel.basicConsume(queueName, false, deliverCallback, ct -> {});
+            recipientTag = this.channel.basicConsume(queueName, false, deliverCallback, ct -> {
+            });
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }

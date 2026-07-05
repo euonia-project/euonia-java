@@ -6,10 +6,13 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.euonia.bus.annotation.Channel;
+import com.euonia.bus.contract.Message;
 import com.euonia.bus.contract.Request;
+import com.euonia.bus.exception.ChannelNotRegisterException;
+import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.message.MessageCache;
 import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.ExtendableOptions;
@@ -114,17 +117,14 @@ public final class MessageBus implements Bus {
         }
 
         var messageType = message.getClass();
-        if (!configurator.getConvention().isMulticastType(messageType)) {
-            throw new MessageTypeException("The message type " + message.getClass().getName() + " is not multicast");
+
+        var channelName = getChannelName(messageType, options);
+
+        if (!configurator.getConvention().isMulticast(channelName)) {
+            throw new MessageConventionException("The message type " + message.getClass().getName() + " is not multicast");
         }
 
         var context = RequestContextAccessor.get();
-
-        var channelName = StringUtility.collapse(
-            options::getChannel,
-            () -> MessageCache.getInstance().getOrAddChannel(messageType)
-        );
-
         RoutedMessage<T> pack = new RoutedMessage<>(message, channelName, options.getMessageId());
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
         pack.setAuthorization(context.getAuthorization());
@@ -179,16 +179,13 @@ public final class MessageBus implements Bus {
 
         var messageType = message.getClass();
 
-        if (!configurator.getConvention().isUnicastType(messageType)) {
-            throw new MessageTypeException("The message type " + message.getClass().getName() + " is not unicast");
+        var channelName = getChannelName(messageType, options);
+
+        if (!configurator.getConvention().isUnicast(channelName)) {
+            throw new MessageConventionException("The message type " + message.getClass().getName() + " is not unicast");
         }
 
         var context = RequestContextAccessor.get();
-
-        var channelName = StringUtility.collapse(
-            options::getChannel,
-            () -> MessageCache.getInstance().getOrAddChannel(messageType)
-        );
 
         RoutedMessage<T> pack = new RoutedMessage<>(message, channelName, options.getMessageId());
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
@@ -264,23 +261,20 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是请求类型
      */
     @Override
-    public <T extends Request<R>, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new CallOptions();
         }
 
         var messageType = request.getClass();
 
-        if (!configurator.getConvention().isRequestType(messageType)) {
-            throw new MessageTypeException("The message type " + messageType.getName() + " is not request");
+        var channelName = getChannelName(messageType, options);
+
+        if (!configurator.getConvention().isRequest(channelName)) {
+            throw new MessageConventionException("The message type " + messageType.getName() + " is not request");
         }
 
         var context = RequestContextAccessor.get();
-
-        var channelName = StringUtility.collapse(
-            options::getChannel,
-            () -> MessageCache.getInstance().getOrAddChannel(messageType)
-        );
 
         RoutedMessage<T> pack = new RoutedMessage<>(request, channelName, options.getMessageId());
         pack.setRequestTrackId(StringUtility.collapse(context::getTraceIdentifier, context::getRequestId, () -> ObjectId.newGuid(GuidType.SEQUENTIAL_AS_STRING).toString()));
@@ -316,7 +310,10 @@ public final class MessageBus implements Bus {
 
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
 
-        if (!options.isEnablePipelineBehaviors() && !configurator.isEnablePipelineBehaviors()) {
+        // 优先使用 options 中的配置，如果未设置，则使用 configurator 的全局配置
+        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() == null ? configurator.isEnablePipelineBehaviors() : options.isEnablePipelineBehaviors();
+
+        if (!isEnablePipelineBehaviors) {
             return CompletableFuture.completedFuture(pack);
         }
 
@@ -344,5 +341,27 @@ public final class MessageBus implements Bus {
                            }
                        });
         return future;
+    }
+
+    private String getChannelName(Class<?> messageType, ExtendableOptions options) {
+
+        String channelName;
+
+        if (!StringUtility.isNullOrBlank(options.getChannel())) {
+            channelName = options.getChannel();
+        } else if (messageType.getAnnotation(Channel.class) != null) {
+            channelName = messageType.getAnnotation(Channel.class).value();
+        } else if (Message.class.isAssignableFrom(messageType)) {
+            channelName = messageType.getName();
+        } else {
+            throw new MessageTypeException(String.format("The message type '%s' is not registered and does not implement the Message interface. Please specify a channel name in the options.", messageType.getName()));
+        }
+
+        var registration = ChannelRegistrar.getRegistration(channelName)
+                                           .orElseThrow(() -> new ChannelNotRegisterException(channelName));
+        if (registration.getMessageType() != messageType && messageType.isAssignableFrom(registration.getMessageType())) {
+            throw new MessageTypeException(String.format("The channel '%s' is registered for message type '%s', but the provided message type is '%s'.", channelName, registration.getMessageType().getName(), messageType.getName()));
+        }
+        return channelName;
     }
 }

@@ -28,7 +28,7 @@ import com.euonia.utility.Assert;
  * @param <R> 响应类型
  * @author damon(zhaorong@outlook.com)
  */
-public final class CallBuilder<T extends Request<R>, R> {
+public final class CallBuilder<T, R> {
 
     private final Bus bus;
     private final T request;
@@ -57,13 +57,6 @@ public final class CallBuilder<T extends Request<R>, R> {
     public CallBuilder<T, R> withBehavior(Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
         Assert.notNull(behavior, "behavior is null");
         this.behavior = behavior;
-        return this;
-    }
-
-    /**
-     * 指定调用选项。
-     */
-    public CallBuilder<T, R> withOptions(CallOptions options) {
         return this;
     }
 

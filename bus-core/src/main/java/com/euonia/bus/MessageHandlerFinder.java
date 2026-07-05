@@ -1,13 +1,16 @@
 package com.euonia.bus;
 
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import com.euonia.bus.annotation.Channel;
 import com.euonia.bus.annotation.Subscribe;
-import com.euonia.bus.message.MessageCache;
+import com.euonia.bus.contract.Message;
+import com.euonia.core.PriorityValueFinder;
 import com.euonia.reflection.ClassScanner;
+import com.euonia.utility.StringUtility;
 
 /**
  * 消息处理器查找器，负责扫描指定包或处理器类型并生成 {@link ChannelRegistration} 列表。
@@ -21,13 +24,11 @@ import com.euonia.reflection.ClassScanner;
  * @author damon(zhaorong@outlook.com)
  */
 public class MessageHandlerFinder {
-
     /**
      * 扫描指定包下的所有类，查找其中带有 {@link Subscribe} 注解的方法，
      * 并为每个匹配的方法生成一个 {@link ChannelRegistration}。
      *
      * @param packages 要扫描的包名数组
-     * @return 找到的处理器注册信息列表
      */
     public static void find(Delegate delegate, String... packages) {
         for (var pkg : packages) {
@@ -69,33 +70,7 @@ public class MessageHandlerFinder {
             return;
         }
 
-        var methods = Arrays.stream(handlerType.getDeclaredMethods())
-                            .filter(m -> m.getAnnotation(Subscribe.class) != null)
-                            .toList();
-
-        if (!methods.isEmpty()) {
-            for (var method : methods) {
-                var parameters = method.getParameters();
-                if (parameters.length < 1) {
-                    throw new IllegalArgumentException("Method " + method.getName() + " in class " + handlerType.getName() + " must have at least one parameter.");
-                }
-                var firstParam = parameters[0];
-                if (parameters.length == 2) {
-                    if (!MessageContext.class.isAssignableFrom(parameters[1].getType())) {
-                        throw new IllegalArgumentException("Second parameter of method " + method.getName() + " in class " + handlerType.getName() + " must be of type MessageContext or its subtype.");
-                    }
-                }
-                var annotation = method.getAnnotation(Subscribe.class);
-                var channel = annotation.value();
-                if (channel == null || channel.isBlank()) {
-                    if (firstParam.getType().isPrimitive()) {
-                        throw new IllegalArgumentException("First parameter of method " + method.getName() + " in class " + handlerType.getName() + " cannot be a primitive type when channel is not specified.");
-                    }
-                    channel = MessageCache.getInstance().getOrAddChannel(firstParam.getType());
-                }
-                delegate.next(channel, firstParam.getType(), new ChannelHandler(handlerType, method, null));
-            }
-        }
+        var declaredMethods = new java.util.ArrayList<>(List.of(handlerType.getDeclaredMethods()));
 
         var interfaces = Arrays.stream(handlerType.getGenericInterfaces())
                                .filter(i -> i instanceof ParameterizedType pt && pt.getRawType() == Handler.class)
@@ -107,11 +82,65 @@ public class MessageHandlerFinder {
                 var messageType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
                 try {
                     var method = handlerType.getMethod("handle", messageType, MessageContext.class);
-                    var channel = MessageCache.getInstance().getOrAddChannel(messageType);
+                    var annotation = method.getAnnotation(Subscribe.class);
+                    var channel = annotation == null ? messageType.getName() : annotation.value();
                     delegate.next(channel, messageType, new ChannelHandler(handlerType, method, null));
+                    declaredMethods.remove(method); // 移除已处理的方法，避免重复注册
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
+            }
+        }
+
+        if (!declaredMethods.isEmpty()) {
+            for (var method : declaredMethods) {
+
+                // 检查方法是否带有 @Subscribe 注解，带有注解的方法将被注册为消息处理器，未带注解的方法将被忽略
+                // 如果方法带有 @Subscribe 注解，则必须至少有一个参数，且第一个参数为消息类型，第二个参数（如果存在）必须为 MessageContext 类型
+                // 方法对应的通道名将按以下优先级查找：
+                // 1. 优先从方法的 @Subscribe 注解中获取通道名
+                // 2. 其次从参数的 @Channel 注解中获取通道名
+                // 3. 最后从参数类型的 @Channel 注解中获取通道名
+                // 4. 如果以上都未指定通道名，则使用参数类型的全限定类名作为通道名，此时参数类型必须实现 Message 接口，否则抛出异常
+
+                var subscribeAnnotation = method.getAnnotation(Subscribe.class);
+
+                if (Objects.isNull(subscribeAnnotation)) {
+                    continue;
+                }
+
+                var parameters = method.getParameters();
+                if (parameters.length < 1) {
+                    throw new IllegalStateException(String.format("方法 %s.%s 必须包含至少一个参数", handlerType.getName(), method.getName()));
+                }
+                var messageParameter = parameters[0];
+                if (parameters.length == 2 && parameters[1].getType() != MessageContext.class) {
+                    throw new IllegalStateException(String.format("方法 %s.%s 的第2个参数必须是 MessageContext 类型", handlerType.getName(), method.getName()));
+                }
+
+                String channel = PriorityValueFinder.find(queue -> {
+                    // 1. 优先从方法的 @Subscribe 注解中获取通道名
+                    queue.add(subscribeAnnotation::value, 1);
+                    // 2. 其次从参数的 @Channel 注解中获取通道名
+                    queue.add(() -> {
+                        var annotation = messageParameter.getAnnotation(Channel.class);
+                        return annotation == null ? null : annotation.value();
+                    }, 2);
+                    // 3. 最后从参数类型的 @Channel 注解中获取通道名
+                    queue.add(() -> {
+                        var annotation = messageParameter.getType().getAnnotation(Channel.class);
+                        return annotation == null ? null : annotation.value();
+                    }, 3);
+                }, value -> !StringUtility.isNullOrBlank(value), null);
+
+                if (StringUtility.isNullOrBlank(channel)) {
+                    if (!Message.class.isAssignableFrom(messageParameter.getType())) {
+                        throw new IllegalStateException("如果 @Subscribe 注解和 @Channel 注解都未指定通道名，则参数类型 " + messageParameter.getType().getName() + " 必须实现 Message 接口。");
+                    }
+                    channel = messageParameter.getType().getName();
+                }
+
+                delegate.next(channel, messageParameter.getType(), new ChannelHandler(handlerType, method, null));
             }
         }
     }

@@ -21,12 +21,12 @@ class DefaultConfiguratorTest {
         @DisplayName("should configure convention via callback")
         void shouldConfigureConvention() {
             var configurator = new DefaultConfigurator();
-            configurator.setConvention(c -> c.evaluateUnicast(t -> t == String.class));
+            configurator.setConvention(c -> c.evaluateUnicast(channel -> "my-unicast-channel".equals(channel)));
 
             var convention = configurator.getConventionBuilder().getConvention();
 
-            assertThat(convention.isUnicastType(String.class)).isTrue();
-            assertThat(convention.isUnicastType(Integer.class)).isFalse();
+            assertThat(convention.isUnicast("my-unicast-channel")).isTrue();
+            assertThat(convention.isUnicast("other-channel")).isFalse();
         }
     }
 
@@ -60,19 +60,6 @@ class DefaultConfiguratorTest {
             var configurator = new DefaultConfigurator();
 
             assertThatThrownBy(() -> configurator.setStrategy("test", null))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("handler registration")
-    class HandlerRegistrationTests {
-
-        @Test
-        @DisplayName("should reject null registration")
-        void shouldRejectNullRegistration() {
-            var configurator = new DefaultConfigurator();
-            assertThatThrownBy(() -> configurator.registerHandlers((HandlerRegistration) null))
                 .isInstanceOf(IllegalArgumentException.class);
         }
     }

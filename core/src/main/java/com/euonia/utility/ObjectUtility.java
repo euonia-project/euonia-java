@@ -75,11 +75,11 @@ public abstract class ObjectUtility {
      * <p>
      * 参数类型从参数实例中自动推断。如果方法未找到或调用失败，返回 {@code null}。
      *
-     * @param <T>         期望的返回类型
-     * @param returnType  返回类型的 {@link Class}
-     * @param obj         要调用方法的对象
-     * @param methodName  方法名
-     * @param args        方法参数
+     * @param <T>        期望的返回类型
+     * @param returnType 返回类型的 {@link Class}
+     * @param obj        要调用方法的对象
+     * @param methodName 方法名
+     * @param args       方法参数
      * @return 强制转换为指定类型的方法返回值，如果方法不存在或调用失败则返回 {@code null}
      */
     public static <T> T invokeMethod(Class<T> returnType, Object obj, String methodName, Object... args) {
@@ -92,8 +92,8 @@ public abstract class ObjectUtility {
             try {
                 return returnType.cast(method.invoke(obj, args));
             } catch (IllegalAccessException | InvocationTargetException exception) {
-                return null;
+                throw new RuntimeException("Failed to invoke method: " + methodName, exception);
             }
-        }).orElse(null);
+        }).orElseThrow(() -> new RuntimeException("Method not found: " + methodName));
     }
 }

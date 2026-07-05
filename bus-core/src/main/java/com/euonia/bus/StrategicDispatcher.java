@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.euonia.bus.exception.MessageTypeException;
+import com.euonia.bus.message.MessageCache;
 
 /**
  * 基于已配置的策略和约定为消息类型确定传输的分发器。
@@ -54,7 +55,7 @@ public class StrategicDispatcher implements Dispatcher {
             case 1 -> {
             }
             default -> {
-                if (!configurator.getConvention().isMulticastType(messageType)) {
+                if (!configurator.getConvention().isMulticast(MessageCache.getInstance().getOrAddChannel(messageType))) {
                     throw new MessageTypeException("The message type is not identified as a multicast type, but multiple transport strategies are configured for it. Message type: " + messageType.getName());
                 }
             }

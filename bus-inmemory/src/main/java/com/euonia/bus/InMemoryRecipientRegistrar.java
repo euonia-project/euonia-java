@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.euonia.bus.convention.MessageConvention;
+import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.messenger.StrongReferenceMessenger;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.bus.strategy.TransportStrategy;
@@ -83,14 +84,14 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
 
             InMemoryRecipient recipient;
 
-            if (convention.isUnicastType(messageType)) {
+            if (convention.isUnicast(channel)) {
                 recipient = getRecipient(InMemoryUnicastRecipient.class);
-            } else if (convention.isMulticastType(messageType)) {
+            } else if (convention.isMulticast(channel)) {
                 recipient = getRecipient(InMemoryMulticastRecipient.class);
-            } else if (convention.isRequestType(messageType)) {
+            } else if (convention.isRequest(channel)) {
                 recipient = getRecipient(InMemoryRequestRecipient.class);
             } else {
-                throw new IllegalStateException("The message type is not identified as unicast or multicast type. Message type: " + messageType.getName());
+                throw new MessageConventionException("The message type is not identified as unicast, multicast, or request type. Message type: " + messageType.getName());
             }
 
             recipient.setDeadLetterOptions(options);

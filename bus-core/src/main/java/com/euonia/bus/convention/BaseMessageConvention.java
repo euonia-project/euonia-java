@@ -58,43 +58,43 @@ public class BaseMessageConvention implements MessageConvention {
     /**
      * 判断指定的类型是否为单播消息类型。
      *
-     * @param messageType 待检查的类型，不能为 {@code null}
+     * @param channel 待检查的类型，不能为 {@code null}
      * @return 若任一已注册的约定将该类型归类为单播，返回 {@code true}
-     * @throws NullPointerException 若 {@code messageType} 为 {@code null}
+     * @throws NullPointerException 若 {@code channel} 为 {@code null}
      */
     @Override
-    public boolean isUnicastType(Class<?> messageType) {
-        Objects.requireNonNull(messageType, "messageType cannot be null.");
+    public boolean isUnicast(String channel) {
+        Objects.requireNonNull(channel, "channel cannot be null.");
 
-        return unicastConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isUnicastType(type)));
+        return unicastConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isUnicast(type)));
     }
 
     /**
      * 判断指定的类型是否为组播消息类型。
      *
-     * @param messageType 待检查的类型，不能为 {@code null}
+     * @param channel 待检查的类型，不能为 {@code null}
      * @return 若任一已注册的约定将该类型归类为组播，返回 {@code true}
-     * @throws NullPointerException 若 {@code messageType} 为 {@code null}
+     * @throws NullPointerException 若 {@code channel} 为 {@code null}
      */
     @Override
-    public boolean isMulticastType(Class<?> messageType) {
-        Objects.requireNonNull(messageType, "messageType cannot be null.");
+    public boolean isMulticast(String channel) {
+        Objects.requireNonNull(channel, "channel cannot be null.");
 
-        return multicastConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isMulticastType(type)));
+        return multicastConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isMulticast(type)));
     }
 
     /**
      * 判断指定的类型是否为请求消息类型。
      *
-     * @param messageType 待检查的类型，不能为 {@code null}
+     * @param channel 待检查的类型，不能为 {@code null}
      * @return 若任一已注册的约定将该类型归类为请求，返回 {@code true}
-     * @throws NullPointerException 若 {@code messageType} 为 {@code null}
+     * @throws NullPointerException 若 {@code channel} 为 {@code null}
      */
     @Override
-    public boolean isRequestType(Class<?> messageType) {
-        Objects.requireNonNull(messageType, "messageType cannot be null.");
+    public boolean isRequest(String channel) {
+        Objects.requireNonNull(channel, "channel cannot be null.");
 
-        return requestConventionCache.apply(messageType, type -> conventions.stream().anyMatch(c -> c.isRequestType(type)));
+        return requestConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isRequest(type)));
     }
 
     /**
@@ -114,7 +114,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为单播的谓词
      */
-    public void defineUnicastTypeConvention(Predicate<Class<?>> convention) {
+    public void defineUnicastTypeConvention(Predicate<String> convention) {
         defaultConvention.setUnicastPredicate(convention);
     }
 
@@ -123,7 +123,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为组播的谓词
      */
-    public void defineMulticastTypeConvention(Predicate<Class<?>> convention) {
+    public void defineMulticastTypeConvention(Predicate<String> convention) {
         defaultConvention.setMulticastPredicate(convention);
     }
 
@@ -132,7 +132,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 判断指定类型是否为请求的谓词
      */
-    public void defineRequestTypeConvention(Predicate<Class<?>> convention) {
+    public void defineRequestTypeConvention(Predicate<String> convention) {
         defaultConvention.setRequestPredicate(convention);
     }
 
@@ -142,7 +142,7 @@ public class BaseMessageConvention implements MessageConvention {
      *
      * @param convention 将类型分类为约定类别的函数
      */
-    public void defineTypeConvention(Function<Class<?>, MessageConventionType> convention) {
+    public void defineTypeConvention(Function<String, MessageConventionType> convention) {
         Objects.requireNonNull(convention, "convention cannot be null.");
 
         defineUnicastTypeConvention(type -> convention.apply(type) == MessageConventionType.UNICAST);
@@ -194,7 +194,7 @@ public class BaseMessageConvention implements MessageConvention {
         /**
          * 存储缓存结果的并发哈希映射
          */
-        private final ConcurrentHashMap<Class<?>, Boolean> cache = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, Boolean> cache = new ConcurrentHashMap<>();
 
         /**
          * 返回给定类型的缓存结果，若首次访问则使用提供的函数计算并存储。
@@ -203,7 +203,7 @@ public class BaseMessageConvention implements MessageConvention {
          * @param convention 缓存未命中时用于计算结果的函数
          * @return 缓存或新计算的布尔值
          */
-        boolean apply(Class<?> type, Predicate<Class<?>> convention) {
+        boolean apply(String type, Predicate<String> convention) {
             return cache.computeIfAbsent(type, convention::test);
         }
 
