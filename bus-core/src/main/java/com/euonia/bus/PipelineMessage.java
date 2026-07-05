@@ -1,4 +1,4 @@
-package com.euonia.bus.message;
+package com.euonia.bus;
 
 import java.util.concurrent.CompletableFuture;
 

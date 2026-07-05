@@ -12,7 +12,6 @@ import com.euonia.bus.contract.Request;
 import com.euonia.bus.exception.MessageConventionException;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.message.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.ExtendableOptions;
 import com.euonia.bus.options.PublishOptions;
@@ -309,7 +308,7 @@ public final class MessageBus implements Bus {
     private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
 
         // 优先使用 options 中的配置，如果未设置，则使用 configurator 的全局配置
-        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() != null ? (boolean)options.isEnablePipelineBehaviors() : configurator.isEnablePipelineBehaviors();
+        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() != null ? options.isEnablePipelineBehaviors() : configurator.isEnablePipelineBehaviors();
 
         if (!isEnablePipelineBehaviors) {
             return CompletableFuture.completedFuture(pack);
