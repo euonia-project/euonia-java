@@ -1,5 +1,6 @@
 package com.euonia.bus;
 
+import com.euonia.bus.handle.DefaultHandlerContext;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.utility.Assert;

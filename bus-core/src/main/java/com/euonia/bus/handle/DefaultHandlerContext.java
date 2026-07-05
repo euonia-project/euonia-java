@@ -1,14 +1,13 @@
-package com.euonia.bus;
+package com.euonia.bus.handle;
 
 import java.lang.reflect.InvocationTargetException;
 
+import com.euonia.bus.*;
 import com.euonia.bus.contract.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
 import com.euonia.bus.inbox.InboxStore;
-import com.euonia.bus.message.MessageHandlerContext;
-import com.euonia.bus.message.MessageHandlerFactory;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
@@ -26,7 +25,7 @@ import java.util.logging.Logger;
  *
  * @author damon(zhaorong@outlook.com)
  */
-final class DefaultHandlerContext implements HandlerContext {
+public final class DefaultHandlerContext implements HandlerContext {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultHandlerContext.class.getName());
 

@@ -1,4 +1,4 @@
-package com.euonia.bus;
+package com.euonia.bus.handle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.euonia.bus.MessageContext;
+import com.euonia.bus.MessageEnvelope;
 import com.euonia.bus.inbox.InboxStore;
-import com.euonia.bus.message.MessageHandlerContext;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.pipeline.DefaultPipelineFactory;
 import com.euonia.pipeline.Pipeline;

@@ -1,5 +1,6 @@
-package com.euonia.bus;
+package com.euonia.bus.handle;
 
+import com.euonia.bus.MessageEnvelope;
 import com.euonia.bus.inbox.InboxStore;
 import com.euonia.pipeline.PipelineBehavior;
 import com.euonia.pipeline.PipelineDelegate;
@@ -7,7 +8,7 @@ import com.euonia.tuple.Duet;
 
 import java.util.concurrent.CompletionStage;
 
-class InboxPipelineBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
+final class InboxPipelineBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
     private final InboxStore inboxStore;
 
     InboxPipelineBehavior(InboxStore inboxStore) {

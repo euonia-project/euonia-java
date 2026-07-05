@@ -1,4 +1,4 @@
-package com.euonia.bus.message;
+package com.euonia.bus.handle;
 
 import com.euonia.reflection.ServiceProvider;
 

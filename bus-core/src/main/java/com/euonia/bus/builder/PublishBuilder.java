@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
-import com.euonia.bus.message.PipelineMessage;
+import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.options.PublishOptions;
 
 /**
