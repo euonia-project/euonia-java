@@ -29,7 +29,7 @@ public final class DefaultHandlerContext implements HandlerContext {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultHandlerContext.class.getName());
 
-    private final ConcurrentMap<String, List<MessageHandlerContext>> handlerContainer = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<HandlerRegistration>> handlerContainer = new ConcurrentHashMap<>();
     private final SubmissionPublisher<MessageSubscribedEvent> publisher = new SubmissionPublisher<>();
     private final MessageConvention convention;
     private final InboxStore inboxStore;
@@ -93,7 +93,7 @@ public final class DefaultHandlerContext implements HandlerContext {
      */
     public <M extends Message, R, H extends Handler<M, R>> void register(String channel, Class<M> messageType, Class<H> handlerType) {
         @SuppressWarnings("unchecked")
-        MessageHandlerFactory factory = sp -> {
+        HandlerFactory factory = sp -> {
             var handler = sp.getRequiredService(handlerType);
             return (message, context) -> {
                 @SuppressWarnings("unchecked")
@@ -102,9 +102,9 @@ public final class DefaultHandlerContext implements HandlerContext {
             };
         };
 
-        var factoryContext = new MessageHandlerContext(handlerType, factory);
+        var registration = new HandlerRegistration(handlerType, factory);
 
-        concurrentDictionarySafeRegister(channel, factoryContext);
+        concurrentDictionarySafeRegister(channel, registration);
         publisher.submit(new MessageSubscribedEvent(channel, messageType, handlerType));
     }
 
@@ -120,7 +120,7 @@ public final class DefaultHandlerContext implements HandlerContext {
         var method = channelHandler.method();
         method.setAccessible(true);
 
-        MessageHandlerFactory factory = sp -> {
+        HandlerFactory factory = sp -> {
             var handler = channelHandler.instance() == null ? sp.getServiceOrCreate(channelHandler.handlerType()) : channelHandler.instance();
             return (message, context) -> {
                 var args = resolveArguments(method, message, context);
@@ -133,9 +133,9 @@ public final class DefaultHandlerContext implements HandlerContext {
             };
         };
 
-        var factoryContext = new MessageHandlerContext(channelHandler.handlerType(), factory);
+        var registration = new HandlerRegistration(channelHandler.handlerType(), factory);
 
-        concurrentDictionarySafeRegister(channel, factoryContext);
+        concurrentDictionarySafeRegister(channel, registration);
         publisher.submit(new MessageSubscribedEvent(channel, null, channelHandler.handlerType()));
     }
 
@@ -158,24 +158,24 @@ public final class DefaultHandlerContext implements HandlerContext {
 
             if (!convention.isMulticast(channel)) {
                 // 单个处理器 — 支持请求/响应模式
-                var factory = factories.get(0);
+                var registration = factories.get(0);
 
                 try {
-                    var result = idempotentHandler.executeHandler(factory, envelope, context);
+                    var result = idempotentHandler.executeHandler(registration, envelope, context);
                     future.complete(result);
                 } catch (Exception exception) {
                     future.completeExceptionally(exception);
                 }
             } else {
                 var handlers = factories.stream()
-                                        .map(factory -> factory.handlerType().getTypeName())
+                                        .map(reg -> reg.handlerType().getTypeName())
                                         .toList();
                 if (inboxStore != null && !inboxStore.insert(channel, envelope, handlers)) {
                     future.complete(null);
                 } else {
                     // 多个处理器 — 并行执行所有（多播场景）
                     var futures = factories.stream()
-                                           .map(factory -> idempotentHandler.executeHandlerAsync(factory, envelope, context))
+                                           .map(reg -> idempotentHandler.executeHandlerAsync(reg, envelope, context))
                                            .toArray(CompletableFuture[]::new);
 
                     CompletableFuture.allOf(futures).whenComplete((result, exception) -> {
@@ -214,10 +214,10 @@ public final class DefaultHandlerContext implements HandlerContext {
      * @param key   要注册值所用的键
      * @param value 要添加到给定键对应列表中的值
      */
-    private void concurrentDictionarySafeRegister(String key, MessageHandlerContext value) {
+    private void concurrentDictionarySafeRegister(String key, HandlerRegistration value) {
         handlerContainer.compute(key, (k, list) -> {
             if (list == null) {
-                var newList = new CopyOnWriteArrayList<MessageHandlerContext>();
+                var newList = new CopyOnWriteArrayList<HandlerRegistration>();
                 newList.add(value);
                 return newList;
             }
