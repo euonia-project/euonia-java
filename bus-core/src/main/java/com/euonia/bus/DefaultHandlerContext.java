@@ -7,8 +7,8 @@ import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
 import com.euonia.bus.inbox.InboxStore;
+import com.euonia.bus.message.MessageHandlerContext;
 import com.euonia.bus.message.MessageHandlerFactory;
-import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;
@@ -30,11 +30,11 @@ final class DefaultHandlerContext implements HandlerContext {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultHandlerContext.class.getName());
 
-    private final ConcurrentMap<String, List<MessageHandlerFactory>> handlerContainer = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<MessageHandlerContext>> handlerContainer = new ConcurrentHashMap<>();
     private final SubmissionPublisher<MessageSubscribedEvent> publisher = new SubmissionPublisher<>();
-    private final ServiceProvider provider;
     private final MessageConvention convention;
     private final InboxStore inboxStore;
+    private final IdempotentHandler idempotentHandler;
 
     /**
      * 初始化 {@link DefaultHandlerContext} 的新实例。
@@ -42,11 +42,13 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param provider 用于解析处理器和其他服务的服务提供者
      */
     public DefaultHandlerContext(ServiceProvider provider) {
-        this.provider = provider;
-        this.convention = this.provider.getService(MessageConvention.class)
-                                       .orElse(new BaseMessageConvention());
-        this.inboxStore = this.provider.getService(InboxStore.class)
-                                       .orElse(null);
+        this.convention = provider.getService(MessageConvention.class)
+                                  .orElse(new BaseMessageConvention());
+        this.inboxStore = provider.getService(InboxStore.class)
+                                  .orElse(null);
+        this.idempotentHandler = new IdempotentHandler(provider, handlerContainer);
+
+        this.idempotentHandler.start();
     }
 
     // region 事件订阅
@@ -95,15 +97,15 @@ final class DefaultHandlerContext implements HandlerContext {
         MessageHandlerFactory factory = sp -> {
             var handler = sp.getRequiredService(handlerType);
             return (message, context) -> {
-                return new IdempotentHandler(channel, (msg, ctx) -> handler.handle((M) msg, ctx))
-                    .withInboxStore(inboxStore)
-                    .withHandler(handlerType.getName())
-                    .withMethod("handle")
-                    .handle(message, context);
+                @SuppressWarnings("unchecked")
+                var result = handler.handle((M) message, context);
+                return result;
             };
         };
 
-        concurrentDictionarySafeRegister(channel, factory);
+        var factoryContext = new MessageHandlerContext(handlerType, factory);
+
+        concurrentDictionarySafeRegister(channel, factoryContext);
         publisher.submit(new MessageSubscribedEvent(channel, messageType, handlerType));
     }
 
@@ -121,21 +123,20 @@ final class DefaultHandlerContext implements HandlerContext {
 
         MessageHandlerFactory factory = sp -> {
             var handler = channelHandler.instance() == null ? sp.getServiceOrCreate(channelHandler.handlerType()) : channelHandler.instance();
-            return (message, context) -> new IdempotentHandler(channel, (msg, ctx) -> {
-                var args = resolveArguments(method, msg, ctx);
+            return (message, context) -> {
+                var args = resolveArguments(method, message, context);
                 try {
                     return method.invoke(handler, args);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     var cause = unwrapCause(e);
                     throw new RuntimeException(cause);
                 }
-            }).withInboxStore(inboxStore)
-              .withHandler(channelHandler.handlerType().getName())
-              .withMethod(method.getName())
-              .handle(message, context);
+            };
         };
 
-        concurrentDictionarySafeRegister(channel, factory);
+        var factoryContext = new MessageHandlerContext(channelHandler.handlerType(), factory);
+
+        concurrentDictionarySafeRegister(channel, factoryContext);
         publisher.submit(new MessageSubscribedEvent(channel, null, channelHandler.handlerType()));
     }
 
@@ -148,8 +149,6 @@ final class DefaultHandlerContext implements HandlerContext {
         var future = new CompletableFuture<>();
 
         try {
-            var message = envelope.getPayload();
-
             var factories = handlerContainer.get(channel);
 
             if (factories == null || factories.isEmpty()) {
@@ -158,29 +157,36 @@ final class DefaultHandlerContext implements HandlerContext {
 
             LOGGER.info(() -> String.format("Message '%s' is being handled on channel %s with %d handler(s)", context.getMessageId(), channel, factories.size()));
 
-            if (!convention.isMulticastType(message.getClass())) {
+            if (!convention.isMulticast(channel)) {
                 // 单个处理器 — 支持请求/响应模式
                 var factory = factories.get(0);
 
                 try {
-                    var result = executeHandler(factory, message, context);
+                    var result = idempotentHandler.executeHandler(factory, envelope, context);
                     future.complete(result);
                 } catch (Exception exception) {
                     future.completeExceptionally(exception);
                 }
             } else {
-                // 多个处理器 — 并行执行所有（多播场景）
-                var futures = factories.stream()
-                                       .map(factory -> executeHandlerAsync(factory, message, context).thenAccept(result -> { /* 多播 — 结果被丢弃 */ }))
-                                       .toArray(CompletableFuture[]::new);
+                var handlers = factories.stream()
+                                        .map(factory -> factory.handlerType().getTypeName())
+                                        .toList();
+                if (inboxStore != null && !inboxStore.insert(channel, envelope, handlers)) {
+                    future.complete(null);
+                } else {
+                    // 多个处理器 — 并行执行所有（多播场景）
+                    var futures = factories.stream()
+                                           .map(factory -> idempotentHandler.executeHandlerAsync(factory, envelope, context))
+                                           .toArray(CompletableFuture[]::new);
 
-                CompletableFuture.allOf(futures).whenComplete((result, exception) -> {
-                    if (exception != null) {
-                        future.completeExceptionally(exception);
-                    } else {
-                        future.complete(result);
-                    }
-                });
+                    CompletableFuture.allOf(futures).whenComplete((result, exception) -> {
+                        if (exception != null) {
+                            future.completeExceptionally(exception);
+                        } else {
+                            future.complete(result);
+                        }
+                    });
+                }
             }
         } catch (IllegalArgumentException | IllegalStateException exception) {
             future.completeExceptionally(exception);
@@ -196,46 +202,6 @@ final class DefaultHandlerContext implements HandlerContext {
         });
     }
 
-    /**
-     * 在给定的服务范围内异步执行单个处理器工厂。
-     * 对于请求/单播消息类型，异常会被重新抛出。
-     * 对于多播消息类型，异常会被吞没并作为结果返回。
-     *
-     * @param factory 处理器工厂
-     * @param message 消息对象
-     * @param context 消息上下文
-     * @return 异步处理结果
-     */
-    private CompletableFuture<Object> executeHandlerAsync(MessageHandlerFactory factory, Object message, MessageContext context) {
-
-        Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
-        return CompletableFuture.supplyAsync(() -> executeHandler(factory, message, context), customExecutor);
-    }
-
-    /**
-     * 在给定的服务范围内执行单个处理器工厂。
-     * 对于请求/单播消息类型，异常会被重新抛出。
-     * 对于多播消息类型，异常会被吞没并作为结果返回。
-     *
-     * @param factory 处理器工厂
-     * @param message 消息对象
-     * @param context 消息上下文
-     * @return 处理结果
-     */
-    private Object executeHandler(MessageHandlerFactory factory, Object message, MessageContext context) {
-        try {
-            var handler = factory.createHandler(provider);
-            return handler.handle(message, context);
-        } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, exception, () -> "Error occurred while handling message " + context.getMessageId());
-            if (!convention.isMulticastType(message.getClass())) {
-                // 对于请求/响应和单播消息类型，异常会被重新抛出，以便调用者可以处理它。
-                throw new RuntimeException(exception);
-            }
-            return exception;
-        }
-    }
-
     // endregion
 
     // region 内部辅助方法
@@ -249,10 +215,10 @@ final class DefaultHandlerContext implements HandlerContext {
      * @param key   要注册值所用的键
      * @param value 要添加到给定键对应列表中的值
      */
-    private void concurrentDictionarySafeRegister(String key, MessageHandlerFactory value) {
+    private void concurrentDictionarySafeRegister(String key, MessageHandlerContext value) {
         handlerContainer.compute(key, (k, list) -> {
             if (list == null) {
-                var newList = new CopyOnWriteArrayList<MessageHandlerFactory>();
+                var newList = new CopyOnWriteArrayList<MessageHandlerContext>();
                 newList.add(value);
                 return newList;
             }
