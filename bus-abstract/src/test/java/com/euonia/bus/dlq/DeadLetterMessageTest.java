@@ -1,11 +1,12 @@
-package com.euonia.bus;
+package com.euonia.bus.dlq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.euonia.bus.dlq.DeadLetterMessage;
+import com.euonia.bus.MessageEnvelope;
+import com.euonia.bus.MessageMetadata;
 
 /**
  * 测试 {@link DeadLetterMessage}。
