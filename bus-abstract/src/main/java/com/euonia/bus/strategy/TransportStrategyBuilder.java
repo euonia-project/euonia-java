@@ -5,9 +5,9 @@ import java.util.function.Predicate;
 public interface TransportStrategyBuilder {
     TransportStrategy getStrategy();
 
-    TransportStrategyBuilder evaluateOutgoing(Predicate<Class<?>> predicate);
+    TransportStrategyBuilder evaluateOutgoing(Predicate<String> predicate);
 
-    TransportStrategyBuilder evaluateIncoming(Predicate<Class<?>> predicate);
+    TransportStrategyBuilder evaluateIncoming(Predicate<String> predicate);
 
     <S extends TransportStrategy> TransportStrategyBuilder add(S strategy);
 

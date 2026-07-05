@@ -10,12 +10,20 @@ public class LocalMessageTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
-        return messageType.getAnnotation(LocalMessage.class) != null;
+    public boolean allowOutgoing(String channel) {
+        try {
+            return Class.forName(channel).getAnnotation(LocalMessage.class) != null;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
-        return messageType.getAnnotation(LocalMessage.class) != null;
+    public boolean allowIncoming(String channel) {
+        try {
+            return Class.forName(channel).getAnnotation(LocalMessage.class) != null;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 }

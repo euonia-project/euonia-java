@@ -7,10 +7,10 @@ import java.util.List;
  */
 public interface Dispatcher {
     /**
-     * Determine the transport(s) to which the message of the given type should be dispatched.
+     * Determine the transport(s) to which the message of the given channel should be dispatched.
      *
-     * @param messageType the type of the message
+     * @param channel the channel of the message
      * @return a list of transport names
      */
-    List<String> determine(Class<?> messageType);
+    List<String> determine(String channel);
 }

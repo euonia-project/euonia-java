@@ -12,18 +12,18 @@ public interface TransportStrategy {
     String getName();
 
     /**
-     * Determines if the transport strategy can handle outgoing messages of the specified type.
+     * Determines if the transport strategy allows outgoing messages on the specified channel.
      *
-     * @param messageType the type of the message
-     * @return true if the transport strategy can handle outgoing messages of the specified type, false otherwise
+     * @param channel the channel name
+     * @return true if the transport strategy allows outgoing messages on the specified channel, false otherwise
      */
-    boolean outgoing(Class<?> messageType);
+    boolean allowOutgoing(String channel);
 
     /**
-     * Determines if the transport strategy can handle incoming messages of the specified type.
+     * Determines if the transport strategy allows incoming messages on the specified channel.
      *
-     * @param messageType the type of the message
-     * @return true if the transport strategy can handle incoming messages of the specified type, false otherwise
+     * @param channel the channel name
+     * @return true if the transport strategy allows incoming messages on the specified channel, false otherwise
      */
-    boolean incoming(Class<?> messageType);
+    boolean allowIncoming(String channel);
 }

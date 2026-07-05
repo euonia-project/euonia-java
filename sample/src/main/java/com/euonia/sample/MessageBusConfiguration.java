@@ -87,13 +87,13 @@ public class MessageBusConfiguration {
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("InMemoryMessageBusTransport"));
-                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
-                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Command"));
+                                            s.evaluateOutgoing(t -> t.startsWith(packageName) && t.endsWith("Command"));
+                                            s.evaluateIncoming(t -> t.startsWith(packageName) && t.endsWith("Command"));
                                         })
                                         .setStrategy("RabbitMqMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("RabbitMqMessageBusTransport"));
-                                            s.evaluateIncoming(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
-                                            s.evaluateOutgoing(t -> t.getPackageName().startsWith(packageName) && t.getSimpleName().endsWith("Eto"));
+                                            s.evaluateIncoming(t -> t.startsWith(packageName) && t.endsWith("Eto"));
+                                            s.evaluateOutgoing(t -> t.startsWith(packageName) && t.endsWith("Eto"));
                                         })
                                         .registerChannel(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"))

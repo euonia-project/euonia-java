@@ -8,12 +8,12 @@ public class DefaultTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
+    public boolean allowOutgoing(String channel) {
         return false;
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
+    public boolean allowIncoming(String channel) {
         return false;
     }
 }

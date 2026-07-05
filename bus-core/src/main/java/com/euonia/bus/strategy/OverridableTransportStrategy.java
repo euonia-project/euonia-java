@@ -5,8 +5,8 @@ import java.util.function.Predicate;
 class OverridableTransportStrategy implements TransportStrategy {
 
     private final TransportStrategy delegate;
-    private Predicate<Class<?>> outgoingPredicate;
-    private Predicate<Class<?>> incomingPredicate;
+    private Predicate<String> outgoingPredicate;
+    private Predicate<String> incomingPredicate;
 
     OverridableTransportStrategy(TransportStrategy delegate) {
         this.delegate = delegate;
@@ -18,28 +18,28 @@ class OverridableTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
+    public boolean allowOutgoing(String channel) {
         if (outgoingPredicate == null) {
-            return delegate.outgoing(messageType);
+            return delegate.allowOutgoing(channel);
         } else {
-            return outgoingPredicate.test(messageType);
+            return outgoingPredicate.test(channel);
         }
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
+    public boolean allowIncoming(String channel) {
         if (incomingPredicate == null) {
-            return delegate.incoming(messageType);
+            return delegate.allowIncoming(channel);
         } else {
-            return incomingPredicate.test(messageType);
+            return incomingPredicate.test(channel);
         }
     }
 
-    void setOutgoingPredicate(Predicate<Class<?>> outgoingPredicate) {
+    void setOutgoingPredicate(Predicate<String> outgoingPredicate) {
         this.outgoingPredicate = outgoingPredicate;
     }
 
-    void setIncomingPredicate(Predicate<Class<?>> incomingPredicate) {
+    void setIncomingPredicate(Predicate<String> incomingPredicate) {
         this.incomingPredicate = incomingPredicate;
     }
 }

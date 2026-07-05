@@ -10,12 +10,20 @@ public class DistributedMessageTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
-        return messageType.getAnnotation(DistributedMessage.class) != null;
+    public boolean allowOutgoing(String channel) {
+        try {
+            return Class.forName(channel).getAnnotation(DistributedMessage.class) != null;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
-        return messageType.getAnnotation(DistributedMessage.class) != null;
+    public boolean allowIncoming(String channel) {
+        try {
+            return Class.forName(channel).getAnnotation(DistributedMessage.class) != null;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 }

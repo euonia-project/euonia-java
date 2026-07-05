@@ -10,11 +10,11 @@ import com.euonia.utility.Assert;
 
 /**
  * Represents a composite transport strategy that aggregates multiple {@link TransportStrategy} instances
- * and caches the results of outgoing and incoming message type evaluations using {@link ConcurrentHashMap}.
+ * and caches the results of outgoing and incoming channel evaluations using {@link ConcurrentHashMap}.
  * <p>
- * Each message type (outgoing, incoming) has its own dedicated cache backed by {@code ConcurrentHashMap&lt;Class&lt;?&gt;, Boolean&gt;}. Since {@link Class} inherits identity-based {@code hashCode()} / {@code equals()} from {@link Object}, the cache key behaves equivalently to .NET's {@code RuntimeTypeHandle} — lightweight, pointer-level comparison with no heap allocation overhead per lookup.
+ * Each channel (outgoing, incoming) has its own dedicated cache backed by {@code ConcurrentHashMap&lt;String, Boolean&gt;}.
  * <p>
- * The composite strategy allows for flexible configuration by enabling the addition of custom transport strategies and the definition of custom predicates for determining outgoing and incoming message types. The default strategy can be overridden to provide custom logic for classifying message types without needing to implement a full {@link TransportStrategy}.
+ * The composite strategy allows for flexible configuration by enabling the addition of custom transport strategies and the definition of custom predicates for determining outgoing and incoming channels. The default strategy can be overridden to provide custom logic for classifying channels without needing to implement a full {@link TransportStrategy}.
  * <p> This design promotes extensibility and performance by leveraging caching and a modular approach to strategy composition.
  */
 public class BaseTransportStrategy implements TransportStrategy {
@@ -34,20 +34,20 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean outgoing(Class<?> messageType) {
-        Assert.notNull(messageType, "messageType cannot be null.");
-        return outgoingCache.apply(messageType, type -> strategies.stream().anyMatch(s -> s.outgoing(type)));
+    public boolean allowOutgoing(String channel) {
+        Assert.notNull(channel, "channel cannot be null.");
+        return outgoingCache.apply(channel, ch -> strategies.stream().anyMatch(s -> s.allowOutgoing(ch)));
     }
 
     @Override
-    public boolean incoming(Class<?> messageType) {
-        Assert.notNull(messageType, "messageType cannot be null.");
-        return incomingCache.apply(messageType, type -> strategies.stream().anyMatch(s -> s.incoming(type)));
+    public boolean allowIncoming(String channel) {
+        Assert.notNull(channel, "channel cannot be null.");
+        return incomingCache.apply(channel, ch -> strategies.stream().anyMatch(s -> s.allowIncoming(ch)));
     }
 
     /**
      * Adds one or more transport strategies to the composite strategy.
-     * The added strategies will be evaluated in order when determining if a message type is outgoing or incoming.
+     * The added strategies will be evaluated in order when determining if a channel is outgoing or incoming.
      *
      * @param strategies the transport strategies to add
      */
@@ -58,27 +58,27 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * Defines a custom strategy for evaluating outgoing message types.
+     * Defines a custom strategy for evaluating outgoing channels.
      *
-     * @param strategy a predicate that determines if a message type is considered outgoing
+     * @param strategy a predicate that determines if a channel is considered outgoing
      */
-    public void defineOutgoingStrategy(Predicate<Class<?>> strategy) {
+    public void defineOutgoingStrategy(Predicate<String> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setOutgoingPredicate(strategy);
     }
 
     /**
-     * Defines a custom strategy for evaluating incoming message types.
+     * Defines a custom strategy for evaluating incoming channels.
      *
-     * @param strategy a predicate that determines if a message type is considered incoming
+     * @param strategy a predicate that determines if a channel is considered incoming
      */
-    public void defineIncomingStrategy(Predicate<Class<?>> strategy) {
+    public void defineIncomingStrategy(Predicate<String> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setIncomingPredicate(strategy);
     }
 
     /**
-     * Resets the caches for outgoing and incoming message evaluations.
+     * Resets the caches for outgoing and incoming channel evaluations.
      */
     private void resetCache() {
         outgoingCache.reset();
@@ -86,15 +86,15 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * StrategyCache is a helper class that manages a cache for message type evaluations.
-     * It uses a {@link ConcurrentHashMap} to store the results of evaluating whether a message type is outgoing or incoming according to the provided strategy.
+     * StrategyCache is a helper class that manages a cache for channel evaluations.
+     * It uses a {@link ConcurrentHashMap} to store the results of evaluating whether a channel is outgoing or incoming according to the provided strategy.
      * The cache allows for fast lookups while ensuring thread safety in concurrent environments.
      */
     private static class StrategyCache {
-        private final ConcurrentHashMap<Class<?>, Boolean> cache = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, Boolean> cache = new ConcurrentHashMap<>();
 
-        boolean apply(Class<?> messageType, Predicate<Class<?>> strategy) {
-            return cache.computeIfAbsent(messageType, strategy::test);
+        boolean apply(String channel, Predicate<String> strategy) {
+            return cache.computeIfAbsent(channel, strategy::test);
         }
 
         void reset() {

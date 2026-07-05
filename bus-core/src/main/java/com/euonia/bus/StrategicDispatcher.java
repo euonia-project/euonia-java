@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.euonia.bus.exception.MessageTypeException;
-import com.euonia.bus.message.MessageCache;
 
 /**
  * 基于已配置的策略和约定为消息类型确定传输的分发器。
@@ -14,7 +13,7 @@ import com.euonia.bus.message.MessageCache;
  * @author damon(zhaorong@outlook.com)
  */
 class StrategicDispatcher implements Dispatcher {
-    private final ConcurrentHashMap<Class<?>, List<String>> transportCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<String>> transportCache = new ConcurrentHashMap<>();
     private final Configurator configurator;
 
     /**
@@ -33,12 +32,12 @@ class StrategicDispatcher implements Dispatcher {
      * @return 消息应被分发到的传输名称列表
      */
     @Override
-    public List<String> determine(Class<?> messageType) {
-        var transportTypes = transportCache.computeIfAbsent(messageType, t -> {
+    public List<String> determine(String channel) {
+        var transportTypes = transportCache.computeIfAbsent(channel, t -> {
             var list = new ArrayList<String>();
             for (var type : configurator.getStrategyAssignedTypes()) {
                 var strategy = configurator.getStrategy(type);
-                if (strategy != null && strategy.outgoing(messageType)) {
+                if (strategy != null && strategy.allowOutgoing(channel)) {
                     list.add(type);
                 }
             }
@@ -48,15 +47,15 @@ class StrategicDispatcher implements Dispatcher {
         switch (transportTypes.size()) {
             case 0 -> {
                 if (configurator.getDefaultTransport() == null || configurator.getDefaultTransport().isEmpty()) {
-                    throw new MessageTypeException("No transport is configured for the message type. Message type: " + messageType.getName());
+                    throw new MessageTypeException("No transport is configured for the message type. Channel: " + channel);
                 }
                 transportTypes.add(configurator.getDefaultTransport());
             }
             case 1 -> {
             }
             default -> {
-                if (!configurator.getConvention().isMulticast(MessageCache.getInstance().getOrAddChannel(messageType))) {
-                    throw new MessageTypeException("The message type is not identified as a multicast type, but multiple transport strategies are configured for it. Message type: " + messageType.getName());
+                if (!configurator.getConvention().isMulticast(channel)) {
+                    throw new MessageTypeException("The message type is not identified as a multicast type, but multiple transport strategies are configured for it. Channel: " + channel);
                 }
             }
         }

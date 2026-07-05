@@ -77,7 +77,7 @@ public class InMemoryRecipientRegistrar implements RecipientRegistrar {
             var channel = entry.getKey();
             var messageType = entry.getValue().getMessageType();
 
-            if (!isDefaultTransport && (strategy == null || !strategy.incoming(messageType))) {
+            if (!isDefaultTransport && (strategy == null || !strategy.allowIncoming(channel))) {
                 /* 如果此注册不是针对默认传输，且策略未将其标识为入站类型，则跳过。 */
                 continue;
             }
