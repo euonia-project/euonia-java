@@ -1,7 +1,5 @@
 package com.euonia.osba;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
@@ -87,22 +85,16 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
             }
         }
 
-        CompletableFuture<List<String>> validations;
-
         if (!isDeleted() || isCheckObjectRulesOnDelete()) {
-            validations = getRules().checkObjectRulesAsync();
-        } else {
-            validations = CompletableFuture.completedFuture(List.of());
+            getRules().checkObjectRules();
         }
 
-        validations.whenComplete((ignored, throwable) -> {
-            if (!isValid() && (!isDeleted() || isCheckObjectRulesOnDelete())) {
-                var errors = getRules().getBrokenRules()
-                                       .stream()
-                                       .collect(Collectors.groupingBy(BrokenRule::property, Collectors.mapping(BrokenRule::description, Collectors.toList())));
-                throw new RuleCheckException(errors);
-            }
-        }).join();
+        if (!isValid() && (!isDeleted() || isCheckObjectRulesOnDelete())) {
+            var errors = getRules().getBrokenRules()
+                                   .stream()
+                                   .collect(Collectors.groupingBy(BrokenRule::property, Collectors.mapping(BrokenRule::description, Collectors.toList())));
+            throw new RuleCheckException(errors);
+        }
 
         try {
             markAsBusy();

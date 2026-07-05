@@ -11,6 +11,7 @@
 
     <artifactId>spring</artifactId>
     <name>euonia spring module</name>
+    <description>Spring integration module for the Euonia framework</description>
 
     <dependencies>
         <dependency>

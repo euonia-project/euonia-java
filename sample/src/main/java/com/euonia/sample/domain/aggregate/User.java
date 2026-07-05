@@ -1,21 +1,19 @@
 package com.euonia.sample.domain.aggregate;
 
+import java.util.Objects;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import com.euonia.annotation.Required;
 import com.euonia.core.ObjectId;
 import com.euonia.factory.annotation.FactoryCreate;
-import com.euonia.osba.rules.LambdaRule;
 import com.euonia.osba.rules.RuleBase;
 import com.euonia.osba.rules.RuleContext;
 import com.euonia.reflection.DisplayName;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.sample.domain.EditableObjectBase;
 import com.euonia.sample.domain.event.UserCreatedEvent;
-import com.euonia.sample.persistent.UserRepository;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @Scope("prototype")
@@ -85,7 +83,8 @@ public class User extends EditableObjectBase<User, Long> {
     @Override
     protected void insert() {
         super.insert();
-        //var repository = getBusinessContext().getOrCreateObject(UserRepository.class);
+        // var repository =
+        // getBusinessContext().getOrCreateObject(UserRepository.class);
     }
 
     protected void fetch(long id) {
@@ -103,21 +102,18 @@ public class User extends EditableObjectBase<User, Long> {
         }
 
         @Override
-        public CompletableFuture<Void> executeAsync(RuleContext context) {
-            return CompletableFuture.runAsync(() -> {
+        public void execute(RuleContext context) {
+            if (!(context.getTarget() instanceof User user)) {
+                return;
+            }
 
-                if (!(context.getTarget() instanceof User user)) {
-                    return;
-                }
+            var name = user.getName();
 
-                var name = user.getName();
-
-                if (name == null || name.trim().isEmpty()) {
-                    context.addErrorResult(String.format("%s cannot be empty", getProperty().getFriendlyName()));
-                } else if (name.length() < 12) {
-                    context.addErrorResult(String.format("%s must be 12 characters", getProperty().getFriendlyName()));
-                }
-            });
+            if (name == null || name.trim().isEmpty()) {
+                context.addErrorResult(String.format("%s cannot be empty", getProperty().getFriendlyName()));
+            } else if (name.length() < 12) {
+                context.addErrorResult(String.format("%s must be 12 characters", getProperty().getFriendlyName()));
+            }
         }
     }
 }

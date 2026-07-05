@@ -8,7 +8,6 @@ import com.euonia.reflection.PropertyInfo;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
@@ -160,34 +159,29 @@ public final class Rules {
     }
 
     /**
-     * 异步检查目标对象的所有验证规则，并相应更新已违反规则的集合。
-     * 该方法返回一个 CompletableFuture，当所有规则检查完毕后完成，
-     * 并提供受影响的属性名称列表。
+     * 检查目标对象的所有验证规则，并相应更新已违反规则的集合。
+     * 该方法返回受影响的属性名称列表。
      *
-     * @return 完成时提供受影响属性名称列表的 CompletableFuture
+     * @return 受影响的属性名称列表
      */
-    public CompletableFuture<List<String>> checkObjectRulesAsync() {
+    public List<String> checkObjectRules() {
         if (suppressRuleChecking || getRuleManager().getRules().isEmpty()) {
-            return CompletableFuture.completedFuture(List.of());
+            return List.of();
         }
 
         hasRunningRules = true;
         brokenRules.clearRules();
         List<String> affectedProperties = new ArrayList<>();
-        List<CompletableFuture<Void>> tasks = getRuleManager().getRules().stream()
-                                                              .sorted(Comparator.comparingInt(Rule::getPriority))
-                                                              .map(rule -> runRule(rule, affectedProperties))
-                                                              .toList();
+        getRuleManager().getRules().stream()
+                        .sorted(Comparator.comparingInt(Rule::getPriority))
+                        .forEach(rule -> runRule(rule, affectedProperties));
 
-        return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
-                                .thenApply(ignored -> affectedProperties.stream().distinct().toList())
-                                .whenComplete((ignored, error) -> {
-                                    hasRunningRules = false;
-                                    notifyValidationComplete();
-                                });
+        hasRunningRules = false;
+        notifyValidationComplete();
+        return affectedProperties.stream().distinct().toList();
     }
 
-    private CompletableFuture<Void> runRule(Rule rule, List<String> affectedProperties) {
+    private void runRule(Rule rule, List<String> affectedProperties) {
         RuleContext context = new RuleContext(ctx -> {
             synchronized (this) {
                 getBrokenRules().add(ctx.getResults(), ctx.getRule().getProperty().getName());
@@ -231,8 +225,8 @@ public final class Rules {
         affectedProperties.addAll(rule.getRelatedProperties().stream().map(PropertyInfo::getName).toList());
 
         runningRules.add(rule);
-        return rule.executeAsync(context)
-                   .thenRun(context::complete);
+        rule.execute(context);
+        context.complete();
     }
 
     private void notifyValidationComplete() {

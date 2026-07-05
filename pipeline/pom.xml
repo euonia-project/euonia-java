@@ -11,6 +11,7 @@
 
     <artifactId>pipeline</artifactId>
     <name>euonia pipeline module</name>
+    <description>Pipeline abstraction with delegate, behavior, provider, and resolver patterns</description>
 
     <dependencies>
         <dependency>

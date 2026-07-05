@@ -2,7 +2,6 @@ package com.euonia.osba.rules;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.CompletableFuture;
 
 import com.euonia.annotation.Validator;
 import com.euonia.osba.BusinessObject;
@@ -42,11 +41,10 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
      * 如果验证失败，则将带有适当消息的错误结果添加到上下文中。
      *
      * @param context 规则上下文，包含有关规则执行环境的信息，如目标对象和属性值。
-     * @return 一个表示异步操作的 CompletableFuture 对象
      */
     @SuppressWarnings("unchecked")
     @Override
-    public CompletableFuture<Void> executeAsync(RuleContext context) {
+    public void execute(RuleContext context) {
         try {
             if (context.getTarget() instanceof BusinessObject<?> businessObject) {
 
@@ -65,6 +63,5 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
                  | InvocationTargetException exception) {
             context.addErrorResult(exception.getMessage());
         }
-        return CompletableFuture.completedFuture(null);
     }
 }
