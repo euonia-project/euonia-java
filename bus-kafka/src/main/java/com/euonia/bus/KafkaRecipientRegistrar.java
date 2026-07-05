@@ -49,7 +49,7 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
             var channel = entry.getKey();
             var messageType = entry.getValue().getMessageType();
 
-            if (!isDefaultTransport && (strategy == null || !strategy.allowIncoming(channel))) {
+            if (!isDefaultTransport && (strategy == null || !strategy.allowIncoming(channel, messageType))) {
                 continue;
             }
 

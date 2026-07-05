@@ -10,7 +10,8 @@ public interface Dispatcher {
      * Determine the transport(s) to which the message of the given channel should be dispatched.
      *
      * @param channel the channel of the message
+     * @param messageType the type of the message
      * @return a list of transport names
      */
-    List<String> determine(String channel);
+    List<String> determine(String channel, Class<?> messageType);
 }

@@ -1,12 +1,12 @@
 package com.euonia.bus.strategy;
 
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 class OverridableTransportStrategy implements TransportStrategy {
 
     private final TransportStrategy delegate;
-    private Predicate<String> outgoingPredicate;
-    private Predicate<String> incomingPredicate;
+    private BiPredicate<String, Class<?>> outgoingPredicate;
+    private BiPredicate<String, Class<?>> incomingPredicate;
 
     OverridableTransportStrategy(TransportStrategy delegate) {
         this.delegate = delegate;
@@ -18,28 +18,28 @@ class OverridableTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean allowOutgoing(String channel) {
+    public boolean allowOutgoing(String channel, Class<?> messageType) {
         if (outgoingPredicate == null) {
-            return delegate.allowOutgoing(channel);
+            return delegate.allowOutgoing(channel, messageType);
         } else {
-            return outgoingPredicate.test(channel);
+            return outgoingPredicate.test(channel, messageType);
         }
     }
 
     @Override
-    public boolean allowIncoming(String channel) {
+    public boolean allowIncoming(String channel, Class<?> messageType) {
         if (incomingPredicate == null) {
-            return delegate.allowIncoming(channel);
+            return delegate.allowIncoming(channel, messageType);
         } else {
-            return incomingPredicate.test(channel);
+            return incomingPredicate.test(channel, messageType);
         }
     }
 
-    void setOutgoingPredicate(Predicate<String> outgoingPredicate) {
+    void setOutgoingPredicate(BiPredicate<String, Class<?>> outgoingPredicate) {
         this.outgoingPredicate = outgoingPredicate;
     }
 
-    void setIncomingPredicate(Predicate<String> incomingPredicate) {
+    void setIncomingPredicate(BiPredicate<String, Class<?>> incomingPredicate) {
         this.incomingPredicate = incomingPredicate;
     }
 }

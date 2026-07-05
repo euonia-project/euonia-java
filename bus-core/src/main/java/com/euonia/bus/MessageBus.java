@@ -135,7 +135,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transports = dispatcher.determine(channelName);
+                    var transports = dispatcher.determine(channelName, messageType);
 
                     var tasks = transports.stream()
                                           .map(transport -> {
@@ -198,7 +198,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transports = dispatcher.determine(channelName);
+                    var transports = dispatcher.determine(channelName, messageType);
 
                     if (transports.isEmpty()) {
                         throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
@@ -287,7 +287,7 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transportNames = dispatcher.determine(channelName);
+                    var transportNames = dispatcher.determine(channelName, messageType);
                     if (transportNames.isEmpty()) {
                         throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
                     }

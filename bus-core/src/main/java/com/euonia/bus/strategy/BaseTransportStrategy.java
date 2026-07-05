@@ -3,8 +3,9 @@ package com.euonia.bus.strategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 import com.euonia.utility.Assert;
 
@@ -12,7 +13,7 @@ import com.euonia.utility.Assert;
  * Represents a composite transport strategy that aggregates multiple {@link TransportStrategy} instances
  * and caches the results of outgoing and incoming channel evaluations using {@link ConcurrentHashMap}.
  * <p>
- * Each channel (outgoing, incoming) has its own dedicated cache backed by {@code ConcurrentHashMap&lt;String, Boolean&gt;}.
+ * Each direction (outgoing, incoming) has its own dedicated cache backed by {@code ConcurrentHashMap<CacheKey, Boolean>}.
  * <p>
  * The composite strategy allows for flexible configuration by enabling the addition of custom transport strategies and the definition of custom predicates for determining outgoing and incoming channels. The default strategy can be overridden to provide custom logic for classifying channels without needing to implement a full {@link TransportStrategy}.
  * <p> This design promotes extensibility and performance by leveraging caching and a modular approach to strategy composition.
@@ -34,15 +35,17 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean allowOutgoing(String channel) {
+    public boolean allowOutgoing(String channel, Class<?> messageType) {
         Assert.notNull(channel, "channel cannot be null.");
-        return outgoingCache.apply(channel, ch -> strategies.stream().anyMatch(s -> s.allowOutgoing(ch)));
+        Assert.notNull(messageType, "messageType cannot be null.");
+        return outgoingCache.apply(channel, messageType, (ch, mt) -> strategies.stream().anyMatch(s -> s.allowOutgoing(ch, mt)));
     }
 
     @Override
-    public boolean allowIncoming(String channel) {
+    public boolean allowIncoming(String channel, Class<?> messageType) {
         Assert.notNull(channel, "channel cannot be null.");
-        return incomingCache.apply(channel, ch -> strategies.stream().anyMatch(s -> s.allowIncoming(ch)));
+        Assert.notNull(messageType, "messageType cannot be null.");
+        return incomingCache.apply(channel, messageType, (ch, mt) -> strategies.stream().anyMatch(s -> s.allowIncoming(ch, mt)));
     }
 
     /**
@@ -62,7 +65,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategy a predicate that determines if a channel is considered outgoing
      */
-    public void defineOutgoingStrategy(Predicate<String> strategy) {
+    public void defineOutgoingStrategy(BiPredicate<String, Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setOutgoingPredicate(strategy);
     }
@@ -72,7 +75,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      *
      * @param strategy a predicate that determines if a channel is considered incoming
      */
-    public void defineIncomingStrategy(Predicate<String> strategy) {
+    public void defineIncomingStrategy(BiPredicate<String, Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
         defaultStrategy.setIncomingPredicate(strategy);
     }
@@ -91,14 +94,39 @@ public class BaseTransportStrategy implements TransportStrategy {
      * The cache allows for fast lookups while ensuring thread safety in concurrent environments.
      */
     private static class StrategyCache {
-        private final ConcurrentHashMap<String, Boolean> cache = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<CacheKey, Boolean> cache = new ConcurrentHashMap<>();
 
-        boolean apply(String channel, Predicate<String> strategy) {
-            return cache.computeIfAbsent(channel, strategy::test);
+        boolean apply(String channel, Class<?> messageType, BiPredicate<String, Class<?>> strategy) {
+            return cache.computeIfAbsent(new CacheKey(channel, messageType), k -> strategy.test(k.channel, k.messageType));
         }
 
         void reset() {
             cache.clear();
+        }
+    }
+
+    /**
+     * Composite cache key combining channel and message type.
+     */
+    private static final class CacheKey {
+        final String channel;
+        final Class<?> messageType;
+
+        CacheKey(String channel, Class<?> messageType) {
+            this.channel = channel;
+            this.messageType = messageType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof CacheKey other)) return false;
+            return Objects.equals(channel, other.channel) && Objects.equals(messageType, other.messageType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(channel, messageType);
         }
     }
 }

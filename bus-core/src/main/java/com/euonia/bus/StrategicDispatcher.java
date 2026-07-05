@@ -32,12 +32,12 @@ class StrategicDispatcher implements Dispatcher {
      * @return 消息应被分发到的传输名称列表
      */
     @Override
-    public List<String> determine(String channel) {
+    public List<String> determine(String channel, Class<?> messageType) {
         var transportTypes = transportCache.computeIfAbsent(channel, t -> {
             var list = new ArrayList<String>();
             for (var type : configurator.getStrategyAssignedTypes()) {
                 var strategy = configurator.getStrategy(type);
-                if (strategy != null && strategy.allowOutgoing(channel)) {
+                if (strategy != null && strategy.allowOutgoing(t, messageType)) {
                     list.add(type);
                 }
             }

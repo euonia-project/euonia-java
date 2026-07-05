@@ -16,23 +16,15 @@ public class AnnotationTransportStrategy implements TransportStrategy {
     }
 
     @Override
-    public boolean allowOutgoing(String channel) {
-        try {
-            var annotation = Class.forName(channel).getAnnotation(DispatchIn.class);
-            return annotation != null && annotation.transports().length > 0 && containsRequired(annotation.transports());
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+    public boolean allowOutgoing(String channel, Class<?> messageType) {
+        var annotation = messageType.getAnnotation(DispatchIn.class);
+        return annotation != null && annotation.transports().length > 0 && containsRequired(annotation.transports());
     }
 
     @Override
-    public boolean allowIncoming(String channel) {
-        try {
-            var annotation = Class.forName(channel).getAnnotation(ReceiveIn.class);
-            return annotation != null && annotation.transports().length > 0 && containsRequired(annotation.transports());
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+    public boolean allowIncoming(String channel, Class<?> messageType) {
+        var annotation = messageType.getAnnotation(ReceiveIn.class);
+        return annotation != null && annotation.transports().length > 0 && containsRequired(annotation.transports());
     }
 
     private boolean containsRequired(String[] values) {

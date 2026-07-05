@@ -38,11 +38,11 @@ class DefaultConfiguratorTest {
         @DisplayName("should add strategy builder by name")
         void shouldAddStrategy() {
             var configurator = new DefaultConfigurator();
-            configurator.setStrategy("rabbitmq", s -> s.evaluateOutgoing(t -> t.equals("java.lang.Integer")));
+            configurator.setStrategy("rabbitmq", s -> s.evaluateOutgoing((ch, mt) -> mt == Integer.class));
 
             assertThat(configurator.getStrategyBuilders()).containsKey("rabbitmq");
             var strategy = configurator.getStrategy("rabbitmq");
-            assertThat(strategy.allowOutgoing("java.lang.Integer")).isTrue();
+            assertThat(strategy.allowOutgoing("java.lang.Integer", Integer.class)).isTrue();
         }
 
         @Test

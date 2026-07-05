@@ -1,7 +1,7 @@
 package com.euonia.bus.strategy;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 import com.euonia.utility.Assert;
 
@@ -14,14 +14,14 @@ public class DefaultTransportStrategyBuilder implements TransportStrategyBuilder
     }
 
     @Override
-    public TransportStrategyBuilder evaluateOutgoing(Predicate<String> predicate) {
+    public TransportStrategyBuilder evaluateOutgoing(BiPredicate<String, Class<?>> predicate) {
         Assert.notNull(predicate, "Predicate cannot be null");
         strategy.defineOutgoingStrategy(predicate);
         return this;
     }
 
     @Override
-    public TransportStrategyBuilder evaluateIncoming(Predicate<String> predicate) {
+    public TransportStrategyBuilder evaluateIncoming(BiPredicate<String, Class<?>> predicate) {
         Assert.notNull(predicate, "Predicate cannot be null");
         strategy.defineIncomingStrategy(predicate);
         return this;
