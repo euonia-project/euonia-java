@@ -1,18 +1,19 @@
 package com.euonia.usecase;
 
 /**
- * Represents a use case in the application. A use case is a specific operation or action that can be performed within the system.
- * It defines a contract for executing a particular business logic or functionality.
+ * 表示应用中的一个用例。用例是可以在系统内执行的特定操作或动作，
+ * 定义了执行特定业务逻辑或功能的契约。
  *
- * @param <I> the type of the input to the use case
- * @param <O> the type of the output of the use case
+ * @param <I> 用例输入的类型
+ * @param <O> 用例输出的类型
+ * @author damon(zhaorong@outlook.com)
  */
 public interface UseCase<I, O> {
     /**
-     * Executes the use case with the given input and returns the output.
+     * 使用给定的输入执行用例并返回输出。
      *
-     * @param input the input data for the use case
-     * @return the output data from the use case
+     * @param input 用例的输入数据
+     * @return 用例的输出数据
      */
     O execute(I input);
 }

@@ -1,8 +1,12 @@
 package com.euonia.domain.event;
 
 /**
- * ApplicationEvent is a marker interface for events that are published within the application context. It extends the base Event interface and can be used to categorize events that are specific to the application's domain logic.
- * By implementing this interface, events can be easily identified and handled by event listeners that are designed to process application-specific events. This allows for better organization and separation of concerns within the event-driven architecture of the application.
+ * {@link ApplicationEvent} 是应用事件的标记接口，用于在应用上下文中发布的事件。
+ * 它继承自基础的 {@link Event} 接口，可用于分类特定于应用领域逻辑的事件。
+ * <p>
+ * 通过实现此接口，事件可以被设计用于处理应用特定事件的事件监听器轻松识别和处理，从而在应用的事件驱动架构中实现更好的组织和关注点分离。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface ApplicationEvent extends Event {
 }

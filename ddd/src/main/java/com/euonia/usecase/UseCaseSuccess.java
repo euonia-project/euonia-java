@@ -1,16 +1,17 @@
 package com.euonia.usecase;
 
 /**
- * Represents a successful output of a use case execution.
- * This interface defines a method to handle the result of a successful use case execution.
+ * 表示用例执行的成功输出。
+ * 该接口定义了一个方法来处理用例执行成功的结果。
  *
- * @param <O> the type of the successful output
+ * @param <O> 成功输出的类型
+ * @author damon(zhaorong@outlook.com)
  */
 public interface UseCaseSuccess<O> {
     /**
-     * Indicates that the use case execution has succeeded with a result.
+     * 表示用例执行已成功并返回结果。
      *
-     * @param output the result of the successful execution
+     * @param output 成功执行的结果
      */
     void success(O output);
 }

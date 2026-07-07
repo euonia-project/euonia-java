@@ -1,57 +1,61 @@
 package com.euonia.domain;
 
-import com.euonia.domain.event.DomainEvent;
-
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.euonia.domain.event.DomainEvent;
+
 /**
- * The HasDomainEvents interface defines the contract for an aggregate that can raise and manage domain events in a domain-driven design (DDD) context.
- * An aggregate is a cluster of domain objects that can be treated as a single unit for data changes.
- * The aggregate root is the main entity that controls access to the other entities within the aggregate and is responsible for enforcing the consistency of the aggregate as a whole.
- * Domain events represent significant occurrences or changes in the state of the aggregate that are relevant to the business logic and can be used for event sourcing, auditing, or integration with other systems.
+ * {@link HasDomainEvents} 接口定义了在领域驱动设计（DDD）上下文中可引发和管理领域事件的聚合的契约。
+ * <p>
+ * 聚合是一组领域对象，可以作为数据变更的单一单元处理。
+ * 聚合根是控制对聚合内其他实体访问的主实体，负责保证整个聚合的一致性。
+ * 领域事件表示聚合状态中与业务逻辑相关的重大事件或变更，可用于事件溯源、审计或与其他系统集成。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface HasDomainEvents {
     /**
-     * Gets the list of domain events that have been raised by this aggregate.
-     * Domain events represent significant occurrences or changes in the state of the aggregate that are relevant to the business logic and can be used for event sourcing, auditing, or integration with other systems.
+     * 获取此聚合已引发的领域事件列表。
+     * 领域事件表示聚合状态中与业务逻辑相关的重大事件或变更，
+     * 可用于事件溯源、审计或与其他系统集成。
      *
-     * @return the list of domain events raised by this aggregate
+     * @return 此聚合引发的领域事件列表
      */
     List<DomainEvent> getEvents();
 
     /**
-     * Registers a handler for a specific type of domain event. The handler will be invoked when an event of the specified type is raised.
+     * 注册特定类型领域事件的处理器。当引发指定类型的事件时，处理器将被调用。
      *
-     * @param eventType the type of domain event to register the handler for
-     * @param handler   the handler to be invoked when the event is raised
-     * @param <E>       the type of the domain event
+     * @param <E>       领域事件类型
+     * @param eventType 要注册处理器的领域事件类型
+     * @param handler   当事件引发时要调用的处理器
      */
     <E extends DomainEvent> void registerEvent(Class<E> eventType, Consumer<E> handler);
 
     /**
-     * Raises a domain event. The event will be processed by the registered handlers.
+     * 引发领域事件。事件将由已注册的处理器处理。
      *
-     * @param event the domain event to raise
-     * @param <E>   the type of the domain event
+     * @param <E>   领域事件类型
+     * @param event 要引发的领域事件
      */
     <E extends DomainEvent> void raiseEvent(E event);
 
     /**
-     * Applies a domain event to the aggregate. This method is typically used to update the state of the aggregate based on the event.
+     * 将领域事件应用到聚合。此方法通常用于根据事件更新聚合的状态。
      *
-     * @param event the domain event to apply
-     * @param <E>   the type of the domain event
+     * @param <E>   领域事件类型
+     * @param event 要应用的领域事件
      */
     <E extends DomainEvent> void applyEvent(E event);
 
     /**
-     * Clears all domain events that have been raised by this aggregate.
+     * 清除此聚合已引发的所有领域事件。
      */
     void clearEvents();
 
     /**
-     * Attaches all domain events to the aggregate. This method is typically used to initialize the aggregate with existing events.
+     * 将所有领域事件附加到聚合。此方法通常用于使用现有事件初始化聚合。
      */
     void attachEvents();
 }

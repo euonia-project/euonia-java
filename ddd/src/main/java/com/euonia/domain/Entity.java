@@ -1,30 +1,32 @@
 package com.euonia.domain;
 
 /**
- * The Entity interface represents a generic entity in the domain model. It defines the basic properties and methods that all entities should have.
- * Entities are objects that have a distinct identity and can be distinguished from other objects based on their identity rather than their attributes.
- * They typically represent real-world concepts or objects in the system and are often used to model business entities or domain objects.
+ * {@link Entity} 接口表示领域模型中的通用实体。定义了所有实体应具备的基本属性和方法。
+ * 实体是具有独特标识的对象，可以根据其标识而非属性与其他对象区分开来。它们通常表示系统中的现实世界概念或对象，常用于建模业务实体或领域对象。
+ *
+ * @param <ID> 实体标识符的类型，必须可比较
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Entity<ID extends Comparable<ID>> {
 
     /**
-     * Gets the identifier for the entity. The identifier is a unique value that distinguishes this entity from others.
+     * 获取实体的唯一标识符，用于区分该实体与其他实体。
      *
-     * @return the unique identifier of the entity
+     * @return 实体的唯一标识符
      */
     ID getId();
 
     /**
-     * Sets the identifier for the entity. The identifier is a unique value that distinguishes this entity from others.
+     * 设置实体的唯一标识符，用于区分该实体与其他实体。
      *
-     * @param id the unique identifier to set for this entity
+     * @param id 要为此实体设置的唯一标识符
      */
     void setId(ID id);
 
     /**
-     * Gets the keys that uniquely identify this entity. By default, it returns an array containing the entity's identifier.
+     * 获取唯一标识此实体的键数组，默认返回包含实体标识符的数组。
      *
-     * @return an array of objects representing the keys that uniquely identify this entity
+     * @return 唯一标识此实体的键对象数组
      */
     default Object[] getKeys() {
         return new Object[]{getId()};
