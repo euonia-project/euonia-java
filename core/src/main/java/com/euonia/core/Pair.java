@@ -10,6 +10,15 @@ package com.euonia.core;
  * @author damon(zhaorong@outlook.com)
  */
 public record Pair<K extends Comparable<K>, V>(K key, V value) {
+    /**
+     * 创建一个新的 Pair 实例。键不能为空，否则将抛出 IllegalArgumentException。
+     *
+     * @param key   键值对的键
+     * @param value 与键关联的值
+     * @param <K>   键的类型
+     * @param <V>   值的类型
+     * @return 新的 Pair 实例
+     */
     public static <K extends Comparable<K>, V> Pair<K, V> of(K key, V value) {
         if (key == null) {
             throw new IllegalArgumentException("key 为 null");

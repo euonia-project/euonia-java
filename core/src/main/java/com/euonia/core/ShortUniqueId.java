@@ -37,14 +37,30 @@ public final class ShortUniqueId {
 
     private static final ShortUniqueId DEFAULT = new ShortUniqueId();
 
+    /**
+     * 获取默认的 ShortUniqueId 实例，使用默认的字母表、分隔符和盐值。
+     *
+     * @return 默认的 ShortUniqueId 实例
+     */
     public static ShortUniqueId getDefault() {
         return DEFAULT;
     }
 
+    /**
+     * 创建一个 ShortUniqueId 实例，使用默认的字母表、分隔符和盐值。
+     */
     public ShortUniqueId() {
         this("", 0, DEFAULT_ALPHABET, DEFAULT_SEPS);
     }
 
+    /**
+     * 创建一个 ShortUniqueId 实例，允许自定义盐值、最小哈希长度、字母表和分隔符。
+     *
+     * @param salt          自定义盐值
+     * @param minHashLength 最小哈希长度
+     * @param alphabet      自定义字母表
+     * @param seps          自定义分隔符
+     */
     public ShortUniqueId(String salt, int minHashLength, String alphabet, String seps) {
         if (salt == null)
             throw new IllegalArgumentException("salt");
@@ -71,7 +87,7 @@ public final class ShortUniqueId {
 
         if (alpha.length < MIN_ALPHABET_LENGTH)
             throw new IllegalArgumentException(
-                    "Alphabet must contain at least " + MIN_ALPHABET_LENGTH + " unique characters.");
+                "Alphabet must contain at least " + MIN_ALPHABET_LENGTH + " unique characters.");
 
         // 分隔符必须来自字母表
         if (sepsArr.length > 0) {
@@ -104,7 +120,7 @@ public final class ShortUniqueId {
 
         if (alpha.length < (MIN_ALPHABET_LENGTH - 6))
             throw new IllegalArgumentException("Alphabet must contain at least " + (MIN_ALPHABET_LENGTH - 6)
-                    + " unique characters not present in seps.");
+                                                   + " unique characters not present in seps.");
 
         // 使用盐值对分隔符进行一致性洗牌
         consistentShuffle(sepsArr, this.salt);
@@ -148,7 +164,7 @@ public final class ShortUniqueId {
      * @return 表示输入整数的短唯一字符串 ID
      */
     public String encode(int number) {
-        return encode(new long[] { number });
+        return encode(new long[]{number});
     }
 
     /**
@@ -182,7 +198,7 @@ public final class ShortUniqueId {
      * @return 表示输入长整数的短唯一字符串 ID
      */
     public String encode(long number) {
-        return encode(new long[] { number });
+        return encode(new long[]{number});
     }
 
     /**

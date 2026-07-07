@@ -1,6 +1,5 @@
 package com.euonia.annotation;
 
-import com.euonia.tuple.Duet;
 import com.euonia.utility.StringUtility;
 
 /**
@@ -19,14 +18,14 @@ import com.euonia.utility.StringUtility;
  */
 public final class RequiredValidator implements Validator<Required> {
     @Override
-    public Duet<Boolean, String> validate(Required annotation, Object value) {
-        Duet<Boolean, String> result;
+    public Result validate(Required annotation, Object value) {
+        Result result;
         if (value == null) {
-            result = new Duet<>(false, StringUtility.collapse(annotation.message(), "Value is required"));
+            result = new Result(false, StringUtility.collapse(annotation.message(), "Value is required"));
         } else if (!annotation.allowEmpty() && value instanceof String string && string.isEmpty()) {
-            result = new Duet<>(false, StringUtility.collapse(annotation.message(), "Value must not be empty"));
+            result = new Result(false, StringUtility.collapse(annotation.message(), "Value must not be empty"));
         } else {
-            result = new Duet<>(true, null);
+            result = new Result(true, StringUtility.collapse(annotation.message(), ""));
         }
         return result;
     }

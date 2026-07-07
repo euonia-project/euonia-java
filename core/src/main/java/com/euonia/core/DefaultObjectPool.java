@@ -126,17 +126,16 @@ public final class DefaultObjectPool<T> implements ObjectPool<T> {
      * <p>
      * <b>正常路径</b>（inUseCount &lt; capacity）：
      * <ol>
-     * <li>如果空闲池中有可用对象，则对其进行验证并返回。
-     * 如果验证失败，对象将被销毁并重试获取。</li>
-     * <li>如果空闲池为空，则通过策略创建新对象。</li>
+     *  <li>如果空闲池中有可用对象，则对其进行验证并返回。如果验证失败，对象将被销毁并重试获取。</li>
+     *  <li>如果空闲池为空，则通过策略创建新对象。</li>
      * </ol>
      * <p>
      * <b>超限路径</b>（inUseCount &ge; capacity）：
      * <ul>
-     * <li>{@code THROW_EXCEPTION} —— 抛出 {@code RuntimeException}</li>
-     * <li>{@code RETURN_NULL} —— 返回 {@code null}</li>
-     * <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
-     * <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞直到有对象被释放，然后重试</li>
+     *  <li>{@code THROW_EXCEPTION} —— 抛出 {@code RuntimeException}</li>
+     *  <li>{@code RETURN_NULL} —— 返回 {@code null}</li>
+     *  <li>{@code CREATE_NEW} / {@code AUTO_ADJUST} —— 在容量之外创建新实例</li>
+     *  <li>{@code WAIT_FOR_AVAILABLE} —— 阻塞直到有对象被释放，然后重试</li>
      * </ul>
      *
      * @return 获取到的对象，如果超限行为为 {@code RETURN_NULL} 则返回 {@code null}
