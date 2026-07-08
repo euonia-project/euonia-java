@@ -7,7 +7,7 @@ import com.euonia.bus.message.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
 import com.euonia.bus.event.MessageSubscribedEvent;
-import com.euonia.bus.inbox.InboxStore;
+import com.euonia.bus.consistency.InboxStore;
 import com.euonia.reflection.ServiceProvider;
 
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package com.euonia.bus.inbox;
+package com.euonia.bus.consistency;
 
 public class InboxHandle {
     private long id;

@@ -1,4 +1,4 @@
-package com.euonia.bus.inbox;
+package com.euonia.bus.consistency;
 
 import com.euonia.bus.MessageEnvelope;
 
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author damon(zhaorong@outlook.com)
  */
 public interface InboxStore {
-    ConcurrentMap<String, InboxEntry> CACHE = new ConcurrentHashMap<String, InboxEntry>();
+    ConcurrentMap<String, InboxEntry> CACHE = new ConcurrentHashMap<>();
 
     default <T> boolean insert(String channel, MessageEnvelope<T> message, List<String> handlers) {
         var entry = new InboxEntry();

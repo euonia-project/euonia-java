@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.euonia.bus.outbox.OutboxEntry;
-import com.euonia.bus.outbox.OutboxStore;
+import com.euonia.bus.consistency.OutboxEntry;
+import com.euonia.bus.consistency.OutboxStore;
 
 /**
  * 投递箱发布器，异地轮询 {@link OutboxStore} 并将消息发送到 {@link Bus}。

@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 import com.euonia.bus.MessageContext;
 import com.euonia.bus.MessageEnvelope;
-import com.euonia.bus.inbox.InboxStore;
+import com.euonia.bus.consistency.InboxStore;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.pipeline.DefaultPipelineFactory;
 import com.euonia.pipeline.Pipeline;

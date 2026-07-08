@@ -1,10 +1,9 @@
-package com.euonia.bus.inbox;
+package com.euonia.bus.consistency;
 
 import com.euonia.bus.MessageEnvelope;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**

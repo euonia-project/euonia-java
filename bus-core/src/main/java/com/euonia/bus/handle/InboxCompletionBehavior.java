@@ -3,7 +3,7 @@ package com.euonia.bus.handle;
 import java.util.concurrent.CompletionStage;
 
 import com.euonia.bus.MessageEnvelope;
-import com.euonia.bus.inbox.InboxStore;
+import com.euonia.bus.consistency.InboxStore;
 import com.euonia.pipeline.PipelineBehavior;
 import com.euonia.pipeline.PipelineDelegate;
 import com.euonia.tuple.Duet;

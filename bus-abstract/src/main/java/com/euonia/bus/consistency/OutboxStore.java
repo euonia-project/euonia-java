@@ -1,4 +1,4 @@
-package com.euonia.bus.outbox;
+package com.euonia.bus.consistency;
 
 import java.util.List;
 
