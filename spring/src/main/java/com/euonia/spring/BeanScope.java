@@ -1,53 +1,55 @@
 package com.euonia.spring;
 
 /**
- * Defines the scopes of a bean in the Spring IoC container.
- * <p>>
- * The scopes are defined as constants in this class, and can be used to specify the scope of a bean when defining it in the Spring configuration.
- * <p>>
- * The scopes defined in this class are:
+ * 定义了 Spring IoC 容器中 Bean 的作用域常量。
+ * <p>
+ * 这些作用域可以在 Spring 配置中定义 Bean 时用于指定 Bean 的作用域。
+ * <p>
+ * 定义的常量包括：
  * <ul>
- *     <li>{@link #APPLICATION}: Scopes a single bean definition to the lifecycle of a ServletContext. Only valid in the context of a web-aware Spring ApplicationContext.</li>
- *     <li>{@link #PROTOTYPE}: Scopes a single bean definition to any number of object instances.</li>
- *     <li>{@link #REQUEST}: Scopes a single bean definition to the lifecycle of a single HTTP request. Only valid in the context of a web-aware Spring ApplicationContext.</li>
- *     <li>{@link #SESSION}: Scopes a single bean definition to the lifecycle of an HTTP Session. Only valid in the context of a web-aware Spring ApplicationContext.</li>
- *     <li>{@link #SINGLETON}: Scopes a single bean definition to a single object instance for each Spring IoC container.</li>
- *     <li>{@link #WEB_SOCKET}: Scopes a single bean definition to the lifecycle of a WebSocket. Only valid in the context of a web-aware Spring ApplicationContext.</li>
+ *     <li>{@link #APPLICATION} —— 将单个 Bean 定义的作用域限定为 ServletContext 的生命周期。仅在 Web 感知的 Spring ApplicationContext 中有效。</li>
+ *     <li>{@link #PROTOTYPE} —— 将单个 Bean 定义的作用域限定为任意数量的对象实例。</li>
+ *     <li>{@link #REQUEST} —— 将单个 Bean 定义的作用域限定为单个 HTTP 请求的生命周期。仅在 Web 感知的 Spring ApplicationContext 中有效。</li>
+ *     <li>{@link #SESSION} —— 将单个 Bean 定义的作用域限定为 HTTP Session 的生命周期。仅在 Web 感知的 Spring ApplicationContext 中有效。</li>
+ *     <li>{@link #SINGLETON} —— 将单个 Bean 定义的作用域限定为每个 Spring IoC 容器的单个对象实例。</li>
+ *     <li>{@link #WEB_SOCKET} —— 将单个 Bean 定义的作用域限定为 WebSocket 的生命周期。仅在 Web 感知的 Spring ApplicationContext 中有效。</li>
  * </ul>
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class BeanScope {
     /**
-     * Scopes a single bean definition to the lifecycle of a ServletContext.
-     * Only valid in the context of a web-aware Spring ApplicationContext.
+     * 将单个 Bean 定义的作用域限定为 ServletContext 的生命周期。
+     * 仅在 Web 感知的 Spring ApplicationContext 中有效。
      */
     public final static String APPLICATION = "application";
 
     /**
-     * Scopes a single bean definition to any number of object instances.
+     * 将单个 Bean 定义的作用域限定为任意数量的对象实例。
      */
     public final static String PROTOTYPE = "prototype";
 
     /**
-     * Scopes a single bean definition to the lifecycle of a single HTTP request.
-     * That is, each HTTP request has its own instance of a bean created off the back of a single bean definition.
-     * Only valid in the context of a web-aware Spring ApplicationContext.
+     * 将单个 Bean 定义的作用域限定为单个 HTTP 请求的生命周期。
+     * 即每个 HTTP 请求都有自己基于单个 Bean 定义创建的 Bean 实例。
+     * 仅在 Web 感知的 Spring ApplicationContext 中有效。
      */
     public final static String REQUEST = "request";
 
     /**
-     * Scopes a single bean definition to the lifecycle of an HTTP Session.
-     * Only valid in the context of a web-aware Spring ApplicationContext.
+     * 将单个 Bean 定义的作用域限定为 HTTP Session 的生命周期。
+     * 仅在 Web 感知的 Spring ApplicationContext 中有效。
      */
     public final static String SESSION = "session";
 
     /**
-     * Scopes a single bean definition to a single object instance for each Spring IoC container.
+     * 将单个 Bean 定义的作用域限定为每个 Spring IoC 容器的单个对象实例。
      */
     public final static String SINGLETON = "singleton";
 
     /**
-     * Scopes a single bean definition to the lifecycle of a WebSocket.
-     * Only valid in the context of a web-aware Spring ApplicationContext.
+     * 将单个 Bean 定义的作用域限定为 WebSocket 的生命周期。
+     * 仅在 Web 感知的 Spring ApplicationContext 中有效。
      */
     public final static String WEB_SOCKET = "websocket";
 
