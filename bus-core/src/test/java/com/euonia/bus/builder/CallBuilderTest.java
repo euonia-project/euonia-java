@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.CallOptions;
@@ -93,7 +92,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withChannel("queries").runAsync();
+            builder.withChannel("queries").executeAsync();
 
             assertThat(capturedOptions.get().getChannel()).isEqualTo("queries");
         }
@@ -106,7 +105,7 @@ class CallBuilderTest {
             var builder = builderFor(bus, "req", String.class);
 
             Consumer<PipelineMessage<RoutedMessage<String>, String>> behavior = pm -> {};
-            builder.withBehavior(behavior).runAsync();
+            builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
         }
@@ -118,7 +117,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withMetadata(m -> m.put("k", "v")).runAsync();
+            builder.withMetadata(m -> m.put("k", "v")).executeAsync();
 
             assertThat(capturedOptions.get().getMetadataSetter()).isNotNull();
         }
@@ -130,7 +129,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withMessageId("call-id-001").runAsync();
+            builder.withMessageId("call-id-001").executeAsync();
 
             assertThat(capturedOptions.get().getMessageId()).isEqualTo("call-id-001");
         }
@@ -142,7 +141,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withCorrelationId("corr-002").runAsync();
+            builder.withCorrelationId("corr-002").executeAsync();
 
             assertThat(capturedOptions.get().getCorrelationId()).isEqualTo("corr-002");
         }
@@ -154,7 +153,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withPriority(7).runAsync();
+            builder.withPriority(7).executeAsync();
 
             assertThat(capturedOptions.get().getPriority()).isEqualTo(7);
         }
@@ -166,7 +165,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withTimeout(8000L).runAsync();
+            builder.withTimeout(8000L).executeAsync();
 
             assertThat(capturedOptions.get().getTimeout()).isEqualTo(8000L);
         }
@@ -178,7 +177,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.withDelay(250L).runAsync();
+            builder.withDelay(250L).executeAsync();
 
             assertThat(capturedOptions.get().getDelay()).isEqualTo(250L);
         }
@@ -203,7 +202,7 @@ class CallBuilderTest {
                    .withPriority(2)
                    .withTimeout(6000L)
                    .withDelay(50L)
-                   .runAsync();
+                   .executeAsync();
 
             assertThat(capturedRequest.get()).isEqualTo("query-request");
             assertThat(capturedResponseType.get()).isEqualTo(Integer.class);
@@ -228,7 +227,7 @@ class CallBuilderTest {
                                 new AtomicReference<>(), "response");
             var builder = builderFor(bus, "req", String.class);
 
-            var future = builder.runAsync();
+            var future = builder.executeAsync();
 
             assertThat(future).isCompletedWithValue("response");
         }
@@ -240,7 +239,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), capturedResponseType, new AtomicReference<>(), new AtomicReference<>());
             var builder = builderFor(bus, "req", Long.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedResponseType.get()).isEqualTo(Long.class);
         }
@@ -252,7 +251,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "req", String.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedOptions.get()).isNotNull();
             assertThat(capturedOptions.get()).isInstanceOf(CallOptions.class);
@@ -265,7 +264,7 @@ class CallBuilderTest {
             var bus = createBus(new AtomicReference<>(), new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
             var builder = builderFor(bus, "req", String.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedBehavior.get()).isNull();
         }

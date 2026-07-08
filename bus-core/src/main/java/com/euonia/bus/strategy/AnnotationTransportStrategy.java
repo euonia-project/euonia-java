@@ -3,9 +3,21 @@ package com.euonia.bus.strategy;
 import com.euonia.bus.annotation.DispatchIn;
 import com.euonia.bus.annotation.ReceiveIn;
 
+/**
+ * 基于注解的传输策略实现，通过 {@link DispatchIn} 和 {@link ReceiveIn} 注解
+ * 判断消息的出入站规则。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 public class AnnotationTransportStrategy implements TransportStrategy {
+    /** 要求的传输名称数组 */
     private final String[] required;
 
+    /**
+     * 使用要求的传输名称构造策略。
+     *
+     * @param required 要求的传输名称
+     */
     public AnnotationTransportStrategy(String... required) {
         this.required = required;
     }

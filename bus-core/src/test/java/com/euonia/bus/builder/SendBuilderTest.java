@@ -2,7 +2,6 @@ package com.euonia.bus.builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.SendOptions;
@@ -99,7 +97,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withChannel("commands").runAsync();
+            builder.withChannel("commands").executeAsync();
 
             assertThat(capturedOptions.get().getChannel()).isEqualTo("commands");
         }
@@ -118,7 +116,7 @@ class SendBuilderTest {
                 @Override public void onError(Throwable t) {}
                 @Override public void onComplete() {}
             };
-            builder.withCallback(subscriber).runAsync();
+            builder.withCallback(subscriber).executeAsync();
 
             assertThat(capturedCallback.get()).isSameAs(subscriber);
         }
@@ -132,7 +130,7 @@ class SendBuilderTest {
             var builder = builderFor(bus, "msg", String.class);
 
             Consumer<PipelineMessage<RoutedMessage<String>, String>> behavior = pm -> {};
-            builder.withBehavior(behavior).runAsync();
+            builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
         }
@@ -145,7 +143,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withMetadata(m -> m.put("k", "v")).runAsync();
+            builder.withMetadata(m -> m.put("k", "v")).executeAsync();
 
             assertThat(capturedOptions.get().getMetadataSetter()).isNotNull();
         }
@@ -158,7 +156,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withMessageId("send-id-456").runAsync();
+            builder.withMessageId("send-id-456").executeAsync();
 
             assertThat(capturedOptions.get().getMessageId()).isEqualTo("send-id-456");
         }
@@ -171,7 +169,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withCorrelationId("corr-001").runAsync();
+            builder.withCorrelationId("corr-001").executeAsync();
 
             assertThat(capturedOptions.get().getCorrelationId()).isEqualTo("corr-001");
         }
@@ -184,7 +182,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withPriority(8).runAsync();
+            builder.withPriority(8).executeAsync();
 
             assertThat(capturedOptions.get().getPriority()).isEqualTo(8);
         }
@@ -197,7 +195,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withTimeout(10_000L).runAsync();
+            builder.withTimeout(10_000L).executeAsync();
 
             assertThat(capturedOptions.get().getTimeout()).isEqualTo(10_000L);
         }
@@ -210,7 +208,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.withDelay(300L).runAsync();
+            builder.withDelay(300L).executeAsync();
 
             assertThat(capturedOptions.get().getDelay()).isEqualTo(300L);
         }
@@ -242,7 +240,7 @@ class SendBuilderTest {
                    .withPriority(3)
                    .withTimeout(2000L)
                    .withDelay(100L)
-                   .runAsync();
+                   .executeAsync();
 
             assertThat(capturedMessage.get()).isEqualTo("command");
             assertThat(capturedResponseType.get()).isEqualTo(Integer.class);
@@ -268,7 +266,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            var future = builder.runAsync();
+            var future = builder.executeAsync();
 
             assertThat(future).isCompleted();
         }
@@ -281,7 +279,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), new AtomicReference<>());
             var builder = builderFor(bus, "msg", Integer.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedResponseType.get()).isEqualTo(Integer.class);
         }
@@ -294,7 +292,7 @@ class SendBuilderTest {
                                 capturedOptions, new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedOptions.get()).isNotNull();
             assertThat(capturedOptions.get()).isInstanceOf(SendOptions.class);
@@ -308,7 +306,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), new AtomicReference<>());
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedCallback.get()).isNull();
         }
@@ -321,7 +319,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), capturedBehavior);
             var builder = builderFor(bus, "msg", String.class);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedBehavior.get()).isNull();
         }

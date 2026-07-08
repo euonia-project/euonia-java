@@ -24,12 +24,24 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
 
     private static final Logger LOGGER = Logger.getLogger(KafkaRecipientRegistrar.class.getName());
 
+    /** 服务提供者 */
     private final ServiceProvider provider;
+    /** Kafka 总线选项 */
     private final KafkaBusOptions options;
+    /** 消息约定 */
     private final MessageConvention convention;
+    /** 传输策略 */
     private final TransportStrategy strategy;
+    /** 已创建的接收者列表 */
     private final List<KafkaRecipient> recipients = new ArrayList<>();
 
+    /**
+     * 使用配置器、服务提供者和 Kafka 选项构造注册器。
+     *
+     * @param configurator 消息总线配置器
+     * @param provider     服务提供者
+     * @param options      Kafka 总线选项
+     */
     public KafkaRecipientRegistrar(Configurator configurator, ServiceProvider provider, KafkaBusOptions options) {
         this.provider = provider;
         this.options = options;
@@ -70,6 +82,9 @@ public class KafkaRecipientRegistrar implements RecipientRegistrar {
         }
     }
 
+    /**
+     * 关闭所有已注册的接收者。
+     */
     public void close() {
         for (var recipient : recipients) {
             try {

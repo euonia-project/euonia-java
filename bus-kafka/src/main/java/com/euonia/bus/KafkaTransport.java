@@ -31,11 +31,21 @@ public final class KafkaTransport implements Transport, AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger(KafkaTransport.class.getName());
 
+    /** 创建 Kafka 生产者 */
     private final KafkaProducer<String, byte[]> producer;
+    /** 消息序列化器 */
     private final MessageSerializer serializer;
+    /** Kafka 总线选项 */
     private final KafkaBusOptions options;
+    /** 基于 Failsafe 的重试策略 */
     private final RetryPolicy<Object> retryPolicy;
 
+    /**
+     * 使用 Kafka 选项和序列化器构造传输实例。
+     *
+     * @param options    Kafka 总线选项
+     * @param serializer 消息序列化器
+     */
     public KafkaTransport(KafkaBusOptions options, MessageSerializer serializer) {
         this.serializer = serializer;
         this.options = options;
@@ -48,6 +58,13 @@ public final class KafkaTransport implements Transport, AutoCloseable {
         return getClass().getSimpleName();
     }
 
+    /**
+     * 发布消息到 Kafka 主题（多播模式）。
+     *
+     * @param <M>     消息类型
+     * @param message 要发布的消息
+     * @return 发布完成后的异步结果
+     */
     @Override
     public <M> CompletableFuture<Void> publishAsync(MessageEnvelope<M> message) {
         var topicName = options.generateTopicName(message.getChannel());
@@ -60,16 +77,41 @@ public final class KafkaTransport implements Transport, AutoCloseable {
         });
     }
 
+    /**
+     * 发送消息到 Kafka 主题（单播模式，不等待响应）。
+     *
+     * @param <M>     消息类型
+     * @param message 要发送的消息
+     * @return 发送完成后的异步结果
+     */
     @Override
     public <M> CompletableFuture<Void> sendAsync(MessageEnvelope<M> message) {
         return publishAsync(message);
     }
 
+    /**
+     * 发送请求消息并等待响应。委托给 {@link #callAsync}。
+     *
+     * @param <M>          消息类型
+     * @param <R>          响应类型
+     * @param message      要发送的消息
+     * @param responseType 期望的响应类型
+     * @return 包含响应的异步结果
+     */
     @Override
     public <M, R> CompletableFuture<R> sendAsync(MessageEnvelope<M> message, Class<R> responseType) {
         return callAsync(message, responseType);
     }
 
+    /**
+     * 以 RPC 模式调用消息，在独立线程中监听回复主题并等待响应。
+     *
+     * @param <M>          消息类型
+     * @param <R>          响应类型
+     * @param message      要发送的消息
+     * @param responseType 期望的响应类型
+     * @return 包含响应的异步结果
+     */
     @Override
     public <M, R> CompletableFuture<R> callAsync(MessageEnvelope<M> message, Class<R> responseType) {
         CompletableFuture<R> future = new CompletableFuture<>();

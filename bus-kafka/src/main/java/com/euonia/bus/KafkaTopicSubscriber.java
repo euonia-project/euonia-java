@@ -14,15 +14,33 @@ import com.euonia.bus.serialization.MessageSerializer;
 
 /**
  * Kafka 主题订阅者，实现多播消息的消费。
+ * <p>
+ * 订阅 Kafka 主题，消费消息后触发确认并提交偏移量。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
 
+    /** Kafka 消费者 */
     private KafkaConsumer<String, byte[]> consumer;
 
+    /**
+     * 使用必要的依赖构造主题订阅者。
+     *
+     * @param options     Kafka 总线选项
+     * @param handler     处理器上下文
+     * @param serializer  消息序列化器
+     * @param messageType 消息类型
+     */
     public KafkaTopicSubscriber(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(options, handler, serializer, messageType);
     }
 
+    /**
+     * 启动主题订阅，在独立线程中轮询并处理消息。
+     *
+     * @param channelName 通道名称
+     */
     @Override
     void start(String channelName) {
         var topicName = options.generateTopicName(channelName);
@@ -47,6 +65,12 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
         });
     }
 
+    /**
+     * 创建 Kafka 消费者。
+     *
+     * @param channelName 通道名称
+     * @return 配置好的 Kafka 消费者
+     */
     private KafkaConsumer<String, byte[]> createConsumer(String channelName) {
         var props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getBootstrapServers());
@@ -55,6 +79,9 @@ final class KafkaTopicSubscriber extends KafkaRecipient implements Subscriber {
         return new KafkaConsumer<>(props);
     }
 
+    /**
+     * 关闭消费者。
+     */
     @Override
     public void close() {
         super.close();
