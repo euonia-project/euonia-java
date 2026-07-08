@@ -564,6 +564,14 @@ mvn spring-boot:run
 ```
 
 ---
+## 发布
+
+```bash
+# 发布到 Maven 中央仓库
+mvn clean deploy -DskipTests -P release 2>&1 | tee release.log
+```
+
+---
 
 ## 项目链接
 
