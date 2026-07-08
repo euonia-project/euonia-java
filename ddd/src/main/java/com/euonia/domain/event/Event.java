@@ -1,16 +1,13 @@
 package com.euonia.domain.event;
 
-import com.euonia.bus.message.Multicast;
-
 /**
  * {@link Event} 接口表示领域模型中的通用事件。定义了所有事件应具备的基本属性和方法。
  * <p>
  * 事件用于捕获和表示系统中的重要发生事件或变更，允许不同组件之间的通信和协调。
- * 继承自 {@link Multicast}，表明事件以多播模式传播。
  *
  * @author damon(zhaorong@outlook.com)
  */
-public interface Event extends Multicast {
+public interface Event {
     /**
      * 获取事件的序号，可用于确定事件的顺序。
      *

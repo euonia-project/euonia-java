@@ -81,18 +81,4 @@ class BaseApplicationServiceTest {
             assertThat(svc.getUser()).isNull();
         }
     }
-
-    @Nested
-    @DisplayName("bus")
-    class Bus {
-
-        @Test
-        @DisplayName("should return null when bus not registered")
-        void shouldReturnNullWhenBusNotRegistered() {
-            var provider = new DelegateServiceProvider(type -> null);
-            var svc = new TestAppService(provider);
-
-            assertThat(svc.getBus()).isNull();
-        }
-    }
 }

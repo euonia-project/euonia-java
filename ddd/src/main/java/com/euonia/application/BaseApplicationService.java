@@ -2,7 +2,6 @@ package com.euonia.application;
 
 import java.util.Optional;
 
-import com.euonia.bus.Bus;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.security.UserPrincipal;
 
@@ -20,10 +19,6 @@ public abstract class BaseApplicationService implements ApplicationService {
      * 服务提供者
      */
     protected final ServiceProvider provider;
-    /**
-     * 消息总线
-     */
-    protected final Bus bus;
 
     /**
      * 使用指定的服务提供者构造基类实例。
@@ -32,7 +27,6 @@ public abstract class BaseApplicationService implements ApplicationService {
      */
     protected BaseApplicationService(ServiceProvider provider) {
         this.provider = provider;
-        this.bus = provider.getService(Bus.class).orElse(null);
     }
 
     /**
@@ -53,14 +47,5 @@ public abstract class BaseApplicationService implements ApplicationService {
      */
     protected UserPrincipal getUser() {
         return getService(UserPrincipal.class).orElse(null);
-    }
-
-    /**
-     * 获取消息总线服务。
-     *
-     * @return 消息总线服务，如果不可用则为 null
-     */
-    protected Bus getBus() {
-        return bus;
     }
 }
