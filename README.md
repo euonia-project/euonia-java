@@ -15,8 +15,6 @@ graph TD
     subgraph "Euonia Java"
         direction TB
         DDD --> Core
-        DDD --> UoW
-        DDD --> Pipeline
         OSBA --> Core
         UoW --> Core
         Pipeline --> Core
