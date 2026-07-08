@@ -1,33 +1,32 @@
 package com.euonia.uow;
 
 /**
- * Thread-local holder for the current ambient {@link UnitOfWork}.
+ * 当前线程环境 {@link UnitOfWork} 的线程本地持有者。
  *
- * <p>Each thread has its own independent unit of work, making this safe
- * for use in thread-per-request environments such as servlet containers.</p>
+ * <p>每个线程都有自己独立的工作单元，因此在 servlet 容器等线程-请求环境下使用是安全的。</p>
  *
  * <pre>{@code
  * UnitOfWork current = accessor.getCurrentUnitOfWork();
  * }</pre>
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class UnitOfWorkAccessor {
     private final ThreadLocal<UnitOfWork> current = new ThreadLocal<>();
 
     /**
-     * Returns the unit of work associated with the current thread,
-     * or {@code null} if none is active.
+     * 返回与当前线程关联的工作单元。如果没有活跃的工作单元则返回 {@code null}。
      *
-     * @return the current unit of work, or {@code null}
+     * @return 当前工作单元，可能为 {@code null}
      */
     public UnitOfWork getCurrentUnitOfWork() {
         return current.get();
     }
 
     /**
-     * Sets the unit of work for the current thread. Passing {@code null}
-     * removes the association.
+     * 为当前线程设置工作单元。传入 {@code null} 将移除关联。
      *
-     * @param unitOfWork the unit of work to associate, or {@code null} to clear
+     * @param unitOfWork 要关联的工作单元，传入 {@code null} 以清除
      */
     public void setCurrentUnitOfWork(UnitOfWork unitOfWork) {
         if (unitOfWork == null) {

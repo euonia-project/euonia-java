@@ -14,35 +14,36 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Coordinates transactional resources within a single atomic unit.
+ * 在单个原子单元内协调事务资源。
  *
- * <h3>Lifecycle</h3>
+ * <h3>生命周期</h3>
  * <ol>
- *   <li>{@link #initialize(UnitOfWorkOptions)} — called by the manager</li>
- *   <li>Register contexts via {@link #addContext} or {@link #getOrAddContext}</li>
- *   <li>{@link #completeAsync()} — save changes and commit</li>
- *   <li>{@link #close()} — release resources (implements {@link AutoCloseable})</li>
+ *   <li>{@link #initialize(UnitOfWorkOptions)} —— 由管理器调用</li>
+ *   <li>通过 {@link #addContext} 或 {@link #getOrAddContext} 注册上下文</li>
+ *   <li>{@link #completeAsync()} —— 保存变更并提交</li>
+ *   <li>{@link #close()} —— 释放资源（实现 {@link AutoCloseable}）</li>
  * </ol>
  *
- * <h3>Usage</h3>
+ * <h3>使用方式</h3>
  * <pre>{@code
  * try (UnitOfWork uow = new UnitOfWork()) {
  *     uow.initialize(new UnitOfWorkOptions(true));
  *     uow.addContext("db", new JdbcTransactionContext(connection));
- *     // ... business logic ...
+ *     // ... 业务逻辑 ...
  *     uow.completeAsync().toCompletableFuture().join();
- * } // automatically disposes
+ * } // 自动释放
  * }</pre>
  *
- * <h3>Listeners</h3>
- * <p>Register callbacks for success, failure, and disposal:
+ * <h3>监听器</h3>
+ * <p>注册成功、失败和释放的回调：
  * <ul>
  *   <li>{@link #addCompletedListener(Consumer)}</li>
  *   <li>{@link #addFailedListener(Consumer)}</li>
  *   <li>{@link #addDisposedListener(Consumer)}</li>
- *   <li>{@link #onCompleted(Supplier)} — async handler before completion event</li>
+ *   <li>{@link #onCompleted(Supplier)} —— 完成事件前的异步处理器</li>
  * </ul>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWorkManager
  * @see UnitOfWorkContext
  * @see ChildUnitOfWork
@@ -69,129 +70,125 @@ public class UnitOfWork implements AutoCloseable {
     private boolean reserved;
     private String reservationName;
 
-    /** Creates a unit of work with default (non-transactional) options. */
+    /** 使用默认（非事务性）选项创建工作单元。 */
     public UnitOfWork() {
         this(new UnitOfWorkOptions());
     }
 
     /**
-     * Creates a unit of work with the given default options.
+     * 使用给定的默认选项创建工作单元。
      *
-     * @param defaultOptions the fallback options; if {@code null}, non-transactional defaults are used
+     * @param defaultOptions 回退选项；如果为 {@code null}，则使用非事务性默认值
      */
     public UnitOfWork(UnitOfWorkOptions defaultOptions) {
         this.defaultOptions = defaultOptions == null ? new UnitOfWorkOptions() : defaultOptions;
     }
 
-    /** @return the unique identifier for this unit of work */
+    /** @return 此工作单元的唯一标识符 */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns a mutable map for storing arbitrary data scoped to this
-     * unit of work.
+     * 返回一个可变的映射，用于存储此工作单元范围内的任意数据。
      *
-     * @return the items map
+     * @return 数据项映射
      */
     public Map<String, Object> getItems() {
         return items;
     }
 
     /**
-     * Returns an unmodifiable view of the registered transactional contexts.
+     * 返回已注册的事务上下文的不可修改视图。
      *
-     * @return the contexts map
+     * @return 上下文映射
      */
     public Map<String, UnitOfWorkContext> getContexts() {
         return Collections.unmodifiableMap(contexts);
     }
 
-    /** @return the active options, or {@code null} before initialization */
+    /** @return 活跃的选项，初始化前为 {@code null} */
     public UnitOfWorkOptions getOptions() {
         return options;
     }
 
-    /** @return the outer (parent) unit of work, or {@code null} if this is the outermost */
+    /** @return 外部（父级）工作单元，如果当前已是最外层则返回 {@code null} */
     public UnitOfWork getOuter() {
         return outer;
     }
 
-    /** @return whether this unit of work has been reserved */
+    /** @return 此工作单元是否已被预留 */
     public boolean isReserved() {
         return reserved;
     }
 
-    /** @return the reservation name, or {@code null} if not reserved */
+    /** @return 预留名称，如果未被预留则返回 {@code null} */
     public String getReservationName() {
         return reservationName;
     }
 
-    /** @return whether {@link #close()} has been called */
+    /** @return {@link #close()} 是否已被调用 */
     public boolean isDisposed() {
         return disposed;
     }
 
-    /** @return whether {@link #completeAsync()} completed successfully */
+    /** @return {@link #completeAsync()} 是否已成功完成 */
     public boolean isCompleted() {
         return completed;
     }
 
     /**
-     * Returns the failure that caused this unit of work to fail,
-     * or {@code null} if it succeeded.
+     * 返回导致此工作单元失败的异常，如果成功则返回 {@code null}。
      *
-     * @return the failure, or {@code null}
+     * @return 失败异常，可能为 {@code null}
      */
     public Throwable getFailure() {
         return failure;
     }
 
     /**
-     * Registers a listener to be notified when the unit of work
-     * completes successfully.
+     * 注册一个监听器，当工作单元成功完成时接收通知。
      *
-     * @param listener the callback
+     * @param listener 回调函数
      */
     public void addCompletedListener(Consumer<UnitOfWorkEvent> listener) {
         completedListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     /**
-     * Registers a listener to be notified when the unit of work fails.
+     * 注册一个监听器，当工作单元失败时接收通知。
      *
-     * @param listener the callback
+     * @param listener 回调函数
      */
     public void addFailedListener(Consumer<UnitOfWorkFailure> listener) {
         failedListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     /**
-     * Registers a listener to be notified when the unit of work is disposed.
+     * 注册一个监听器，当工作单元被释放时接收通知。
      *
-     * @param listener the callback
+     * @param listener 回调函数
      */
     public void addDisposedListener(Consumer<UnitOfWorkEvent> listener) {
         disposedListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     /**
-     * Registers an async handler that runs before the completed event is fired.
-     * Handlers are chained sequentially.
+     * 注册一个异步处理器，在完成事件触发之前运行。处理器按顺序链式执行。
      *
-     * @param handler the async handler
+     * @param handler 异步处理器
      */
     public void onCompleted(Supplier<CompletionStage<Void>> handler) {
         completedHandlers.add(Objects.requireNonNull(handler, "handler"));
     }
 
     /**
-     * Initializes the unit of work with the given options (called once by the manager).
-     * Merges the supplied options with this unit's defaults.
+     * 使用给定的选项初始化工作单元（由管理器调用一次）。
+     * 将提供的选项与此工作单元的默认选项合并。
      *
-     * @param options the options for this unit of work
-     * @throws IllegalArgumentException if {@code options} is {@code null}
-     * @throws IllegalStateException    if already initialized
+     * @param options 此工作单元的选项
+     * @throws IllegalArgumentException 如果 {@code options} 为 {@code null}
+     * @throws IllegalStateException    如果已经初始化
      */
     public void initialize(UnitOfWorkOptions options) {
         if (options == null) {
@@ -207,9 +204,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Reserves this unit of work for a specific purpose.
+     * 为此工作单元预留一个特定目的。
      *
-     * @param reservationName a descriptive name
+     * @param reservationName 描述性名称
      */
     public void reserve(String reservationName) {
         if (reservationName == null || reservationName.isBlank()) {
@@ -221,9 +218,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Saves pending changes across all registered contexts without committing.
+     * 保存所有已注册上下文中挂起的变更，但不提交。
      *
-     * @return a stage that completes when all contexts have saved
+     * @return 当所有上下文保存完成后完成的阶段
      */
     public CompletionStage<Void> saveChangesAsync() {
         if (rolledBack) {
@@ -241,9 +238,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Rolls back all registered contexts.
+     * 回滚所有已注册的上下文。
      *
-     * @return a stage that completes when all contexts have rolled back
+     * @return 当所有上下文回滚完成后完成的阶段
      */
     public CompletionStage<Void> rollbackAsync() {
         if (rolledBack) {
@@ -262,11 +259,10 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Completes the unit of work: saves changes, fires completion handlers,
-     * then notifies listeners. May only be called once.
+     * 完成工作单元：保存变更、触发完成处理器、然后通知监听器。只能调用一次。
      *
-     * @return a stage that completes when the unit of work is done
-     * @throws IllegalStateException if completion has already been requested
+     * @return 当工作单元完成后完成的阶段
+     * @throws IllegalStateException 如果已完成请求已发出
      */
     public CompletionStage<Void> completeAsync() {
         if (rolledBack) {
@@ -307,19 +303,19 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Sets the outer (parent) unit of work for nesting support.
+     * 设置外部（父级）工作单元以支持嵌套。
      *
-     * @param outer the outer unit of work
+     * @param outer 外部工作单元
      */
     public void setOuter(UnitOfWork outer) {
         this.outer = outer;
     }
 
     /**
-     * Finds a registered context by key.
+     * 按键查找已注册的上下文。
      *
-     * @param key the context key
-     * @return the context, or {@code null} if not found
+     * @param key 上下文键
+     * @return 上下文，如果未找到则返回 {@code null}
      */
     public UnitOfWorkContext findContext(String key) {
         if (key == null || key.isBlank()) {
@@ -330,12 +326,11 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Registers a context under the given key. Fails if a context is
-     * already registered with that key.
+     * 在给定键下注册上下文。如果该键下已有上下文，则操作失败。
      *
-     * @param key     the context key
-     * @param context the context to register
-     * @throws IllegalStateException if a context with this key already exists
+     * @param key     上下文键
+     * @param context 要注册的上下文
+     * @throws IllegalStateException 如果该键下已有上下文
      */
     public void addContext(String key, UnitOfWorkContext context) {
         if (key == null || key.isBlank()) {
@@ -353,11 +348,11 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Gets an existing context or creates a new one using the supplied factory.
+     * 获取已有上下文，或使用提供的工厂创建新的上下文。
      *
-     * @param key     the context key
-     * @param factory the factory to create the context if absent
-     * @return the existing or newly created context
+     * @param key     上下文键
+     * @param factory 当上下文不存在时用于创建上下文的工厂
+     * @return 已有或新创建的上下文
      */
     public UnitOfWorkContext getOrAddContext(String key, Supplier<UnitOfWorkContext> factory) {
         if (key == null || key.isBlank()) {
@@ -372,9 +367,8 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Disposes the unit of work. Closes all contexts, fires failure
-     * listeners if the unit did not complete successfully, and fires
-     * disposal listeners. Idempotent — subsequent calls are no-ops.
+     * 释放工作单元。关闭所有上下文，如果单元未成功完成则触发失败监听器，
+     * 并触发释放监听器。幂等 —— 后续调用为空操作。
      */
     @Override
     public void close() {
@@ -396,9 +390,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Notifies all registered completed listeners with the given event.
+     * 使用给定事件通知所有已注册的完成监听器。
      *
-     * @param event the completion event
+     * @param event 完成事件
      */
     protected void notifyCompleted(UnitOfWorkEvent event) {
         for (Consumer<UnitOfWorkEvent> listener : completedListeners) {
@@ -407,9 +401,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Notifies all registered failure listeners with the given event.
+     * 使用给定事件通知所有已注册的失败监听器。
      *
-     * @param event the failure event
+     * @param event 失败事件
      */
     protected void notifyFailed(UnitOfWorkFailure event) {
         for (Consumer<UnitOfWorkFailure> listener : failedListeners) {
@@ -418,9 +412,9 @@ public class UnitOfWork implements AutoCloseable {
     }
 
     /**
-     * Notifies all registered disposal listeners with the given event.
+     * 使用给定事件通知所有已注册的释放监听器。
      *
-     * @param event the disposal event
+     * @param event 释放事件
      */
     protected void notifyDisposed(UnitOfWorkEvent event) {
         for (Consumer<UnitOfWorkEvent> listener : disposedListeners) {

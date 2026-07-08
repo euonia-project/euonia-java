@@ -3,46 +3,45 @@ package com.euonia.uow;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Abstraction for a transactional resource (database, message broker, etc.)
- * that participates in a unit of work.
+ * 参与工作单元的事务资源（数据库、消息代理等）的抽象。
  *
- * <p>Implementations register themselves with a {@link UnitOfWork} via
- * {@link UnitOfWork#addContext} and receive lifecycle callbacks:</p>
+ * <p>实现类通过 {@link UnitOfWork#addContext} 向 {@link UnitOfWork} 注册自己，
+ * 并接收生命周期回调：</p>
  * <ol>
- *   <li>{@link #saveChangesAsync()} — flush pending changes</li>
- *   <li>{@link #commitAsync()} — commit the transaction</li>
- *   <li>{@link #rollbackAsync()} — roll back the transaction</li>
- *   <li>{@link #close()} — release resources</li>
+ *   <li>{@link #saveChangesAsync()} —— 刷新挂起的变更</li>
+ *   <li>{@link #commitAsync()} —— 提交事务</li>
+ *   <li>{@link #rollbackAsync()} —— 回滚事务</li>
+ *   <li>{@link #close()} —— 释放资源</li>
  * </ol>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWork
  */
 public interface UnitOfWorkContext {
     /**
-     * Persists pending changes to the underlying resource without
-     * committing the transaction.
+     * 将挂起的变更持久化到底层资源，但不提交事务。
      *
-     * @return a stage that completes when changes are saved
+     * @return 在变更保存后完成的阶段
      */
     CompletionStage<Void> saveChangesAsync();
 
     /**
-     * Commits the transaction.
+     * 提交事务。
      *
-     * @return a stage that completes when the commit is done
+     * @return 在提交完成后完成的阶段
      */
     CompletionStage<Void> commitAsync();
 
     /**
-     * Rolls back the transaction.
+     * 回滚事务。
      *
-     * @return a stage that completes when the rollback is done
+     * @return 在回滚完成后完成的阶段
      */
     CompletionStage<Void> rollbackAsync();
 
     /**
-     * Releases any resources held by this context.
-     * The default implementation does nothing.
+     * 释放此上下文持有的所有资源。
+     * 默认实现不做任何操作。
      */
     default void close() {
     }

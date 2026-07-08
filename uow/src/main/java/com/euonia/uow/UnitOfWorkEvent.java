@@ -1,29 +1,30 @@
 package com.euonia.uow;
 
 /**
- * Event raised when a unit of work completes or is disposed.
+ * 工作单元完成或被释放时引发的事件。
  *
- * <p>Listeners registered via {@link UnitOfWork#addCompletedListener}
- * and {@link UnitOfWork#addDisposedListener} receive instances of this class.</p>
+ * <p>通过 {@link UnitOfWork#addCompletedListener} 和
+ * {@link UnitOfWork#addDisposedListener} 注册的监听器会收到此类的实例。</p>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWorkFailure
  */
 public class UnitOfWorkEvent {
     private final UnitOfWork unitOfWork;
 
     /**
-     * Creates a new event for the given unit of work.
+     * 为给定的工作单元创建新的事件。
      *
-     * @param unitOfWork the unit of work that triggered the event
+     * @param unitOfWork 触发事件的工作单元
      */
     public UnitOfWorkEvent(UnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
     }
 
     /**
-     * Returns the unit of work that triggered this event.
+     * 返回触发此事件的工作单元。
      *
-     * @return the associated unit of work
+     * @return 关联的工作单元
      */
     public UnitOfWork getUnitOfWork() {
         return unitOfWork;
