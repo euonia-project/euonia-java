@@ -66,6 +66,8 @@ public final class MessageBus implements Bus {
      */
     private final PipelineFactory pipelineFactory;
 
+    private final OutboxPublisher publisher;
+
     /**
      * 使用服务提供者创建消息总线实例。
      * <p>
@@ -75,10 +77,7 @@ public final class MessageBus implements Bus {
      * @throws IllegalStateException 如果 Dispatcher 服务未找到
      */
     public MessageBus(ServiceProvider provider) {
-        this.provider = provider;
-        this.dispatcher = provider.getService(Dispatcher.class).orElseThrow(() -> new IllegalStateException("Dispatcher service not found"));
-        this.configurator = provider.getService(Configurator.class).orElseThrow(() -> new IllegalStateException("Configurator service not found"));
-        this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
+        this(provider, provider.getService(Configurator.class).orElseThrow(() -> new IllegalStateException("Configurator service not found")));
     }
 
     /**
@@ -92,6 +91,8 @@ public final class MessageBus implements Bus {
         this.configurator = configurator;
         this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
+        this.publisher = new OutboxPublisher(provider);
+        this.publisher.start();
     }
 
     /**
@@ -137,12 +138,7 @@ public final class MessageBus implements Bus {
                     var transports = dispatcher.determine(channelName, messageType);
 
                     var tasks = transports.stream()
-                                          .map(transport -> {
-                                              LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
-                                              return provider.getService(Transport.class, transport)
-                                                             .orElseThrow(() -> new MessageTransportException("Transport service not found: " + transport))
-                                                             .publishAsync(finalPack);
-                                          })
+                                          .map(transport -> publisher.publishAsync(transport, finalPack))
                                           .toArray(CompletableFuture[]::new);
 
                     return CompletableFuture.allOf(tasks);
