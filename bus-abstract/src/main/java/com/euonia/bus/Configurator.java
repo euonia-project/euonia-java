@@ -1,18 +1,20 @@
 package com.euonia.bus;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.MessageConventionBuilder;
 import com.euonia.bus.strategy.TransportStrategy;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-
 /**
- * BusConfigurator is the main interface for configuring the message bus.
- * It provides methods to configure message conventions, transport strategies, and handler registrations.
- * Implementations of this interface will be used to set up the bus before it is started.
+ * {@link Configurator} 是配置消息总线的主接口。
+ * 提供了配置消息约定、传输策略和处理器注册的方法。
+ * 此接口的实现将在总线启动之前用于设置总线。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Configurator {
     /**
@@ -30,23 +32,23 @@ public interface Configurator {
     boolean isEnablePipelineBehaviors();
 
     /**
-     * Gets the MessageConventionBuilder that has been configured.
+     * 获取已配置的 {@link MessageConventionBuilder}。
      *
-     * @return the MessageConventionBuilder
+     * @return MessageConventionBuilder 实例
      */
     MessageConventionBuilder getConventionBuilder();
 
     /**
-     * Gets the map of transport strategy builders that have been configured.
+     * 获取已配置的传输策略构建器映射。
      *
-     * @return the map of transport strategy builders
+     * @return 传输策略构建器映射
      */
     ConcurrentMap<String, TransportStrategyBuilder> getStrategyBuilders();
 
     /**
-     * Gets the map of handler registrations that have been configured.
+     * 获取已配置的处理器注册信息映射。
      *
-     * @return the map of handler registrations
+     * @return 处理器注册信息映射
      */
     Map<String, ChannelRegistration> getRegistrations();
 

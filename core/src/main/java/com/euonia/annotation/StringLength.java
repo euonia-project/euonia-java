@@ -22,9 +22,24 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Validation(validator = StringLengthValidator.class)
 public @interface StringLength {
+    /**
+     * 指定允许的最小长度。
+     *
+     * @return 最小长度, 默认为 {@code 0}
+     */
     int min() default 0;
 
+    /**
+     * 指定允许的最大长度。
+     *
+     * @return 最大长度, 默认为 {@code Integer.MAX_VALUE}
+     */
     int max() default Integer.MAX_VALUE;
 
+    /**
+     * 自定义验证失败时的错误消息。默认为空字符串。
+     *
+     * @return 错误消息, 默认为空字符串
+     */
     String message() default "";
 }

@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a type or method as requiring a unit of work.
+ * 标记某个类型或方法需要工作单元支持。
  *
- * <p>When applied to a class, all methods are wrapped in a unit of work.
- * When applied to a method, only that specific method is wrapped.
+ * <p>当应用于类上时，所有方法都会被包装在工作单元中。
+ * 当应用于方法上时，仅该特定方法会被包装。
  *
  * <pre>{@code
  * @UnitOfWork
@@ -19,16 +19,17 @@ import java.lang.annotation.Target;
  * public void readOnlyQuery() { ... }
  * }</pre>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see com.euonia.uow.UnitOfWork
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UnitOfWork {
     /**
-     * When {@code true}, the unit of work is suppressed for the annotated
-     * element even if a parent scope declares it.
+     * 当设置为 {@code true} 时，即使父作用域声明了工作单元，
+     * 也会为被注解的元素抑制工作单元。
      *
-     * @return whether the unit of work is disabled
+     * @return 工作单元是否被禁用
      */
     boolean disabled() default false;
 }

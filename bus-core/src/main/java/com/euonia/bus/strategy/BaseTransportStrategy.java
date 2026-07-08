@@ -10,13 +10,15 @@ import java.util.function.BiPredicate;
 import com.euonia.utility.Assert;
 
 /**
- * Represents a composite transport strategy that aggregates multiple {@link TransportStrategy} instances
- * and caches the results of outgoing and incoming channel evaluations using {@link ConcurrentHashMap}.
+ * 组合传输策略，聚合多个 {@link TransportStrategy} 实例，
+ * 并使用 {@link ConcurrentHashMap} 缓存出入站通道的评估结果。
  * <p>
- * Each direction (outgoing, incoming) has its own dedicated cache backed by {@code ConcurrentHashMap<CacheKey, Boolean>}.
+ * 出入站方向各有专属缓存，基于 {@code ConcurrentHashMap} 实现。
  * <p>
- * The composite strategy allows for flexible configuration by enabling the addition of custom transport strategies and the definition of custom predicates for determining outgoing and incoming channels. The default strategy can be overridden to provide custom logic for classifying channels without needing to implement a full {@link TransportStrategy}.
- * <p> This design promotes extensibility and performance by leveraging caching and a modular approach to strategy composition.
+ * 此组合策略通过支持添加自定义传输策略和定义评估出入站通道的自定义断言来实现灵活配置。
+ * 默认策略可被覆盖以提供自定义逻辑而无需实现完整的 {@link TransportStrategy}。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class BaseTransportStrategy implements TransportStrategy {
     private final OverridableTransportStrategy defaultStrategy = new OverridableTransportStrategy(new DefaultTransportStrategy());
@@ -49,21 +51,21 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * Adds one or more transport strategies to the composite strategy.
-     * The added strategies will be evaluated in order when determining if a channel is outgoing or incoming.
+     * 添加一个或多个传输策略到组合策略中。
+     * 添加的策略将在判断通道方向时按顺序评估。
      *
-     * @param strategies the transport strategies to add
+     * @param strategies 要添加的传输策略
      */
     public void add(TransportStrategy... strategies) {
         Assert.notEmpty(strategies, "strategies cannot be null or empty.");
         Collections.addAll(this.strategies, strategies);
-        resetCache(); // Reset caches to ensure new strategies take effect
+        resetCache(); // 重置缓存以确保新策略生效
     }
 
     /**
-     * Defines a custom strategy for evaluating outgoing channels.
+     * 定义评估出站通道的自定义策略。
      *
-     * @param strategy a predicate that determines if a channel is considered outgoing
+     * @param strategy 判断通道是否视为出站的断言
      */
     public void defineOutgoingStrategy(BiPredicate<String, Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
@@ -71,9 +73,9 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * Defines a custom strategy for evaluating incoming channels.
+     * 定义评估入站通道的自定义策略。
      *
-     * @param strategy a predicate that determines if a channel is considered incoming
+     * @param strategy 判断通道是否视为入站的断言
      */
     public void defineIncomingStrategy(BiPredicate<String, Class<?>> strategy) {
         Assert.notNull(strategy, "strategy cannot be null.");
@@ -81,7 +83,7 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * Resets the caches for outgoing and incoming channel evaluations.
+     * 重置出入站评估缓存。
      */
     private void resetCache() {
         outgoingCache.reset();
@@ -89,9 +91,8 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * StrategyCache is a helper class that manages a cache for channel evaluations.
-     * It uses a {@link ConcurrentHashMap} to store the results of evaluating whether a channel is outgoing or incoming according to the provided strategy.
-     * The cache allows for fast lookups while ensuring thread safety in concurrent environments.
+     * {@link StrategyCache} 是管理通道评估缓存的辅助类。
+     * 使用 {@link ConcurrentHashMap} 存储评估结果，保证并发环境下的快速查找和线程安全。
      */
     private static class StrategyCache {
         private final ConcurrentHashMap<CacheKey, Boolean> cache = new ConcurrentHashMap<>();
@@ -106,7 +107,7 @@ public class BaseTransportStrategy implements TransportStrategy {
     }
 
     /**
-     * Composite cache key combining channel and message type.
+     * 组合缓存键，包含通道和消息类型。
      */
     private static final class CacheKey {
         final String channel;

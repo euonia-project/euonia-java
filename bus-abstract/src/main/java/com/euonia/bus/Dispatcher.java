@@ -3,15 +3,17 @@ package com.euonia.bus;
 import java.util.List;
 
 /**
- * Defines a dispatcher that determines handler types for messages.
+ * 定义消息分发器，用于确定消息应被派发到哪些传输通道。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface Dispatcher {
     /**
-     * Determine the transport(s) to which the message of the given channel should be dispatched.
+     * 确定给定通道的消息应被派发到哪些传输通道。
      *
-     * @param channel the channel of the message
-     * @param messageType the type of the message
-     * @return a list of transport names
+     * @param channel     消息的通道
+     * @param messageType 消息的类型
+     * @return 传输名称列表
      */
     List<String> determine(String channel, Class<?> messageType);
 }

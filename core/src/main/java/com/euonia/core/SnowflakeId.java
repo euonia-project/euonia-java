@@ -52,10 +52,22 @@ public final class SnowflakeId {
         return new SnowflakeId(workerId, datacenterId);
     }
 
+    /**
+     * 获取 SnowflakeId 的默认实例，使用 workerId 和 datacenterId 都为 0。
+     *
+     * @return 默认的 SnowflakeId 实例
+     */
     public static synchronized SnowflakeId getInstance() {
         return new SnowflakeId(0, 0);
     }
 
+    /**
+     * 生成下一个唯一 ID。
+     * <p>
+     * 该方法是线程安全的，确保在多线程环境下生成的 ID仍然唯一。如果系统时钟回退，将抛出异常。
+     *
+     * @return 下一个唯一的 64 位 ID
+     */
     public synchronized long nextId() {
         long timestamp = timeGen();
 
@@ -80,6 +92,12 @@ public final class SnowflakeId {
             | sequence;
     }
 
+    /**
+     * 阻塞直到下一个毫秒，以确保生成的 ID 唯一。
+     *
+     * @param lastTimestamp 上一次生成 ID 的时间戳
+     * @return 当前时间戳
+     */
     private long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
         while (timestamp <= lastTimestamp) {

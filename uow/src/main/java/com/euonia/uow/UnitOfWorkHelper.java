@@ -5,22 +5,23 @@ import java.lang.reflect.Method;
 import com.euonia.uow.annotation.UnitOfWork;
 
 /**
- * Static utility methods for introspecting unit-of-work annotations
- * and marker interfaces on types and methods.
+ * 用于检查类型和方法上工作单元注解和标记接口的静态工具方法。
  *
- * <p>Used primarily by AOP interceptors and proxies to determine
- * whether a given class or method should be wrapped in a unit of work.</p>
+ * <p>主要由 AOP 拦截器和代理使用，用于判断给定的类或方法
+ * 是否应被包装在工作单元中。</p>
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public final class UnitOfWorkHelper {
     private UnitOfWorkHelper() {
     }
 
     /**
-     * Returns {@code true} if the type has a unit-of-work annotation
-     * (class or method level) or implements {@link UnitOfWorkEnabled}.
+     * 如果类型具有工作单元注解（类或方法级别）或实现了 {@link UnitOfWorkEnabled}，
+     * 则返回 {@code true}。
      *
-     * @param implementationType the type to inspect
-     * @return {@code true} if the type requires a unit of work
+     * @param implementationType 要检查的类型
+     * @return 如果类型需要工作单元则返回 {@code true}
      */
     public static boolean isUnitOfWorkType(Class<?> implementationType) {
         if (implementationType == null) {
@@ -35,23 +36,21 @@ public final class UnitOfWorkHelper {
     }
 
     /**
-     * Returns {@code true} if the method has an active (non-disabled)
-     * {@link UnitOfWork} annotation.
+     * 如果方法具有活跃的（未禁用的）{@link UnitOfWork} 注解，则返回 {@code true}。
      *
-     * @param method the method to inspect
-     * @return {@code true} if the method is annotated with {@code @UnitOfWork}
+     * @param method 要检查的方法
+     * @return 如果方法标注了 {@code @UnitOfWork} 则返回 {@code true}
      */
     public static boolean isUnitOfWorkMethod(Method method) {
         return getUnitOfWorkAnnotation(method) != null;
     }
 
     /**
-     * Retrieves the active {@link UnitOfWork} annotation from a method
-     * or its declaring class, returning {@code null} if the annotation
-     * is absent or {@link UnitOfWork#disabled() disabled}.
+     * 从方法或其声明类中检索活跃的 {@link UnitOfWork} 注解。
+     * 如果注解不存在或 {@link UnitOfWork#disabled() disabled}，则返回 {@code null}。
      *
-     * @param method the method to inspect
-     * @return the annotation, or {@code null}
+     * @param method 要检查的方法
+     * @return 注解，或 {@code null}
      */
     public static UnitOfWork getUnitOfWorkAnnotation(Method method) {
         if (method == null) {

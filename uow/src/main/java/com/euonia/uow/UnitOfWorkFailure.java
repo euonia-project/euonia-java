@@ -1,12 +1,11 @@
 package com.euonia.uow;
 
 /**
- * Event raised when a unit of work fails — either due to an exception
- * or an explicit rollback.
+ * 工作单元失败时引发的事件 —— 可能由于异常或显式回滚导致。
  *
- * <p>Listeners registered via {@link UnitOfWork#addFailedListener}
- * receive instances of this class.</p>
+ * <p>通过 {@link UnitOfWork#addFailedListener} 注册的监听器会收到此类的实例。</p>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWorkEvent
  */
 public class UnitOfWorkFailure extends UnitOfWorkEvent {
@@ -14,11 +13,11 @@ public class UnitOfWorkFailure extends UnitOfWorkEvent {
     private final boolean rollback;
 
     /**
-     * Creates a new failure event.
+     * 创建一个新的失败事件。
      *
-     * @param unitOfWork the unit of work that failed
-     * @param exception  the exception that caused the failure, may be {@code null}
-     * @param rollback   whether a rollback was triggered
+     * @param unitOfWork 失败的工作单元
+     * @param exception  导致失败的异常，可能为 {@code null}
+     * @param rollback   是否触发了回滚
      */
     public UnitOfWorkFailure(UnitOfWork unitOfWork, Throwable exception, boolean rollback) {
         super(unitOfWork);
@@ -27,19 +26,18 @@ public class UnitOfWorkFailure extends UnitOfWorkEvent {
     }
 
     /**
-     * Returns the exception that caused the failure, or {@code null}
-     * if the failure was triggered by an explicit rollback.
+     * 返回导致失败的异常。如果失败是由显式回滚触发的，则返回 {@code null}。
      *
-     * @return the exception, or {@code null}
+     * @return 异常，可能为 {@code null}
      */
     public Throwable getException() {
         return exception;
     }
 
     /**
-     * Returns whether a rollback was performed.
+     * 返回是否执行了回滚。
      *
-     * @return {@code true} if the unit of work was rolled back
+     * @return 如果工作单元已回滚则返回 {@code true}
      */
     public boolean isRollback() {
         return rollback;

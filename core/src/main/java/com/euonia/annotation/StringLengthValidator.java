@@ -1,6 +1,5 @@
 package com.euonia.annotation;
 
-import com.euonia.tuple.Duet;
 import com.euonia.utility.StringUtility;
 
 /**
@@ -19,7 +18,7 @@ import com.euonia.utility.StringUtility;
  */
 public final class StringLengthValidator implements Validator<StringLength> {
     @Override
-    public Duet<Boolean, String> validate(StringLength annotation, Object value) {
+    public Result validate(StringLength annotation, Object value) {
         boolean result = true;
         String message = null;
 
@@ -31,7 +30,7 @@ public final class StringLengthValidator implements Validator<StringLength> {
             }
         }
 
-        return new Duet<>(result, message);
+        return new Result(result, message);
     }
 
     private String getMessage(StringLength annotation) {

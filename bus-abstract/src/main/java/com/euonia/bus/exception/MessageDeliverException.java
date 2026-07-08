@@ -1,31 +1,33 @@
 package com.euonia.bus.exception;
 
 /**
- * Exception thrown when an error occurs during message delivery.
+ * 消息投递异常，当消息投递过程中发生错误时抛出。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class MessageDeliverException extends RuntimeException {
 
     /**
-     * Constructs a new MessageDeliverException with a default error message.
+     * 使用默认错误消息构造异常。
      */
     public MessageDeliverException() {
         this("Error occurred during message deliver.");
     }
 
     /**
-     * Constructs a new MessageDeliverException with the specified error message.
+     * 使用指定的错误消息构造异常。
      *
-     * @param message the detail message
+     * @param message 详细错误描述
      */
     public MessageDeliverException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new MessageDeliverException with the specified error message and cause.
+     * 使用指定的错误消息和原因构造异常。
      *
-     * @param message the detail message
-     * @param cause   the cause of the exception
+     * @param message 详细错误描述
+     * @param cause   异常的根因
      */
     public MessageDeliverException(String message, Throwable cause) {
         super(message, cause);

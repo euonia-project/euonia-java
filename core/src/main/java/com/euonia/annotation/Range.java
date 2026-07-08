@@ -10,8 +10,8 @@ import java.lang.annotation.Target;
  * <p>
  * 该注解支持以下属性：
  * <ul>
- *     <li>{@code min}：指定允许的最小值，默认为 {@code Long.MIN_VALUE}。</li>
- *     <li>{@code max}：指定允许的最大值，默认为 {@code Long.MAX_VALUE}。</li>
+ *     <li>{@code min}：指定允许的最小值，默认为 {@code Double.MIN_VALUE}。</li>
+ *     <li>{@code max}：指定允许的最大值，默认为 {@code Double.MAX_VALUE}。</li>
  *     <li>{@code inclusiveMin}：是否包含最小值，默认为 {@code false}。</li>
  *     <li>{@code inclusiveMax}：是否包含最大值，默认为 {@code false}。</li>
  * </ul>
@@ -25,16 +25,16 @@ public @interface Range {
     /**
      * 指定允许的最小值。
      *
-     * @return 最小值，默认为 {@code Long.MIN_VALUE}
+     * @return 最小值，默认为 {@code Double.MIN_VALUE}
      */
-    long min() default Long.MIN_VALUE;
+    double min() default Double.MIN_VALUE;
 
     /**
      * 指定允许的最大值。
      *
-     * @return 最大值，默认为 {@code Long.MAX_VALUE}
+     * @return 最大值，默认为 {@code Double.MAX_VALUE}
      */
-    long max() default Long.MAX_VALUE;
+    double max() default Double.MAX_VALUE;
 
     /**
      * 是否包含最小值。为{@code true}时允许指定值等于最小值。

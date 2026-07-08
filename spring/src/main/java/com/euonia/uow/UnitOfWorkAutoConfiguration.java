@@ -5,30 +5,27 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
- * Spring auto-configuration for the Unit of Work module.
+ * 工作单元模块的 Spring 自动配置。
  *
- * <p>Registers the following beans:
+ * <p>注册以下 Bean：
  * <ul>
- *   <li>{@link UnitOfWorkAccessor} — thread-local holder for the
- *       ambient unit of work</li>
- *   <li>{@link UnitOfWorkManager} — entry point for creating and
- *       managing units of work</li>
- *   <li>{@link UnitOfWorkAspect} — AOP aspect that wraps
- *       {@code @UnitOfWork}-annotated methods</li>
+ *   <li>{@link UnitOfWorkAccessor} —— 用于持有当前环境工作单元的线程本地持有者</li>
+ *   <li>{@link UnitOfWorkManager} —— 创建和管理工作单元的入口点</li>
+ *   <li>{@link UnitOfWorkAspect} —— 包装标注了 {@code @UnitOfWork} 方法的 AOP 切面</li>
  * </ul>
  *
- * <p>Enable AspectJ auto-proxy so the {@link UnitOfWorkAspect} can
- * intercept annotated Spring beans.</p>
+ * <p>启用 AspectJ 自动代理，使 {@link UnitOfWorkAspect} 可以拦截标注了注解的 Spring Bean。</p>
  *
- * <h3>Usage</h3>
- * <p>For Spring Boot, this configuration is auto-detected via
- * {@code spring.factories}. For plain Spring, import it manually:</p>
+ * <h3>使用方式</h3>
+ * <p>对于 Spring Boot，此配置通过 {@code spring.factories} 自动检测。
+ * 对于普通 Spring，手动导入：</p>
  * <pre>{@code
  * @Configuration
  * @Import(UnitOfWorkAutoConfiguration.class)
  * public class AppConfig { }
  * }</pre>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWorkAspect
  * @see UnitOfWorkManager
  */
@@ -37,10 +34,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class UnitOfWorkAutoConfiguration {
 
     /**
-     * Creates the thread-local accessor for tracking the ambient
-     * unit of work.
+     * 创建用于跟踪当前环境工作单元的线程本地持有者。
      *
-     * @return a new {@link UnitOfWorkAccessor}
+     * @return 新的 {@link UnitOfWorkAccessor}
      */
     @Bean
     public UnitOfWorkAccessor unitOfWorkAccessor() {
@@ -48,10 +44,10 @@ public class UnitOfWorkAutoConfiguration {
     }
 
     /**
-     * Creates the unit-of-work manager.
+     * 创建工作单元管理器。
      *
-     * @param accessor the thread-local accessor
-     * @return a new {@link UnitOfWorkManager}
+     * @param accessor 线程本地访问器
+     * @return 新的 {@link UnitOfWorkManager}
      */
     @Bean
     public UnitOfWorkManager unitOfWorkManager(UnitOfWorkAccessor accessor) {
@@ -59,11 +55,10 @@ public class UnitOfWorkAutoConfiguration {
     }
 
     /**
-     * Creates the AOP aspect that wraps {@code @UnitOfWork}-annotated
-     * methods in a unit of work.
+     * 创建 AOP 切面，将标注了 {@code @UnitOfWork} 的方法包装在工作单元中。
      *
-     * @param manager the unit-of-work manager
-     * @return a new {@link UnitOfWorkAspect}
+     * @param manager 工作单元管理器
+     * @return 新的 {@link UnitOfWorkAspect}
      */
     @Bean
     public UnitOfWorkAspect unitOfWorkAspect(UnitOfWorkManager manager) {

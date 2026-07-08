@@ -8,26 +8,24 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 /**
- * Spring AOP aspect that intercepts methods annotated with
- * {@link com.euonia.uow.annotation.UnitOfWork @UnitOfWork} and
- * wraps them in a unit of work.
+ * Spring AOP 切面，拦截标注了
+ * {@link com.euonia.uow.annotation.UnitOfWork @UnitOfWork} 的方法，
+ * 并将其包装在工作单元中。
  *
- * <h3>How it works</h3>
+ * <h3>工作原理</h3>
  * <ol>
- *   <li>Before the method executes, a new {@link UnitOfWork} is begun
- *       via {@link UnitOfWorkManager}.</li>
- *   <li>The method proceeds normally.</li>
- *   <li>On success, the unit of work is completed (save → handlers → listeners).</li>
- *   <li>On failure, the unit of work is rolled back and the exception is
- *       propagated. Failed listeners are fired via {@link UnitOfWork#close()}.</li>
- *   <li>The unit of work is always disposed in a {@code finally} block.</li>
+ *   <li>方法执行前，通过 {@link UnitOfWorkManager} 开启新的 {@link UnitOfWork}。</li>
+ *   <li>方法正常执行。</li>
+ *   <li>成功后，完成工作单元（保存 → 处理器 → 监听器）。</li>
+ *   <li>失败后，回滚工作单元并传播异常。通过 {@link UnitOfWork#close()} 触发失败监听器。</li>
+ *   <li>工作单元始终在 {@code finally} 块中释放。</li>
  * </ol>
  *
- * <h3>Pointcut</h3>
- * <p>Intercepts any Spring-managed bean method whose class or method is
- * annotated with {@code @UnitOfWork}. Methods annotated with
- * {@code @UnitOfWork(disabled = true)} are skipped.</p>
+ * <h3>切入点</h3>
+ * <p>拦截类或方法上标注了 {@code @UnitOfWork} 的任意 Spring 管理的 Bean 方法。
+ * 标注了 {@code @UnitOfWork(disabled = true)} 的方法会被跳过。</p>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWorkManager
  * @see com.euonia.uow.annotation.UnitOfWork
  */
@@ -37,20 +35,20 @@ public class UnitOfWorkAspect {
     private final UnitOfWorkManager unitOfWorkManager;
 
     /**
-     * Creates an aspect that uses the given manager for unit-of-work lifecycle.
+     * 创建使用给定管理器进行工作单元生命周期管理的切面。
      *
-     * @param unitOfWorkManager the unit-of-work manager
+     * @param unitOfWorkManager 工作单元管理器
      */
     public UnitOfWorkAspect(UnitOfWorkManager unitOfWorkManager) {
         this.unitOfWorkManager = unitOfWorkManager;
     }
 
     /**
-     * Around advice that wraps annotated methods in a unit of work.
+     * 环绕通知，将标注了注解的方法包装在工作单元中。
      *
-     * @param pjp the join point
-     * @return the method's return value
-     * @throws Throwable if the method throws
+     * @param pjp 连接点
+     * @return 方法的返回值
+     * @throws Throwable 如果方法抛出异常
      */
     @Around("@within(com.euonia.uow.annotation.UnitOfWork) || @annotation(com.euonia.uow.annotation.UnitOfWork)")
     public Object aroundUnitOfWork(ProceedingJoinPoint pjp) throws Throwable {
@@ -64,8 +62,8 @@ public class UnitOfWorkAspect {
             uow.completeAsync().toCompletableFuture().join();
             return result;
         } catch (Throwable t) {
-            // close() (via try-with-resources) detects !completed
-            // and fires failed listeners automatically
+            // close()（通过 try-with-resources）检测 !completed
+            // 并自动触发失败监听器
             throw t;
         }
     }

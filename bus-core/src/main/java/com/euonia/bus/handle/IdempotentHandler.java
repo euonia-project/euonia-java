@@ -3,22 +3,16 @@ package com.euonia.bus.handle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.MessageContext;
 import com.euonia.bus.MessageEnvelope;
-import com.euonia.bus.inbox.InboxStore;
+import com.euonia.bus.consistency.InboxStore;
 import com.euonia.http.RequestContextAwareExecutor;
-import com.euonia.pipeline.DefaultPipelineFactory;
-import com.euonia.pipeline.Pipeline;
-import com.euonia.pipeline.PipelineFactory;
+import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.tuple.Duet;
 
@@ -120,7 +114,7 @@ final class IdempotentHandler {
         Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
         Pipeline<Duet<String, MessageEnvelope<?>>, Object> pipeline = pipelineFactory.create();
         if (inboxStore != null) {
-            pipeline.use(InboxCompletionBehavior.class, inboxStore);
+            pipeline.use(InboxCompletionBehavior.class);
         }
         return pipeline.runAsync(new Duet<>(registration.handlerType().getTypeName(), message), ctx -> CompletableFuture.supplyAsync(() -> executeHandler(registration, message, context), customExecutor))
                        .toCompletableFuture();
@@ -139,5 +133,19 @@ final class IdempotentHandler {
     public Object executeHandler(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         var delegate = registration.factory().createDelegate(provider);
         return delegate.handle(message.getPayload(), context);
+    }
+
+    class InboxCompletionBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
+        @Override
+        public CompletionStage<Object> handleAsync(Duet<String, MessageEnvelope<?>> context, PipelineDelegate<Duet<String, MessageEnvelope<?>>, Object> next) {
+            assert inboxStore != null;
+            return next.invoke(context).whenComplete((message, throwable) -> {
+                if (throwable != null) {
+                    inboxStore.markAsFailed(context.value2().getMessageId(), context.value1(), throwable.getMessage());
+                } else {
+                    inboxStore.markAsSuccess(context.value2().getMessageId(), context.value1());
+                }
+            });
+        }
     }
 }

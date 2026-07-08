@@ -12,9 +12,23 @@ import org.springframework.core.ResolvableType;
 
 import com.euonia.utility.Assert;
 
+/**
+ * 基于 Spring {@link ApplicationContext} 的 {@link ServiceProvider} 实现。
+ * <p>
+ * 将 Spring 的依赖注入容器适配为 Euonia 的服务提供者接口，
+ * 支持按类型、泛型参数和服务名称解析服务，以及带构造参数的实例创建。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 public class ApplicationContextServiceProvider implements ServiceProvider {
+    /** Spring 应用上下文 */
     private final ApplicationContext context;
 
+    /**
+     * 使用指定的 Spring {@link ApplicationContext} 构造服务提供者。
+     *
+     * @param context Spring 应用上下文
+     */
     public ApplicationContextServiceProvider(ApplicationContext context) {
         this.context = context;
     }

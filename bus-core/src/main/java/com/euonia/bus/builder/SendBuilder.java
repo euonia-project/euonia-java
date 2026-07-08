@@ -18,14 +18,14 @@ import com.euonia.utility.Assert;
  * <pre>{@code
  * bus.send(command)
  *    .withChannel("orders")
- *    .execute();
+ *    .executeAsync();
  * }</pre>
  * <p>
  * 需要异步回调响应时：
  * <pre>{@code
  * bus.send(command, Result.class)
  *    .withCallback(new Flow.Subscriber<>() { ... })
- *    .execute();
+ *    .executeAsync();
  * }</pre>
  *
  * @param <T> 消息负载类型
@@ -145,7 +145,7 @@ public final class SendBuilder<T, R> {
      *
      * @return 在消息处理完毕时完成的 future
      */
-    public CompletableFuture<Void> runAsync() {
+    public CompletableFuture<Void> executeAsync() {
         return bus.sendAsync(message, responseType, callback, options, behavior);
     }
 }

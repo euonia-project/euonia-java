@@ -6,9 +6,16 @@ import com.euonia.bus.message.Request;
 import com.euonia.bus.message.Unicast;
 
 /**
- * DefaultMessageConvention is a simple implementation of the MessageConvention interface that uses class type checks to determine the message type.
- * It considers any class that implements Queue (but is not Queue itself) as a unicast message, any class that implements Topic (but is not Topic itself) as a multicast message, and any class that implements Request (but is not Request itself) as a request message.
- * This convention is straightforward and relies on the class hierarchy to determine the message type, making it easy to use and understand. It is suitable for simple scenarios where the message types can be easily distinguished by their class structure.
+ * {@link DefaultMessageConvention} 是 {@link MessageConvention} 接口的简单实现，使用类类型检查来判断消息类型。
+ * <p>
+ * 它将任何实现了 {@link Unicast}（但不是 Unicast 本身）的类视为单播消息，
+ * 将任何实现了 {@link Multicast}（但不是 Multicast 本身）的类视为多播消息，
+ * 将任何实现了 {@link Request}（但不是 Request 本身）的类视为请求消息。
+ * <p>
+ * 此约定简单直接，依赖类层次结构来判断消息类型，易于使用和理解。
+ * 适用于消息类型可以通过类结构轻松区分的简单场景。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class DefaultMessageConvention implements MessageConvention {
     @Override

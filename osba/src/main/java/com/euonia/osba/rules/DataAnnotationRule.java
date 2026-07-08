@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import com.euonia.annotation.Validator;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
-import com.euonia.tuple.Duet;
 import com.euonia.utility.Assert;
 
 /**
@@ -53,9 +52,9 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
                 var field = getProperty().getField();
                 if (field != null) {
                     Validator<A> validator = (Validator<A>) validatorType.getDeclaredConstructor().newInstance();
-                    Duet<Boolean, String> validate = validator.validate(annotation, value);
-                    if (!validate.value1()) {
-                        context.addErrorResult(validate.value2());
+                    Validator.Result validate = validator.validate(annotation, value);
+                    if (!validate.result()) {
+                        context.addErrorResult(validate.message());
                     }
                 }
             }

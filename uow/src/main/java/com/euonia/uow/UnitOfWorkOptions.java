@@ -3,11 +3,12 @@ package com.euonia.uow;
 import java.time.Duration;
 
 /**
- * Configuration options for a unit of work.
+ * 工作单元的配置选项。
  *
- * <p>Options control transactional behavior, isolation level, and timeout.
- * Use {@link #normalize(UnitOfWorkOptions)} to merge with a set of defaults.</p>
+ * <p>选项控制事务行为、隔离级别和超时时间。
+ * 使用 {@link #normalize(UnitOfWorkOptions)} 与默认选项进行合并。</p>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWork
  * @see UnitOfWorkManager
  */
@@ -16,25 +17,25 @@ public class UnitOfWorkOptions {
     private UnitOfWorkIsolationLevel isolationLevel;
     private Duration timeout;
 
-    /** Creates default, non-transactional options. */
+    /** 创建默认的、非事务性的选项。 */
     public UnitOfWorkOptions() {
     }
 
     /**
-     * Creates options with the given transactional flag.
+     * 使用给定的事务性标志创建选项。
      *
-     * @param transactional whether the unit of work is transactional
+     * @param transactional 工作单元是否具有事务性
      */
     public UnitOfWorkOptions(boolean transactional) {
         this.transactional = transactional;
     }
 
     /**
-     * Creates fully-specified options.
+     * 创建完全指定的选项。
      *
-     * @param transactional  whether the unit of work is transactional
-     * @param isolationLevel the transaction isolation level, or {@code null}
-     * @param timeout        the transaction timeout, or {@code null}
+     * @param transactional  工作单元是否具有事务性
+     * @param isolationLevel 事务隔离级别，可以为 {@code null}
+     * @param timeout        事务超时时间，可以为 {@code null}
      */
     public UnitOfWorkOptions(boolean transactional, UnitOfWorkIsolationLevel isolationLevel, Duration timeout) {
         this.transactional = transactional;
@@ -43,9 +44,9 @@ public class UnitOfWorkOptions {
     }
 
     /**
-     * Returns whether the unit of work should be transactional.
+     * 返回工作单元是否应为事务性的。
      *
-     * @return {@code true} if transactional
+     * @return 如果是事务性的则返回 {@code true}
      */
     public boolean isTransactional() {
         return transactional;
@@ -56,9 +57,9 @@ public class UnitOfWorkOptions {
     }
 
     /**
-     * Returns the transaction isolation level, or {@code null} if not set.
+     * 返回事务隔离级别，如果未设置则返回 {@code null}。
      *
-     * @return the isolation level, or {@code null}
+     * @return 隔离级别，可能为 {@code null}
      */
     public UnitOfWorkIsolationLevel getIsolationLevel() {
         return isolationLevel;
@@ -69,9 +70,9 @@ public class UnitOfWorkOptions {
     }
 
     /**
-     * Returns the transaction timeout, or {@code null} if not set.
+     * 返回事务超时时间，如果未设置则返回 {@code null}。
      *
-     * @return the timeout, or {@code null}
+     * @return 超时时间，可能为 {@code null}
      */
     public Duration getTimeout() {
         return timeout;
@@ -82,11 +83,10 @@ public class UnitOfWorkOptions {
     }
 
     /**
-     * Merges the given options with this instance, using this instance's
-     * values as defaults for any {@code null} fields.
+     * 将给定的选项与此实例合并，使用此实例的值作为任何 {@code null} 字段的默认值。
      *
-     * @param options the options to normalize (must not be {@code null})
-     * @return the normalized options object (the same instance)
+     * @param options 要规范化的选项（不能为 {@code null}）
+     * @return 规范化后的选项对象（同一实例）
      */
     public UnitOfWorkOptions normalize(UnitOfWorkOptions options) {
         if (options == null) {

@@ -1,15 +1,19 @@
 package com.euonia.bus.event;
 
 /**
- * Represents the arguments for a message replied event.
+ * 消息已回复事件，包含回复的结果。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class MessageRepliedEvent extends MessageProcessedEvent{
+    /** 回复结果 */
     private final Object result;
 
     /**
-     * Initializes a new instance of the MessageRepliedEventArgs class with the specified result.
+     * 使用消息和回复结果构造消息已回复事件。
      *
-     * @param result the result of the message reply
+     * @param message 原始消息
+     * @param result  回复的结果
      */
     public MessageRepliedEvent(Object message, Object result) {
         super(message, null, MessageProcessType.REPLIED);
@@ -17,9 +21,9 @@ public class MessageRepliedEvent extends MessageProcessedEvent{
     }
 
     /**
-     * Gets the result of the message reply.
+     * 获取回复的结果。
      *
-     * @return the result of the message reply
+     * @return 回复的结果
      */
     public Object getResult() {
         return result;

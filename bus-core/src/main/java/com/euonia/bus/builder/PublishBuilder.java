@@ -18,7 +18,7 @@ import com.euonia.bus.options.PublishOptions;
  *    .withChannel("orders")
  *    .withBehavior(b -> b.use(LoggingStep.class))
  *    .withOptions(new PublishOptions())
- *    .execute();
+ *    .executeAsync();
  * }</pre>
  *
  * @param <T> 消息负载类型
@@ -109,7 +109,7 @@ public final class PublishBuilder<T> {
      *
      * @return 在所有传输实例完成发送后完成的 future
      */
-    public CompletableFuture<Void> runAsync() {
+    public CompletableFuture<Void> executeAsync() {
         return bus.publishAsync(message, options, behavior);
     }
 }

@@ -1,25 +1,27 @@
 package com.euonia.bus.exception;
 
 /**
- * Represents an exception that occurs during message transport in the bus system.
- * This exception is thrown when there is an issue with sending or receiving messages,
- * such as network errors, serialization issues, or other transport-related problems.
+ * 消息传输异常，表示总线系统中消息传输过程中发生的异常。
+ * <p>
+ * 该异常在消息发送或接收出现问题时抛出，如网络错误、序列化问题或其他与传输相关的问题。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class MessageTransportException extends RuntimeException {
     /**
-     * Constructs a new MessageTransportException with the specified detail message.
+     * 使用指定的详细错误消息构造异常。
      *
-     * @param message the detail message
+     * @param message 详细错误描述
      */
     public MessageTransportException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new MessageTransportException with the specified detail message and cause.
+     * 使用指定的详细错误消息和原因构造异常。
      *
-     * @param message the detail message
-     * @param cause   the cause of the exception
+     * @param message 详细错误描述
+     * @param cause   异常的根因
      */
     public MessageTransportException(String message, Throwable cause) {
         super(message, cause);

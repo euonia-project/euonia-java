@@ -8,23 +8,28 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * A unit of work that delegates all operations to a parent unit of work.
+ * 将所有操作委托给父级工作单元的工作单元实现。
  *
- * <p>When {@link UnitOfWorkManager#begin} is called while a unit of work
- * is already active on the current thread (and {@code requiresNew} is
- * {@code false}), a {@code ChildUnitOfWork} is returned instead of a new
- * top-level unit. All lifecycle methods — save, commit, rollback, listener
- * registration — are forwarded to the parent.</p>
+ * <p>当 {@link UnitOfWorkManager#begin} 在当前线程上已有活跃的工作单元
+ * 且 {@code requiresNew} 为 {@code false} 时被调用，会返回
+ * {@code ChildUnitOfWork} 而非新的顶级单元。所有生命周期方法 ——
+ * 保存、提交、回滚、监听器注册 —— 都会转发给父级。</p>
  *
- * <p>The {@link #completeAsync()} method is a no-op on a child, since
- * only the outermost unit of work should trigger completion.</p>
+ * <p>{@link #completeAsync()} 方法在子单元上是空操作，
+ * 因为只有最外层的工作单元才应触发完成。</p>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWork
  * @see UnitOfWorkManager
  */
 public class ChildUnitOfWork extends UnitOfWork {
     private final UnitOfWork parent;
 
+    /**
+     * 创建委托给指定父级工作单元的子工作单元。
+     *
+     * @param parent 父级工作单元
+     */
     public ChildUnitOfWork(UnitOfWork parent) {
         super(parent == null ? null : parent.getOptions());
         this.parent = Objects.requireNonNull(parent, "parent");

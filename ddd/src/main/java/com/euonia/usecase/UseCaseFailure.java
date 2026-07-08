@@ -1,14 +1,16 @@
 package com.euonia.usecase;
 
 /**
- * Represents a failure output of a use case execution.
- * This interface defines a method to handle errors that occur during the execution of a use case.
+ * 表示用例执行的失败输出。
+ * 该接口定义了一个方法来处理用例执行过程中发生的错误。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface UseCaseFailure {
     /**
-     * Indicates that the use case execution has failed with an error.
+     * 表示用例执行因错误而失败。
      *
-     * @param throwable the error that caused the failure
+     * @param throwable 导致失败的异常
      */
     void error(Throwable throwable);
 }

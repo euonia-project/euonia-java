@@ -1,67 +1,66 @@
 package com.euonia.domain.event;
 
-import com.euonia.bus.message.Multicast;
-
 /**
- * The Event interface represents a generic event in the domain model. It defines the basic properties and methods that all events should have.
- * Events are used to capture and represent significant occurrences or changes in the system, allowing for communication and coordination between different components.
+ * {@link Event} 接口表示领域模型中的通用事件。定义了所有事件应具备的基本属性和方法。
+ * <p>
+ * 事件用于捕获和表示系统中的重要发生事件或变更，允许不同组件之间的通信和协调。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
-public interface Event extends Multicast {
+public interface Event {
     /**
-     * Gets the sequence number of the event, which can be used to determine the order of events.
+     * 获取事件的序号，可用于确定事件的顺序。
      *
-     * @return the sequence number of the event
+     * @return 事件的序号
      */
     long getSequence();
 
     /**
-     * Sets the sequence number of the event, which can be used to determine the order of events.
+     * 设置事件的序号，可用于确定事件的顺序。
      *
-     * @param sequence the sequence number of the event
+     * @param sequence 事件的序号
      */
     void setSequence(long sequence);
 
     /**
-     * Gets the event intent, which represents the purpose or meaning of the event.
-     * It can be used to categorize or identify the type of event being processed.
+     * 获取事件意图，表示事件的目的或含义，可用于分类或识别正在处理的事件类型。
      *
-     * @return the intent of the event
+     * @return 事件的意图
      */
     String getEventIntent();
 
     /**
-     * Sets the event intent, which represents the purpose or meaning of the event.
-     * It can be used to categorize or identify the type of event being processed.
+     * 设置事件意图，表示事件的目的或含义，可用于分类或识别正在处理的事件类型。
      *
-     * @param eventIntent the intent of the event
+     * @param eventIntent 事件的意图
      */
     void setEventIntent(String eventIntent);
 
     /**
-     * Gets the originator type of the event, which indicates the source or origin of the event.
+     * 获取事件的发起者类型，表示事件的来源或起源。
      *
-     * @return the originator type of the event
+     * @return 事件的发起者类型
      */
     String getOriginatorType();
 
     /**
-     * Sets the originator type of the event, which indicates the source or origin of the event.
+     * 设置事件的发起者类型，表示事件的来源或起源。
      *
-     * @param originatorType the originator type of the event
+     * @param originatorType 事件的发起者类型
      */
     void setOriginatorType(String originatorType);
 
     /**
-     * Gets the originator ID of the event, which uniquely identifies the source or origin of the event.
+     * 获取事件的发起者 ID，唯一标识事件的来源或起源。
      *
-     * @return the originator ID of the event
+     * @return 事件的发起者 ID
      */
     String getOriginatorId();
 
     /**
-     * Sets the originator ID of the event, which uniquely identifies the source or origin of the event.
+     * 设置事件的发起者 ID，唯一标识事件的来源或起源。
      *
-     * @param originatorId the originator ID of the event
+     * @param originatorId 事件的发起者 ID
      */
     void setOriginatorId(String originatorId);
 }

@@ -18,16 +18,35 @@ import com.euonia.bus.serialization.MessageSerializer;
 
 /**
  * Kafka RPC 请求执行器，实现请求-响应模式的消息消费。
+ * <p>
+ * 从 Kafka 主题消费请求消息，处理后通过回复主题发送响应。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 final class KafkaRequestExecutor extends KafkaRecipient implements Executor {
 
+    /** Kafka 消费者 */
     private KafkaConsumer<String, byte[]> consumer;
+    /** 用于发送回复的 Kafka 生产者 */
     private KafkaProducer<String, byte[]> replyProducer;
 
+    /**
+     * 使用必要的依赖构造 RPC 请求执行器。
+     *
+     * @param options     Kafka 总线选项
+     * @param handler     处理器上下文
+     * @param serializer  消息序列化器
+     * @param messageType 消息类型
+     */
     public KafkaRequestExecutor(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(options, handler, serializer, messageType);
     }
 
+    /**
+     * 启动 RPC 请求处理，在独立线程中轮询并处理消息，并发送回复。
+     *
+     * @param channelName 通道名称
+     */
     @Override
     void start(String channelName) {
         var topicName = options.generateTopicName(channelName);

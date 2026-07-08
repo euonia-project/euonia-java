@@ -1,36 +1,33 @@
 package com.euonia.bus.strategy;
 
 /**
- * Defines the contract for a transport strategy, which determines how messages
- * are handled for outgoing and incoming operations.
+ * 定义传输策略的契约，该策略决定了消息在出站和入站操作中的处理方式。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public interface TransportStrategy {
     /**
-     * Gets the name of the transport strategy.
+     * 获取传输策略的名称。
      *
-     * @return the name of the transport strategy
+     * @return 传输策略的名称
      */
     String getName();
 
     /**
-     * Determines if the transport strategy allows outgoing messages on the
-     * specified channel.
+     * 判断传输策略是否允许在指定通道上发送出站消息。
      *
-     * @param channel     the channel name
-     * @param messageType the type of the message
-     * @return true if the transport strategy allows outgoing messages on the
-     *         specified channel, false otherwise
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @return 如果传输策略允许在指定通道上发送出站消息则返回 true，否则返回 false
      */
     boolean allowOutgoing(String channel, Class<?> messageType);
 
     /**
-     * Determines if the transport strategy allows incoming messages on the
-     * specified channel.
+     * 判断传输策略是否允许在指定通道上接收入站消息。
      *
-     * @param channel     the channel name
-     * @param messageType the type of the message
-     * @return true if the transport strategy allows incoming messages on the
-     *         specified channel, false otherwise
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @return 如果传输策略允许在指定通道上接收入站消息则返回 true，否则返回 false
      */
     boolean allowIncoming(String channel, Class<?> messageType);
 }

@@ -6,8 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Represents that the message is a unicast message, which means it will be sent to only one subscriber.
- * This annotation is used to mark the message class as a unicast message, and the bus will ensure that only one subscriber receives the message.
+ * 标记消息为单播消息，表示消息只会发送给一个订阅者。
+ * 总线会确保仅有一个订阅者接收该消息。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

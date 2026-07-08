@@ -18,16 +18,35 @@ import com.euonia.bus.serialization.MessageSerializer;
 
 /**
  * Kafka 队列消费者，实现单播消息的消费。
+ * <p>
+ * 从 Kafka 主题消费消息，处理后通过回复主题发送响应。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 final class KafkaQueueConsumer extends KafkaRecipient implements Consumer {
 
+    /** Kafka 消费者 */
     private KafkaConsumer<String, byte[]> consumer;
+    /** 用于发送回复的 Kafka 生产者 */
     private KafkaProducer<String, byte[]> replyProducer;
 
+    /**
+     * 使用必要的依赖构造队列消费者。
+     *
+     * @param options     Kafka 总线选项
+     * @param handler     处理器上下文
+     * @param serializer  消息序列化器
+     * @param messageType 消息类型
+     */
     public KafkaQueueConsumer(KafkaBusOptions options, HandlerContext handler, MessageSerializer serializer, Class<?> messageType) {
         super(options, handler, serializer, messageType);
     }
 
+    /**
+     * 启动队列消费，在独立线程中轮询并处理消息，并发送回复。
+     *
+     * @param channelName 通道名称
+     */
     @Override
     void start(String channelName) {
         var topicName = options.generateTopicName(channelName);
@@ -73,6 +92,11 @@ final class KafkaQueueConsumer extends KafkaRecipient implements Consumer {
         }
     }
 
+    /**
+     * 创建用于发送回复的 Kafka 生产者。
+     *
+     * @return Kafka 生产者
+     */
     private KafkaProducer<String, byte[]> createReplyProducer() {
         var props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getBootstrapServers());

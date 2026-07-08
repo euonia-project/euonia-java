@@ -15,8 +15,6 @@ graph TD
     subgraph "Euonia Java"
         direction TB
         DDD --> Core
-        DDD --> UoW
-        DDD --> Pipeline
         OSBA --> Core
         UoW --> Core
         Pipeline --> Core
@@ -563,6 +561,14 @@ mvn clean install
 # 运行示例应用
 cd sample
 mvn spring-boot:run
+```
+
+---
+## 发布
+
+```bash
+# 发布到 Maven 中央仓库
+mvn clean deploy -DskipTests -P release 2>&1 | tee release.log
 ```
 
 ---

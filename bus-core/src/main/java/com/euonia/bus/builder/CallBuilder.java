@@ -20,7 +20,7 @@ import com.euonia.utility.Assert;
  *                    .withChannel("orders")
  *                    .withBehavior(b -> b.use(AuthStep.class))
  *                    .withOptions(new CallOptions())
- *                    .execute()
+ *                    .executeAsync()
  *                    .get();
  * }</pre>
  *
@@ -131,7 +131,7 @@ public final class CallBuilder<T, R> {
      *
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    public CompletableFuture<R> runAsync() {
+    public CompletableFuture<R> executeAsync() {
         return bus.callAsync(request, responseType, options, behavior);
     }
 }

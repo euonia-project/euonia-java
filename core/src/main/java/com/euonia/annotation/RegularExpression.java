@@ -21,7 +21,18 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Validation(validator = RegularExpressionValidator.class)
 public @interface RegularExpression {
+
+    /**
+     * 指定正则表达式模式，必须提供。
+     *
+     * @return 正则表达式模式
+     */
     String value();
 
+    /**
+     * 自定义验证失败时的错误消息，默认为空字符串。
+     *
+     * @return 错误消息
+     */
     String message() default "";
 }

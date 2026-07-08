@@ -3,21 +3,21 @@ package com.euonia.uow;
 import java.util.Objects;
 
 /**
- * Entry point for creating and managing units of work.
+ * 创建和管理工作单元的入口点。
  *
- * <p>Each manager holds a default set of {@link UnitOfWorkOptions} and
- * a {@link UnitOfWorkAccessor} for tracking the ambient unit of work on
- * the current thread.</p>
+ * <p>每个管理器持有一组默认的 {@link UnitOfWorkOptions} 和一个
+ * {@link UnitOfWorkAccessor}，用于跟踪当前线程上的环境工作单元。</p>
  *
  * <pre>{@code
  * UnitOfWorkManager manager = new UnitOfWorkManager();
  * try (UnitOfWork uow = manager.begin(new UnitOfWorkOptions(true), false)) {
  *     uow.addContext("db", new JdbcTransactionContext(connection));
- *     // ... business logic ...
+ *     // ... 业务逻辑 ...
  *     uow.completeAsync().toCompletableFuture().join();
  * }
  * }</pre>
  *
+ * @author damon(zhaorong@outlook.com)
  * @see UnitOfWork
  * @see ChildUnitOfWork
  */
@@ -25,16 +25,16 @@ public class UnitOfWorkManager {
     private final UnitOfWorkAccessor accessor;
     private final UnitOfWorkOptions defaultOptions;
 
-    /** Creates a manager with default options and a new accessor. */
+    /** 使用默认选项和新的访问器创建管理器。 */
     public UnitOfWorkManager() {
         this(new UnitOfWorkAccessor(), new UnitOfWorkOptions());
     }
 
     /**
-     * Creates a manager with the given accessor and default options.
+     * 使用给定的访问器和默认选项创建管理器。
      *
-     * @param accessor       the accessor for tracking the current unit of work
-     * @param defaultOptions the default options to apply to new units of work
+     * @param accessor       用于跟踪当前工作单元的访问器
+     * @param defaultOptions 应用于新工作单元的默认选项
      */
     public UnitOfWorkManager(UnitOfWorkAccessor accessor, UnitOfWorkOptions defaultOptions) {
         this.accessor = Objects.requireNonNull(accessor, "accessor");
@@ -42,26 +42,24 @@ public class UnitOfWorkManager {
     }
 
     /**
-     * Returns the unit of work associated with the current thread,
-     * or {@code null} if none is active.
+     * 返回与当前线程关联的工作单元，如果没有活跃的工作单元则返回 {@code null}。
      *
-     * @return the current unit of work, or {@code null}
+     * @return 当前工作单元，可能为 {@code null}
      */
     public UnitOfWork getCurrent() {
         return accessor.getCurrentUnitOfWork();
     }
 
     /**
-     * Begins a new unit of work with the given options.
+     * 使用给定的选项开启一个新的工作单元。
      *
-     * <p>If a unit of work is already active on the current thread and
-     * {@code requiresNew} is {@code false}, a {@link ChildUnitOfWork}
-     * that delegates to the existing unit is returned. Otherwise a new
-     * top-level unit is created and set as the ambient unit of work.</p>
+     * <p>如果当前线程上已有活跃的工作单元且 {@code requiresNew} 为 {@code false}，
+     * 则返回一个委托给现有单元的 {@link ChildUnitOfWork}。
+     * 否则创建一个新的顶级单元并将其设置为环境工作单元。</p>
      *
-     * @param options     the options for the unit of work
-     * @param requiresNew if {@code true}, always creates a new top-level unit
-     * @return the unit of work (must be closed via {@link UnitOfWork#close()})
+     * @param options     工作单元的选项
+     * @param requiresNew 如果为 {@code true}，始终创建新的顶级单元
+     * @return 工作单元（必须通过 {@link UnitOfWork#close()} 关闭）
      */
     public UnitOfWork begin(UnitOfWorkOptions options, boolean requiresNew) {
         if (options == null) {
@@ -82,12 +80,11 @@ public class UnitOfWorkManager {
     }
 
     /**
-     * Convenience method for beginning a unit of work with a
-     * transactional flag.
+     * 使用事务性标志开启工作单元的便捷方法。
      *
-     * @param transactional whether the unit of work is transactional
-     * @param requiresNew   if {@code true}, always creates a new top-level unit
-     * @return the unit of work
+     * @param transactional 工作单元是否具有事务性
+     * @param requiresNew   如果为 {@code true}，始终创建新的顶级单元
+     * @return 工作单元
      */
     public UnitOfWork begin(boolean transactional, boolean requiresNew) {
         return begin(new UnitOfWorkOptions(transactional), requiresNew);

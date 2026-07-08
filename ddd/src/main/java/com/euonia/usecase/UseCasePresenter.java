@@ -1,24 +1,37 @@
 package com.euonia.usecase;
 
 import java.util.concurrent.Flow.*;
+import java.util.concurrent.Flow.Publisher;
+import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 
 /**
- * A presenter that implements the output ports for a use case and allows subscribers to listen for success and failure events.
+ * 用例呈现器，实现了用例的输出端口，允许订阅者监听成功和失败事件。
+ * <p>
+ * 同时实现了 {@link UseCaseSuccess}、{@link UseCaseFailure} 和 {@link AutoCloseable} 接口，
+ * 基于 {@link SubmissionPublisher} 实现响应式的事件传递。
  *
- * @param <O> the type of the successful output of the use case
+ * @param <O> 用例成功输出的类型
+ * @author damon(zhaorong@outlook.com)
  */
 public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, AutoCloseable {
+    /**
+     * 事件发布者，用于向订阅者推送成功/失败事件
+     */
     private final Publisher<O> publisher = new SubmissionPublisher<>();
 
+    /**
+     * 用例执行的成功输出
+     */
     private O output;
 
     /**
-     * Subscribes to the presenter to receive success and failure events.
+     * 订阅呈现器以接收成功和失败事件。
      *
-     * @param onSuccess the consumer to handle successful output
-     * @param onFailure the consumer to handle errors
+     * @param onSuccess 用于处理成功输出的消费者
+     * @param onFailure 用于处理错误的消费者
      */
     public void subscribe(Consumer<O> onSuccess, Consumer<Throwable> onFailure) {
         publisher.subscribe(new Subscriber<>() {
@@ -40,7 +53,7 @@ public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, A
 
             @Override
             public void onComplete() {
-                // Handle completion if needed
+                // 如有需要，处理完成事件
             }
         });
     }
@@ -62,9 +75,9 @@ public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, A
     }
 
     /**
-     * Returns the output of the use case execution if it was successful.
+     * 返回用例执行成功时的输出。
      *
-     * @return the output of the use case execution
+     * @return 用例执行的输出
      */
     public O getOutput() {
         return output;

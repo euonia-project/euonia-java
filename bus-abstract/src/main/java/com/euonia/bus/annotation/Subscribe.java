@@ -5,21 +5,27 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 标记方法为消息订阅处理器，指定要订阅的通道和分组名称。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Subscribe {
     /**
-     * The channel to subscribe to.
+     * 要订阅的通道名称。
      *
-     * @return the channel name
+     * @return 通道名称
      */
     String value() default "";
 
     /**
-     * Gets or sets the group name for this subscription.
-     * Messages published to the same channel but with different group names will be delivered to different subscribers, while messages published to the same channel and group name will be load balanced among those subscribers.
+     * 此订阅的分组名称。
+     * 发布到同一通道但分组名称不同的消息将投递给不同的订阅者，
+     * 而发布到同一通道和分组名称的消息将在同组订阅者之间负载均衡。
      *
-     * @return the group name for this subscription
+     * @return 此订阅的分组名称
      */
     String group() default "";
 }

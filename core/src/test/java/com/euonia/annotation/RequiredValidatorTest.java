@@ -1,6 +1,5 @@
 package com.euonia.annotation;
 
-import com.euonia.tuple.Duet;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,10 +26,10 @@ class RequiredValidatorTest {
     void givenNullValueWhenValidatingThenFailWithDefaultMessage() throws NoSuchFieldException {
         Required annotation = Samples.class.getDeclaredField("defaultRequired").getAnnotation(Required.class);
 
-        Duet<Boolean, String> result = validator.validate(annotation, null);
+        Validator.Result result = validator.validate(annotation, null);
 
-        assertFalse(result.value1());
-        assertEquals("Value is required", result.value2());
+        assertFalse(result.result());
+        assertEquals("Value is required", result.message());
     }
 
     @Test
@@ -38,10 +37,10 @@ class RequiredValidatorTest {
     void givenEmptyStringAndAllowEmptyFalseWhenValidatingThenFail() throws NoSuchFieldException {
         Required annotation = Samples.class.getDeclaredField("defaultRequired").getAnnotation(Required.class);
 
-        Duet<Boolean, String> result = validator.validate(annotation, "");
+        Validator.Result result = validator.validate(annotation, "");
 
-        assertFalse(result.value1());
-        assertEquals("Value must not be empty", result.value2());
+        assertFalse(result.result());
+        assertEquals("Value must not be empty", result.message());
     }
 
     @Test
@@ -49,10 +48,10 @@ class RequiredValidatorTest {
     void givenEmptyStringAndAllowEmptyTrueWhenValidatingThenSucceed() throws NoSuchFieldException {
         Required annotation = Samples.class.getDeclaredField("allowEmpty").getAnnotation(Required.class);
 
-        Duet<Boolean, String> result = validator.validate(annotation, "");
+        Validator.Result result = validator.validate(annotation, "");
 
-        assertTrue(result.value1());
-        assertNull(result.value2());
+        assertTrue(result.result());
+        assertNull(result.message());
     }
 
     @Test
@@ -60,10 +59,10 @@ class RequiredValidatorTest {
     void givenNullValueAndCustomMessageWhenValidatingThenReturnCustomMessage() throws NoSuchFieldException {
         Required annotation = Samples.class.getDeclaredField("customMessage").getAnnotation(Required.class);
 
-        Duet<Boolean, String> result = validator.validate(annotation, null);
+        Validator.Result result = validator.validate(annotation, null);
 
-        assertFalse(result.value1());
-        assertEquals("custom required", result.value2());
+        assertFalse(result.result());
+        assertEquals("custom required", result.message());
     }
 
     @Test
@@ -71,10 +70,10 @@ class RequiredValidatorTest {
     void givenNonEmptyValueWhenValidatingThenSucceed() throws NoSuchFieldException {
         Required annotation = Samples.class.getDeclaredField("defaultRequired").getAnnotation(Required.class);
 
-        Duet<Boolean, String> result = validator.validate(annotation, "abc");
+        Validator.Result result = validator.validate(annotation, "abc");
 
-        assertTrue(result.value1());
-        assertNull(result.value2());
+        assertTrue(result.result());
+        assertNull(result.message());
     }
 }
 

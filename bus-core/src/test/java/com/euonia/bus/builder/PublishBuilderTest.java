@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.PublishOptions;
@@ -97,7 +96,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withChannel("orders").runAsync();
+            builder.withChannel("orders").executeAsync();
 
             assertThat(capturedOptions.get().getChannel()).isEqualTo("orders");
         }
@@ -109,7 +108,7 @@ class PublishBuilderTest {
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
             Consumer<PipelineMessage<RoutedMessage<String>, Void>> behavior = pm -> {};
-            builder.withBehavior(behavior).runAsync();
+            builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
         }
@@ -120,7 +119,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withMetadata(m -> m.put("key", "value")).runAsync();
+            builder.withMetadata(m -> m.put("key", "value")).executeAsync();
 
             assertThat(capturedOptions.get().getMetadataSetter()).isNotNull();
         }
@@ -131,7 +130,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withMessageId("custom-id-123").runAsync();
+            builder.withMessageId("custom-id-123").executeAsync();
 
             assertThat(capturedOptions.get().getMessageId()).isEqualTo("custom-id-123");
         }
@@ -142,7 +141,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withPriority(5).runAsync();
+            builder.withPriority(5).executeAsync();
 
             assertThat(capturedOptions.get().getPriority()).isEqualTo(5);
         }
@@ -153,7 +152,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withTimeout(3000L).runAsync();
+            builder.withTimeout(3000L).executeAsync();
 
             assertThat(capturedOptions.get().getTimeout()).isEqualTo(3000L);
         }
@@ -164,7 +163,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.withDelay(500L).runAsync();
+            builder.withDelay(500L).executeAsync();
 
             assertThat(capturedOptions.get().getDelay()).isEqualTo(500L);
         }
@@ -184,7 +183,7 @@ class PublishBuilderTest {
                    .withTimeout(5000L)
                    .withDelay(200L)
                    .withBehavior(behavior)
-                   .runAsync();
+                   .executeAsync();
 
             assertThat(capturedMessage.get()).isEqualTo("event");
             assertThat(capturedOptions.get().getChannel()).isEqualTo("notifications");
@@ -205,7 +204,7 @@ class PublishBuilderTest {
         void shouldReturnCompletedFuture() {
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), new AtomicReference<>());
 
-            var future = builder.runAsync();
+            var future = builder.executeAsync();
 
             assertThat(future).isCompleted();
         }
@@ -216,7 +215,7 @@ class PublishBuilderTest {
             var capturedMessage = new AtomicReference<String>();
             var builder = builderFor("test-message", capturedMessage, new AtomicReference<>(), new AtomicReference<>());
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedMessage.get()).isEqualTo("test-message");
         }
@@ -227,7 +226,7 @@ class PublishBuilderTest {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedOptions.get()).isNotNull();
             assertThat(capturedOptions.get()).isInstanceOf(PublishOptions.class);
@@ -239,7 +238,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
-            builder.runAsync();
+            builder.executeAsync();
 
             assertThat(capturedBehavior.get()).isNull();
         }
@@ -257,7 +256,7 @@ class PublishBuilderTest {
 
             assertThatNoException().isThrownBy(() -> {
                 builder.withChannel(null);
-                builder.runAsync();
+                builder.executeAsync();
             });
             assertThat(capturedOptions.get().getChannel()).isNull();
         }
@@ -268,7 +267,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
-            builder.withBehavior(null).runAsync();
+            builder.withBehavior(null).executeAsync();
 
             assertThat(capturedBehavior.get()).isNull();
         }
@@ -280,7 +279,7 @@ class PublishBuilderTest {
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
             assertThatNoException().isThrownBy(() -> {
-                builder.withMetadata(null).runAsync();
+                builder.withMetadata(null).executeAsync();
             });
         }
     }

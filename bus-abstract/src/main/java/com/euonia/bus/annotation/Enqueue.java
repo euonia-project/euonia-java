@@ -6,18 +6,27 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Represents a message that should be enqueued for processing. The value of the annotation specifies the queue name.
- * The priority attribute can be used to indicate the processing priority of the message, with higher values indicating higher priority.
- * This annotation is typically used in conjunction with a message bus or queueing system to ensure that messages are processed in the correct order and with the appropriate level of urgency.
+ * 标记消息应入队等待处理。{@code value} 属性指定了队列名称，
+ * {@code priority} 属性可用于指示消息的处理优先级，值越高优先级越高。
+ * <p>
+ * 此注解通常与消息总线或队列系统配合使用，以确保消息按正确顺序和适当的紧急程度进行处理。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface Enqueue {
+    /**
+     * 队列名称。
+     *
+     * @return 队列名称
+     */
     String value();
 
     /**
-     * Indicates the processing priority of the message, with higher values indicating higher priority. The default value is 0.
-     * @return the priority level of the message
+     * 消息的处理优先级，值越高优先级越高，默认值为 0。
+     *
+     * @return 消息的优先级
      */
     int priority() default 0;
 }

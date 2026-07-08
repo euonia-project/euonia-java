@@ -1,5 +1,11 @@
 package com.euonia.bus.strategy;
 
+/**
+ * 默认传输策略，默认拒绝所有出入站消息。
+ * 通常作为回退策略使用，由 {@link BaseTransportStrategy} 中的可覆盖策略包装。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 public class DefaultTransportStrategy implements TransportStrategy {
 
     @Override
