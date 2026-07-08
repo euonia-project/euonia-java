@@ -154,6 +154,7 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
      *
      * @return 消息元数据
      */
+    @Override
     public MessageMetadata getMetadata() {
         return metadata;
     }
