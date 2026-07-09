@@ -2,7 +2,9 @@ package com.euonia.bus;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.MessageConventionBuilder;
@@ -51,6 +53,11 @@ public interface Configurator {
      * @return 处理器注册信息映射
      */
     Map<String, ChannelRegistration> getRegistrations();
+
+    /**
+     * 获取消息发布器函数，用于将消息发送到总线。
+     */
+    Function<MessageEnvelope<?>, CompletableFuture<Void>> getCustomPublisher();
 
     /**
      * 获取消息约定，可用于消息格式化和验证。

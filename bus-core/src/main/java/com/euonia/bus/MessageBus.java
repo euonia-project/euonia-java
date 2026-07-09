@@ -66,6 +66,9 @@ public final class MessageBus implements Bus {
      */
     private final PipelineFactory pipelineFactory;
 
+    /**
+     * 消息发布器，用于将消息发送到传输实例。
+     */
     private final OutboxPublisher publisher;
 
     /**
@@ -135,13 +138,20 @@ public final class MessageBus implements Bus {
             .thenCompose(finalPack -> {
                 RequestContextAccessor.set(context);
                 try {
-                    var transports = dispatcher.determine(channelName, messageType);
+                    var customerPublisher = configurator.getCustomPublisher();
 
-                    var tasks = transports.stream()
-                                          .map(transport -> publisher.publishAsync(transport, finalPack))
-                                          .toArray(CompletableFuture[]::new);
+                    if (customerPublisher != null) {
+                        return customerPublisher.apply(finalPack);
+                    } else {
 
-                    return CompletableFuture.allOf(tasks);
+                        var transports = dispatcher.determine(channelName, messageType);
+
+                        var tasks = transports.stream()
+                                              .map(transport -> publisher.publishAsync(transport, finalPack))
+                                              .toArray(CompletableFuture[]::new);
+
+                        return CompletableFuture.allOf(tasks);
+                    }
                 } finally {
                     RequestContextAccessor.remove();
                 }

@@ -2,10 +2,12 @@ package com.euonia.bus;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.euonia.bus.convention.DefaultMessageConventionBuilder;
@@ -28,6 +30,8 @@ public final class DefaultConfigurator implements Configurator {
 
     private Supplier<String> defaultTransportSupplier = () -> "";
     private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
+
+    private Function<MessageEnvelope<?>, CompletableFuture<Void>> customPublisher;
 
     @Override
     public String getDefaultTransport() {
@@ -67,6 +71,27 @@ public final class DefaultConfigurator implements Configurator {
     @Override
     public Map<String, ChannelRegistration> getRegistrations() {
         return ChannelRegistrar.getRegistrations();
+    }
+
+    /**
+     * 获取自定义消息发布器函数。
+     *
+     * @return 自定义消息发布器函数
+     */
+    @Override
+    public Function<MessageEnvelope<?>, CompletableFuture<Void>> getCustomPublisher() {
+        return customPublisher;
+    }
+
+    /**
+     * 设置自定义消息发布器。
+     *
+     * @param customPublisher 自定义消息发布器函数
+     * @return 当前配置器实例
+     */
+    public DefaultConfigurator setCustomPublisher(Function<MessageEnvelope<?>, CompletableFuture<Void>> customPublisher) {
+        this.customPublisher = customPublisher;
+        return this;
     }
 
     /**
