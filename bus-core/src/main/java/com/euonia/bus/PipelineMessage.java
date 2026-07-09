@@ -12,9 +12,13 @@ import com.euonia.pipeline.Pipeline;
  * @author damon(zhaorong@outlook.com)
  */
 public class PipelineMessage<M, R> {
-    /** 原始消息对象 */
+    /**
+     * 原始消息对象
+     */
     private final M message;
-    /** 关联的管道实例 */
+    /**
+     * 关联的管道实例
+     */
     private Pipeline<M, R> pipeline;
 
     /**
