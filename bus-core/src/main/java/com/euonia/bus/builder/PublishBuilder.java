@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
-import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.options.PublishOptions;
+import com.euonia.pipeline.Pipeline;
 
 /**
  * 发布/订阅模式的 Builder。
@@ -28,7 +28,7 @@ public final class PublishBuilder<T> {
 
     private final Bus bus;
     private final T message;
-    private Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior;
+    private Consumer<Pipeline<RoutedMessage<T>, Void>> behavior;
     private final PublishOptions options = new PublishOptions();
 
     public PublishBuilder(Bus bus, T message) {
@@ -47,7 +47,7 @@ public final class PublishBuilder<T> {
     /**
      * 配置管道行为回调。
      */
-    public PublishBuilder<T> withBehavior(Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
+    public PublishBuilder<T> withBehavior(Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
         this.behavior = behavior;
         return this;
     }

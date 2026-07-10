@@ -7,8 +7,8 @@ import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.message.Request;
-import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.options.CallOptions;
+import com.euonia.pipeline.Pipeline;
 import com.euonia.utility.Assert;
 
 /**
@@ -33,7 +33,7 @@ public final class CallBuilder<T, R> {
     private final Bus bus;
     private final T request;
     private final Class<R> responseType;
-    private Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior;
+    private Consumer<Pipeline<RoutedMessage<T>, R>> behavior;
     private final CallOptions options = new CallOptions();
 
     public CallBuilder(Bus bus, T request, Class<R> responseType) {
@@ -54,7 +54,7 @@ public final class CallBuilder<T, R> {
     /**
      * 配置管道行为回调。
      */
-    public CallBuilder<T, R> withBehavior(Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public CallBuilder<T, R> withBehavior(Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
         Assert.notNull(behavior, "behavior is null");
         this.behavior = behavior;
         return this;

@@ -8,12 +8,12 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import com.euonia.pipeline.Pipeline;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.SendOptions;
 
@@ -36,7 +36,7 @@ class SendBuilderTest {
             @SuppressWarnings("unchecked")
             @Override
             public <T> CompletableFuture<Void> publishAsync(T message, com.euonia.bus.options.PublishOptions options,
-                                                             Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
+                                                             Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
 
@@ -44,7 +44,7 @@ class SendBuilderTest {
             @Override
             public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback,
                                                              SendOptions sendOptions,
-                                                             Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                             Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                 capturedMessage.set(message);
                 capturedResponseType.set(responseType);
                 capturedCallback.set(callback);
@@ -56,7 +56,7 @@ class SendBuilderTest {
             @Override
             public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType,
                                                           com.euonia.bus.options.CallOptions callOptions,
-                                                          Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                          Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
         };
@@ -129,7 +129,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), capturedBehavior);
             var builder = builderFor(bus, "msg", String.class);
 
-            Consumer<PipelineMessage<RoutedMessage<String>, String>> behavior = pm -> {};
+            Consumer<Pipeline<RoutedMessage<String>, String>> behavior = pm -> {};
             builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
@@ -230,7 +230,7 @@ class SendBuilderTest {
                 @Override public void onError(Throwable t) {}
                 @Override public void onComplete() {}
             };
-            Consumer<PipelineMessage<RoutedMessage<String>, Integer>> behavior = pm -> {};
+            Consumer<Pipeline<RoutedMessage<String>, Integer>> behavior = pm -> {};
 
             builder.withChannel("cmds")
                    .withCallback(subscriber)
