@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 @Validation(validator = RangeValidator.class)
 public @interface Range {
     /**
-     * 指定值范围的区间表达式，例如[1,10],(1,10),(1,10]等。
+     * 指定值范围的区间表达式，例如[1,10],(1,10),(1,10],[9,)等。
      * <p>
      * 如果指定了区间表达式则忽略 min、max、minBoundary 和 maxBoundary 属性。
      *

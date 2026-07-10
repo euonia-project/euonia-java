@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * @author damon(zhaorong@outlook.com)
  */
 public final class RangeValidator implements Validator<Range> {
-    private static final String EXPRESSION = "^(?<left>[\\[(])\\s*(?<min>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))\\s*,\\s*(?<max>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))\\s*(?<right>[\\])])$";
+    private static final String EXPRESSION = "^(?<left>[\\[(])\\s*(?<min>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))?\\s*,\\s*(?<max>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))?\\s*(?<right>[\\])])$";
 
     private final Pattern pattern = Pattern.compile(EXPRESSION);
 
@@ -41,8 +41,11 @@ public final class RangeValidator implements Validator<Range> {
                 throw new IllegalArgumentException("Invalid range format in annotation value: " + annotation.value());
             }
 
-            min = Double.parseDouble(matcher.group("min").trim());
-            max = Double.parseDouble(matcher.group("max").trim());
+            var minValue = matcher.group("min").trim();
+            var maxValue = matcher.group("max").trim();
+
+            min = StringUtility.isNullOrBlank(minValue) ? Double.MIN_VALUE : Double.parseDouble(minValue);
+            max = StringUtility.isNullOrBlank(maxValue) ? Double.MAX_VALUE : Double.parseDouble(maxValue);
             minBoundary = switch (matcher.group("left")) {
                 case "[" -> Range.Boundary.INCLUSIVE;
                 case "(" -> Range.Boundary.EXCLUSIVE;
