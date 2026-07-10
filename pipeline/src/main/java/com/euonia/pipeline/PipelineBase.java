@@ -21,6 +21,7 @@ import java.util.function.Function;
  */
 public abstract class PipelineBase<C, R> implements Pipeline<C, R> {
     private final List<Function<PipelineDelegate<C, R>, PipelineDelegate<C, R>>> components = new ArrayList<>();
+    private final List<Class<?>> componentTypes = new ArrayList<>();
 
     /**
      * 获取管道中组件的列表。返回一个不可修改的列表。
@@ -79,6 +80,10 @@ public abstract class PipelineBase<C, R> implements Pipeline<C, R> {
      */
     @Override
     public Pipeline<C, R> use(Class<?> type, Object... args) {
+        if (componentTypes.contains(type)) {
+            throw new IllegalArgumentException("Component type " + type.getName() + " has already been added to the pipeline.");
+        }
+        componentTypes.add(type);
         return use(next -> getNext(next, type, args));
     }
 
@@ -164,5 +169,5 @@ public abstract class PipelineBase<C, R> implements Pipeline<C, R> {
      * @return 包含新组件的 PipelineDelegate 实例
      */
     protected abstract PipelineDelegate<C, R> getNext(PipelineDelegate<C, R> next, Class<?> type,
-            Object... constructorArguments);
+                                                      Object... constructorArguments);
 }
