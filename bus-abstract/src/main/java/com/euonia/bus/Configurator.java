@@ -2,9 +2,7 @@ package com.euonia.bus;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.MessageConventionBuilder;
@@ -27,13 +25,6 @@ public interface Configurator {
     String getDefaultTransport();
 
     /**
-     * 获取是否启用管道行为，可用于消息处理和操作。
-     *
-     * @return 如果管道行为已启用则返回 true，否则返回 false
-     */
-    boolean isEnablePipelineBehaviors();
-
-    /**
      * 获取已配置的 {@link MessageConventionBuilder}。
      *
      * @return MessageConventionBuilder 实例
@@ -53,11 +44,6 @@ public interface Configurator {
      * @return 处理器注册信息映射
      */
     Map<String, ChannelRegistration> getRegistrations();
-
-    /**
-     * 获取消息发布器函数，用于将消息发送到总线。
-     */
-    Function<MessageEnvelope<?>, CompletableFuture<Void>> getCustomPublisher();
 
     /**
      * 获取消息约定，可用于消息格式化和验证。
