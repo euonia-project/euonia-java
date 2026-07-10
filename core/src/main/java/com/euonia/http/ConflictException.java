@@ -1,24 +1,26 @@
 package com.euonia.http;
 
 /**
- * The ConflictException class represents an HTTP 409 Conflict error. It extends the HttpStatusException class and provides constructors for creating instances of this exception with a specific message and an optional cause.
+ * HTTP 409 Conflict 异常。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class ConflictException extends HttpStatusException {
 
     /**
-     * Creates a new ConflictException with the specified message. This constructor allows for creating an exception with a specific message, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息构造异常。
      *
-     * @param message The detail message for the exception.
+     * @param message 错误描述
      */
     public ConflictException(String message) {
         super(409, message);
     }
 
     /**
-     * Creates a new ConflictException with the specified message and cause. This constructor allows for creating an exception with a specific message and cause, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息和原因构造异常。
      *
-     * @param message The detail message for the exception.
-     * @param cause The cause of the exception.
+     * @param message 错误描述
+     * @param cause   异常的根因
      */
     public ConflictException(String message, Throwable cause) {
         super(409, message, cause);

@@ -4,29 +4,33 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Exception thrown for account-related errors during authentication or authorization processes, such as account not found, account locked, etc.
- * This exception can be extended to provide more specific error types and include additional details as needed.
+ * 账户异常基类，用于认证或授权过程中的账户相关错误，
+ * 如账户未找到、账户已锁定等。可通过子类扩展提供更具体的错误类型。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 @SuppressWarnings("unused")
 public abstract class AccountException extends RuntimeException {
+    /** 账户标识（如用户名、用户 ID 或邮箱） */
     private final Object identity;
 
+    /** 异常相关的额外详细信息 */
     private final Map<String, Object> details = Collections.emptyMap();
 
     /**
-     * Creates a new AccountException with the specified identity. The identity can be any object that represents the account, such as a username, user ID, or email address. This constructor allows for creating an exception without a specific message or cause, while still providing context about which account is involved in the error.
+     * 使用指定的账户标识构造异常。
      *
-     * @param identity The identity associated with the account error, such as username or user ID.
+     * @param identity 与错误关联的账户标识
      */
     public AccountException(Object identity) {
         this.identity = identity;
     }
 
     /**
-     * Creates a new AccountException with the specified identity and detail message. This constructor allows for creating an exception with a specific message while still providing context about which account is involved in the error.
+     * 使用指定的账户标识和错误消息构造异常。
      *
-     * @param identity The identity associated with the account error, such as username or user ID.
-     * @param message The detail message explaining the reason for the exception.
+     * @param identity 与错误关联的账户标识
+     * @param message  错误描述
      */
     public AccountException(Object identity, String message) {
         super(message);
@@ -34,11 +38,11 @@ public abstract class AccountException extends RuntimeException {
     }
 
     /**
-     * Creates a new AccountException with the specified identity, detail message, and cause. This constructor allows for creating an exception with a specific message and cause while still providing context about which account is involved in the error.
+     * 使用指定的账户标识、错误消息和原因构造异常。
      *
-     * @param identity The identity associated with the account error, such as username or user ID.
-     * @param message The detail message explaining the reason for the exception.
-     * @param cause The cause of the exception (which is saved for later retrieval by the getCause() method).
+     * @param identity 与错误关联的账户标识
+     * @param message  错误描述
+     * @param cause    异常的根因
      */
     public AccountException(Object identity, String message, Throwable cause) {
         super(message, cause);
@@ -46,49 +50,49 @@ public abstract class AccountException extends RuntimeException {
     }
 
     /**
-     * Gets the identity associated with the account error. This can be used to provide more context about the error, such as which username or user ID was involved.
+     * 获取与错误关联的账户标识。
      *
-     * @return The identity associated with the account error.
+     * @return 账户标识
      */
     public Object getIdentity() {
         return identity;
     }
 
     /**
-     * Gets additional details related to the account exception. This can be used to provide more context about the error, such as which field was invalid or what the expected format was.
+     * 获取异常相关的额外详细信息。
      *
-     * @return A map of additional details related to the account exception.
+     * @return 详细信息的映射
      */
     public Map<String, Object> getDetails() {
         return details;
     }
 
     /**
-     * Gets a specific detail from the details map based on the provided key. This can be used to retrieve specific information about the account error, such as which field was invalid or what the expected format was.
+     * 根据键从详细信息中获取特定的值。
      *
-     * @param key The key for the detail to retrieve.
-     * @return The value associated with the specified key in the details map, or null if the key does not exist.
+     * @param key 要检索的键
+     * @return 与键关联的值，如果键不存在则返回 null
      */
     public Object get(String key) {
         return details.getOrDefault(key, null);
     }
 
     /**
-     * Sets a specific detail in the details map with the provided key and value. This can be used to add additional context about the account error, such as which field was invalid or what the expected format was.
+     * 在详细信息中设置键值对。
      *
-     * @param key The key for the detail.
-     * @param value The value for the detail.
+     * @param key   键
+     * @param value 值
      */
     public void set(String key, Object value) {
         details.put(key, value);
     }
 
     /**
-     * Sets a specific detail in the details map with the provided key and value, and returns the AccountException instance for method chaining. This can be used to add additional context about the account error while allowing for fluent API style when constructing the exception.
+     * 在详细信息中设置键值对，并返回当前实例支持链式调用。
      *
-     * @param key The key for the detail.
-     * @param value The value for the detail.
-     * @return The AccountException instance, allowing for method chaining.
+     * @param key   键
+     * @param value 值
+     * @return 当前 AccountException 实例
      */
     public AccountException with(String key, Object value) {
         details.put(key, value);

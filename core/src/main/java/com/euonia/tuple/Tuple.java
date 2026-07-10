@@ -12,8 +12,6 @@ import java.util.Objects;
  * 表示一个有序的值集合，其中每个值可以是任意类型。元组是不可变的，可以包含重复值。
  * 提供了访问值、检查值是否存在以及执行常见元组操作（如相等性检查、转换为列表和数组）的方法。
  * Tuple 接口继承 Iterable&lt;Object&gt; 以便于遍历元组中的值，同时还实现了 Serializable 以支持元组实例的序列化。
- * Tuple 接口设计灵活，可由表示不同大小和类型的元组的各种类来实现（如 Pair、Triplet、Quadruple 等）。
- * 它为操作元组提供了通用约定，允许在不同的实现和用例中一致地处理元组。
  *
  * @author damon(zhaorong@outlook.com)
  */
