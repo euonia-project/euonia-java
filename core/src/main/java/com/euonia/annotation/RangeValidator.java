@@ -2,6 +2,8 @@ package com.euonia.annotation;
 
 import com.euonia.utility.StringUtility;
 
+import java.util.regex.Pattern;
+
 /**
  * RangeValidator 是一个用于验证数值是否在指定范围内的验证器类。
  * 它实现了 Validator 接口，并提供了 validate 方法来执行验证逻辑。
@@ -17,22 +19,60 @@ import com.euonia.utility.StringUtility;
  * @author damon(zhaorong@outlook.com)
  */
 public final class RangeValidator implements Validator<Range> {
+    private static final String EXPRESSION = "^(?<left>[\\[(])\\s*(?<min>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))\\s*,\\s*(?<max>-?(?:\\d+(?:\\.\\d+)?|\\.\\d+))\\s*(?<right>[\\])])$";
+
+    private final Pattern pattern = Pattern.compile(EXPRESSION);
+
     @Override
     public Result validate(Range annotation, Object value) {
         boolean result = true;
         String message = null;
 
+        double min;
+        double max;
+        Range.Boundary minBoundary;
+        Range.Boundary maxBoundary;
+
+        if (!StringUtility.isNullOrEmpty(annotation.value())) {
+
+            var matcher = pattern.matcher(annotation.value());
+
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Invalid range format in annotation value: " + annotation.value());
+            }
+
+            min = Double.parseDouble(matcher.group("min").trim());
+            max = Double.parseDouble(matcher.group("max").trim());
+            minBoundary = switch (matcher.group("left")) {
+                case "[" -> Range.Boundary.INCLUSIVE;
+                case "(" -> Range.Boundary.EXCLUSIVE;
+                default ->
+                    throw new IllegalArgumentException("Invalid left boundary in range: " + matcher.group("left"));
+            };
+            maxBoundary = switch (matcher.group("right")) {
+                case "]" -> Range.Boundary.INCLUSIVE;
+                case ")" -> Range.Boundary.EXCLUSIVE;
+                default ->
+                    throw new IllegalArgumentException("Invalid right boundary in range: " + matcher.group("right"));
+            };
+        } else {
+            min = annotation.min();
+            max = annotation.max();
+            minBoundary = annotation.minBoundary();
+            maxBoundary = annotation.maxBoundary();
+        }
+
         if (value instanceof Number number) {
-            if (number.doubleValue() > annotation.max()) {
+            if (number.doubleValue() > max) {
                 result = false;
                 message = getMessage(annotation);
-            } else if (number.doubleValue() < annotation.min()) {
+            } else if (number.doubleValue() < min) {
                 result = false;
                 message = getMessage(annotation);
-            } else if (number.doubleValue() == annotation.min() && !annotation.inclusiveMin()) {
+            } else if (number.doubleValue() == min && minBoundary == Range.Boundary.EXCLUSIVE) {
                 result = false;
                 message = getMessage(annotation);
-            } else if (number.doubleValue() == annotation.max() && !annotation.inclusiveMax()) {
+            } else if (number.doubleValue() == max && maxBoundary == Range.Boundary.EXCLUSIVE) {
                 result = false;
                 message = getMessage(annotation);
             }
@@ -50,8 +90,8 @@ public final class RangeValidator implements Validator<Range> {
         return String.format("Value must be between %s and %s%s%s",
                              annotation.min(),
                              annotation.max(),
-                             annotation.inclusiveMin() ? " (inclusive)" : "",
-                             annotation.inclusiveMax() ? " (inclusive)" : ""
+                             annotation.minBoundary() == Range.Boundary.INCLUSIVE ? " (inclusive)" : "",
+                             annotation.maxBoundary() == Range.Boundary.INCLUSIVE ? " (inclusive)" : ""
         );
     }
 }

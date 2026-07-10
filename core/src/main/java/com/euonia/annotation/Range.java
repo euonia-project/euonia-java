@@ -23,6 +23,15 @@ import java.lang.annotation.Target;
 @Validation(validator = RangeValidator.class)
 public @interface Range {
     /**
+     * 指定值范围的区间表达式，例如[1,10],(1,10),(1,10]等。
+     * <p>
+     * 如果指定了区间表达式则忽略 min、max、minBoundary 和 maxBoundary 属性。
+     *
+     * @return 区间表达式
+     */
+    String value() default "";
+
+    /**
      * 指定允许的最小值。
      *
      * @return 最小值，默认为 {@code Double.MIN_VALUE}
@@ -37,18 +46,18 @@ public @interface Range {
     double max() default Double.MAX_VALUE;
 
     /**
-     * 是否包含最小值。为{@code true}时允许指定值等于最小值。
+     * 指定最小值的边界类型。
      *
-     * @return 是否包含最小值，默认为 {@code false}
+     * @return 最小值的边界类型，默认为 {@code EXCLUSIVE}
      */
-    boolean inclusiveMin() default false;
+    Boundary minBoundary() default Boundary.EXCLUSIVE;
 
     /**
-     * 是否包含最大值。为{@code true}时允许指定值等于最大值。
+     * 指定最大值的边界类型。
      *
-     * @return 是否包含最大值，默认为 {@code false}
+     * @return 最大值的边界类型，默认为 {@code EXCLUSIVE}
      */
-    boolean inclusiveMax() default false;
+    Boundary maxBoundary() default Boundary.EXCLUSIVE;
 
     /**
      * 自定义验证失败时的错误消息。默认为空字符串。
@@ -56,4 +65,22 @@ public @interface Range {
      * @return 错误消息，默认为空字符串
      */
     String message() default "";
+
+    /**
+     * 枚举类型，表示范围的边界类型。包括：
+     * <ul>
+     *     <li>{@code INCLUSIVE}：包含边界值。</li>
+     *     <li>{@code EXCLUSIVE}：不包含边界值。</li>
+     * </ul>
+     */
+    enum Boundary {
+        /**
+         * 包含边界值。
+         */
+        INCLUSIVE,
+        /**
+         * 不包含边界值。
+         */
+        EXCLUSIVE
+    }
 }
