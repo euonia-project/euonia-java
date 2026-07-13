@@ -1,11 +1,11 @@
 package com.euonia.bus.behavior;
 
-import com.euonia.bus.RoutedMessage;
-import com.euonia.pipeline.PipelineBehavior;
-import com.euonia.pipeline.PipelineDelegate;
-
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
+
+import com.euonia.bus.MessageEnvelope;
+import com.euonia.pipeline.PipelineBehavior;
+import com.euonia.pipeline.PipelineDelegate;
 
 /**
  * IncomingLoggingBehavior 是一个用于记录入站消息的行为类，实现了 PipelineBehavior 接口。
@@ -19,12 +19,12 @@ import java.util.logging.Logger;
  * @param <T>
  * @param <R>
  */
-public final class IncomingLoggingBehavior<T, R> implements PipelineBehavior<RoutedMessage<T>, R> {
+public final class IncomingLoggingBehavior<T, R> implements PipelineBehavior<MessageEnvelope<T>, R> {
     private static final Logger LOGGER = Logger.getLogger(IncomingLoggingBehavior.class.getName());
 
     @Override
-    public CompletionStage<R> handleAsync(RoutedMessage<T> context, PipelineDelegate<RoutedMessage<T>, R> next) {
-        LOGGER.info("Incoming message: " + context);
+    public CompletionStage<R> handleAsync(MessageEnvelope<T> context, PipelineDelegate<MessageEnvelope<T>, R> next) {
+        LOGGER.info(()-> String.format("Message '%s'(%s) is received on channel: %s", context.getMessageId(), context.getTypeName(), context.getChannel()));
         return next.invoke(context);
     }
 }
