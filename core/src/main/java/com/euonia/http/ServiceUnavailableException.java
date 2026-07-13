@@ -1,26 +1,25 @@
 package com.euonia.http;
 
 /**
- * The ServiceUnavailableException class represents an HTTP 503 Service Unavailable error.
- * It extends the HttpStatusException class and provides constructors for creating instances of this exception with a specific message and an optional cause.
+ * HTTP 503 Service Unavailable 异常。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class ServiceUnavailableException extends HttpStatusException {
     /**
-     * Creates a new ServiceUnavailableException with the specified message.
-     * This constructor allows for creating an exception with a specific message, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息构造异常。
      *
-     * @param message The detail message for the exception.
+     * @param message 错误描述
      */
     public ServiceUnavailableException(String message) {
         super(503, message);
     }
 
     /**
-     * Creates a new ServiceUnavailableException with the specified message and cause.
-     * This constructor allows for creating an exception with a specific message and cause, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息和原因构造异常。
      *
-     * @param message The detail message for the exception.
-     * @param cause The cause of the exception.
+     * @param message 错误描述
+     * @param cause   异常的根因
      */
     public ServiceUnavailableException(String message, Throwable cause) {
         super(503, message, cause);

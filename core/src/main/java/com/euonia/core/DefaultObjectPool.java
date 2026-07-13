@@ -166,31 +166,31 @@ public final class DefaultObjectPool<T> implements ObjectPool<T> {
 
             // 步骤 3：达到或超过容量 —— 应用超限行为
             switch (policy.oversizeBehavior()) {
-                case THROW_EXCEPTION:
-                    throw new RuntimeException("All pooled objects are in use (capacity=" + capacity + ").");
+                case THROW_EXCEPTION -> throw new RuntimeException("All pooled objects are in use (capacity=" + capacity + ").");
 
-                case RETURN_NULL:
+                case RETURN_NULL -> {
                     return null;
+                }
 
-                case CREATE_NEW:
+                case CREATE_NEW -> {
                     instance = policy.create();
                     inUseCount.incrementAndGet();
                     return instance;
+                }
 
-                case WAIT_FOR_AVAILABLE:
+                case WAIT_FOR_AVAILABLE -> {
                     try {
                         // wait() 会原子性地释放监视器锁并挂起线程。
                         // 这避免了在持有 synchronized 锁的同时调用 acquire() 导致的死锁。
                         wait();
-                    } catch (InterruptedException e) {
+                    }catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException("Thread interrupted while waiting for an available object.", e);
                     }
                     // 被 release() 通知后，循环回去重试获取
-                    break;
+                }
 
-                default:
-                    throw new IllegalStateException("Unexpected oversize behavior: " + policy.oversizeBehavior());
+                default -> throw new IllegalStateException("Unexpected oversize behavior: " + policy.oversizeBehavior());
             }
         }
     }

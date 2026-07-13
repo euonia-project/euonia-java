@@ -25,13 +25,6 @@ public interface Configurator {
     String getDefaultTransport();
 
     /**
-     * 获取是否启用管道行为，可用于消息处理和操作。
-     *
-     * @return 如果管道行为已启用则返回 true，否则返回 false
-     */
-    boolean isEnablePipelineBehaviors();
-
-    /**
      * 获取已配置的 {@link MessageConventionBuilder}。
      *
      * @return MessageConventionBuilder 实例

@@ -7,12 +7,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import com.euonia.pipeline.Pipeline;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.PublishOptions;
 
@@ -30,7 +30,7 @@ class PublishBuilderTest {
                                                       AtomicReference<Consumer<?>> capturedBehavior) {
         Bus bus = new Bus() {
             @Override
-            public <T> CompletableFuture<Void> publishAsync(T msg, PublishOptions opts, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
+            public <T> CompletableFuture<Void> publishAsync(T msg, PublishOptions opts, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
                 capturedMessage.set((String) msg);
                 capturedOptions.set(opts);
                 capturedBehavior.set((Consumer<?>) (Object) behavior);
@@ -40,13 +40,13 @@ class PublishBuilderTest {
             @Override
             public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, java.util.concurrent.Flow.Subscriber<R> callback,
                                                              com.euonia.bus.options.SendOptions sendOptions,
-                                                             Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                             Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
 
             @Override
             public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, com.euonia.bus.options.CallOptions callOptions,
-                                                          Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                          Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
         };
@@ -62,20 +62,20 @@ class PublishBuilderTest {
         void shouldCreateViaBusPublish() {
             Bus bus = new Bus() {
                 @Override
-                public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
+                public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
 
                 @Override
                 public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, java.util.concurrent.Flow.Subscriber<R> callback,
                                                                  com.euonia.bus.options.SendOptions sendOptions,
-                                                                 Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                                 Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
 
                 @Override
                 public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, com.euonia.bus.options.CallOptions callOptions,
-                                                              Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+                                                              Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
             };
@@ -107,7 +107,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
-            Consumer<PipelineMessage<RoutedMessage<String>, Void>> behavior = pm -> {};
+            Consumer<Pipeline<RoutedMessage<String>, Void>> behavior = pm -> {};
             builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
@@ -176,7 +176,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("event", capturedMessage, capturedOptions, capturedBehavior);
 
-            Consumer<PipelineMessage<RoutedMessage<String>, Void>> behavior = pm -> {};
+            Consumer<Pipeline<RoutedMessage<String>, Void>> behavior = pm -> {};
             builder.withChannel("notifications")
                    .withMessageId("msg-001")
                    .withPriority(10)

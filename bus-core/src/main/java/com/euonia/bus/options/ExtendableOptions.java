@@ -16,8 +16,6 @@ public abstract class ExtendableOptions {
     private String channel;
     private String queue;
     private int priority;
-    private Boolean enablePipelineBehaviors = null;
-    private boolean attachDefaultPipelineBehaviors = true;
     private long delay, timeout;
     private Consumer<MessageMetadata> metadataSetter;
 
@@ -94,61 +92,55 @@ public abstract class ExtendableOptions {
     }
 
     /**
-     * 检查管道行为是否已启用，可用于自定义消息处理。
+     * 获取消息的延迟时间（以毫秒为单位），用于控制消息的发送或处理延迟。
      *
-     * @return 如果管道行为已启用则返回 true，否则返回 false
+     * @return 消息的延迟时间（毫秒）
      */
-    public Boolean isEnablePipelineBehaviors() {
-        return enablePipelineBehaviors;
-    }
-
-    /**
-     * 设置管道行为是否启用，可用于自定义消息处理。
-     *
-     * @param enablePipelineBehaviors true 表示启用管道行为，false 表示禁用
-     */
-    public void setEnablePipelineBehaviors(Boolean enablePipelineBehaviors) {
-        this.enablePipelineBehaviors = enablePipelineBehaviors;
-    }
-
-    /**
-     * 检查默认管道行为是否已附加，可用于自定义消息处理。
-     *
-     * @return 如果默认管道行为已附加则返回 true，否则返回 false
-     */
-    public boolean isAttachDefaultPipelineBehaviors() {
-        return attachDefaultPipelineBehaviors;
-    }
-
-    /**
-     * 设置默认管道行为是否附加，可用于自定义消息处理。
-     *
-     * @param attachDefaultPipelineBehaviors true 表示附加默认管道行为，false 表示不附加
-     */
-    public void setAttachDefaultPipelineBehaviors(boolean attachDefaultPipelineBehaviors) {
-        this.attachDefaultPipelineBehaviors = attachDefaultPipelineBehaviors;
-    }
-
     public long getDelay() {
         return delay;
     }
 
+    /**
+     * 设置消息的延迟时间（以毫秒为单位），用于控制消息的发送或处理延迟。
+     *
+     * @param delay 消息的延迟时间（毫秒）
+     */
     public void setDelay(long delay) {
         this.delay = delay;
     }
 
+    /**
+     * 获取消息的超时时间（以毫秒为单位），用于控制消息的处理超时。
+     *
+     * @return 消息的超时时间（毫秒）
+     */
     public long getTimeout() {
         return timeout;
     }
 
+    /**
+     * 设置消息的超时时间（以毫秒为单位），用于控制消息的处理超时。
+     *
+     * @param timeout 消息的超时时间（毫秒）
+     */
     public void setTimeout(long timeout) {
         this.timeout = timeout;
     }
 
+    /**
+     * 获取用于设置消息元数据的函数。该函数接受一个 {@link MessageMetadata} 对象，并允许用户自定义消息的元数据。
+     *
+     * @return 用于设置消息元数据的函数
+     */
     public Consumer<MessageMetadata> getMetadataSetter() {
         return metadataSetter;
     }
 
+    /**
+     * 设置用于设置消息元数据的函数。该函数接受一个 {@link MessageMetadata} 对象，并允许用户自定义消息的元数据。
+     *
+     * @param metadataSetter 用于设置消息元数据的函数
+     */
     public void setMetadataSetter(Consumer<MessageMetadata> metadataSetter) {
         this.metadataSetter = metadataSetter;
     }

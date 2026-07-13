@@ -7,8 +7,8 @@ import java.util.function.Consumer;
 import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
-import com.euonia.bus.PipelineMessage;
 import com.euonia.bus.options.SendOptions;
+import com.euonia.pipeline.Pipeline;
 import com.euonia.utility.Assert;
 
 /**
@@ -38,7 +38,7 @@ public final class SendBuilder<T, R> {
     private final T message;
     private final Class<R> responseType;
     private Flow.Subscriber<R> callback;
-    private Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior;
+    private Consumer<Pipeline<RoutedMessage<T>, R>> behavior;
     private final SendOptions options = new SendOptions();
 
     public SendBuilder(Bus bus, T message, Class<R> responseType) {
@@ -68,7 +68,7 @@ public final class SendBuilder<T, R> {
     /**
      * 配置管道行为回调。
      */
-    public SendBuilder<T, R> withBehavior(Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public SendBuilder<T, R> withBehavior(Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
         Assert.notNull(behavior, "behavior is null");
         this.behavior = behavior;
         return this;

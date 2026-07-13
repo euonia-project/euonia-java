@@ -4,28 +4,31 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * The CredentialException is thrown when there is an issue with user credentials, such as invalid username or password.
- * This exception indicates that the provided credentials are incorrect or do not meet the required criteria.
+ * 凭证异常，当用户凭证（如用户名或密码）出现问题时抛出。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 @SuppressWarnings("unused")
 public abstract class CredentialException extends RuntimeException {
+    /** 导致异常的凭证 */
     private final Object credential;
+    /** 异常相关的额外详细信息 */
     private final Map<String, Object> details = Collections.emptyMap();
 
     /**
-     * Create a new CredentialException with the specified credential.
+     * 使用指定的凭证构造异常。
      *
-     * @param credential The credential that caused the exception.
+     * @param credential 导致异常的凭证
      */
     public CredentialException(Object credential) {
         this.credential = credential;
     }
 
     /**
-     * Create a new CredentialException with the specified credential and message.
+     * 使用指定的凭证和错误消息构造异常。
      *
-     * @param credential The credential that caused the exception.
-     * @param message The detail message for the exception.
+     * @param credential 导致异常的凭证
+     * @param message    错误描述
      */
     public CredentialException(Object credential, String message) {
         super(message);
@@ -33,11 +36,11 @@ public abstract class CredentialException extends RuntimeException {
     }
 
     /**
-     * Create a new CredentialException with the specified credential, message, and cause.
+     * 使用指定的凭证、错误消息和原因构造异常。
      *
-     * @param credential The credential that caused the exception.
-     * @param message The detail message for the exception.
-     * @param cause The cause of the exception (which is saved for later retrieval by the getCause() method).
+     * @param credential 导致异常的凭证
+     * @param message    错误描述
+     * @param cause      异常的根因
      */
     public CredentialException(Object credential, String message, Throwable cause) {
         super(message, cause);
@@ -45,49 +48,49 @@ public abstract class CredentialException extends RuntimeException {
     }
 
     /**
-     * Get the credential that caused the exception. This can be used to provide more context about the error, such as which username or password was invalid.
+     * 获取导致异常的凭证。
      *
-     * @return The credential that caused the exception.
+     * @return 导致异常的凭证
      */
     public Object getCredential() {
         return credential;
     }
 
     /**
-     * Get additional details related to the credential exception. This can be used to provide more context about the error, such as which field was invalid or what the expected format was.
+     * 获取异常相关的额外详细信息。
      *
-     * @return A map of additional details related to the credential exception.
+     * @return 详细信息的映射
      */
     public Map<String, Object> getDetails() {
         return details;
     }
 
     /**
-     * Get additional details related to the credential exception. This can be used to provide more context about the error, such as which field was invalid or what the expected format was.
+     * 根据键从详细信息中获取特定的值。
      *
-     * @param key The key for the detail.
-     * @return The value associated with the key, or null if the key does not exist.
+     * @param key 要检索的键
+     * @return 与键关联的值，如果键不存在则返回 null
      */
     public Object get(String key) {
         return details.getOrDefault(key, null);
     }
 
     /**
-     * Set additional details related to the credential exception. This can be used to provide more context about the error, such as which field was invalid or what the expected format was.
+     * 在详细信息中设置键值对。
      *
-     * @param key The key for the detail.
-     * @param value The value for the detail.
+     * @param key   键
+     * @param value 值
      */
     public void set(String key, Object value) {
         details.put(key, value);
     }
 
     /**
-     * Set additional details related to the credential exception. This can be used to provide more context about the error, such as which field was invalid or what the expected format was.
+     * 在详细信息中设置键值对，并返回当前实例支持链式调用。
      *
-     * @param key The key for the detail.
-     * @param value The value for the detail.
-     * @return The CredentialException instance, allowing for method chaining.
+     * @param key   键
+     * @param value 值
+     * @return 当前 CredentialException 实例
      */
     public CredentialException with(String key, Object value) {
         details.put(key, value);

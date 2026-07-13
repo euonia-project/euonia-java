@@ -27,16 +27,10 @@ public final class DefaultConfigurator implements Configurator {
     private final ConcurrentMap<String, ChannelRegistration> registrations = new ConcurrentHashMap<>();
 
     private Supplier<String> defaultTransportSupplier = () -> "";
-    private Supplier<Boolean> enablePipelineBehaviorsSupplier = () -> true;
 
     @Override
     public String getDefaultTransport() {
         return defaultTransportSupplier.get();
-    }
-
-    @Override
-    public boolean isEnablePipelineBehaviors() {
-        return enablePipelineBehaviorsSupplier.get();
     }
 
     /**
@@ -180,18 +174,6 @@ public final class DefaultConfigurator implements Configurator {
     public DefaultConfigurator setDefaultTransport(Supplier<String> defaultTransportSupplier) {
         Assert.notNull(defaultTransportSupplier, "Default transport supplier cannot be null");
         this.defaultTransportSupplier = defaultTransportSupplier;
-        return this;
-    }
-
-    /**
-     * 设置是否启用管道行为。
-     *
-     * @param enablePipelineBehaviorsSupplier 启用管道行为的提供者
-     * @return 当前配置器实例
-     */
-    public DefaultConfigurator setEnablePipelineBehaviors(Supplier<Boolean> enablePipelineBehaviorsSupplier) {
-        Assert.notNull(enablePipelineBehaviorsSupplier, "Enable pipeline behaviors cannot be null");
-        this.enablePipelineBehaviorsSupplier = enablePipelineBehaviorsSupplier;
         return this;
     }
 }

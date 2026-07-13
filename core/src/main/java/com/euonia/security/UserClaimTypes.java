@@ -1,8 +1,10 @@
 package com.euonia.security;
 
 /**
- * User claim types as defined in OpenID Connect Core 1.0 specification.
- * See: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+ * OpenID Connect Core 1.0 规范中定义的用户声明（Claim）类型常量。
+ * 参考：<a href="https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims">标准声明</a>
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class UserClaimTypes {
     public static final String SUBJECT = "sub";

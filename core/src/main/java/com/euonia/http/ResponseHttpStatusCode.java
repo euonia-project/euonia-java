@@ -5,14 +5,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 标注类对应的 HTTP 响应状态码。
+ * 用于在异常类上声明其对应的 HTTP 状态码（如 400、404 等），
+ * 以便框架自动映射。
+ *
+ * @author damon(zhaorong@outlook.com)
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ResponseHttpStatusCode {
     /**
-     * The HTTP status code associated with the response.
-     * This value is used to indicate the status of the HTTP response, such as 400 for bad request, 404 for not found, etc.
+     * 与此响应关联的 HTTP 状态码。
      *
-     * @return The HTTP status code for the response.
+     * @return HTTP 状态码
      */
     int value();
 }

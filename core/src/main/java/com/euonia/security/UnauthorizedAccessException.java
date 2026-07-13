@@ -1,16 +1,28 @@
 package com.euonia.security;
 
 /**
- * The UnauthorizedAccessException is thrown when an attempt is made to access a resource or perform an action without proper authentication or authorization.
- * This exception indicates that the user does not have the necessary credentials or permissions to access the requested resource.
- * It is typically used in scenarios where authentication is required but has not been provided, or when the provided credentials are invalid.
+ * 未经授权访问异常，当尝试在未通过适当认证或授权的情况下访问资源或执行操作时抛出。
+ * 表示用户缺乏访问所请求资源所需的凭据或权限。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 @SuppressWarnings("unused")
 public class UnauthorizedAccessException extends RuntimeException {
+    /**
+     * 使用指定的错误消息构造异常。
+     *
+     * @param message 错误描述
+     */
     public UnauthorizedAccessException(String message) {
         super(message);
     }
 
+    /**
+     * 使用指定的错误消息和原因构造异常。
+     *
+     * @param message 错误描述
+     * @param cause   异常的根因
+     */
     public UnauthorizedAccessException(String message, Throwable cause) {
         super(message, cause);
     }

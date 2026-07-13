@@ -1,24 +1,25 @@
 package com.euonia.http;
 
 /**
- * The InternalServerErrorException class represents an HTTP 500 Internal Server Error.
- * It extends the HttpStatusException class and provides constructors for creating instances of this exception with a specific message and an optional cause.
+ * HTTP 500 Internal Server Error 异常。
+ *
+ * @author damon(zhaorong@outlook.com)
  */
 public class InternalServerErrorException extends HttpStatusException {
     /**
-     * Creates a new InternalServerErrorException with the specified message. This constructor allows for creating an exception with a specific message, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息构造异常。
      *
-     * @param message The detail message for the exception.
+     * @param message 错误描述
      */
     public InternalServerErrorException(String message) {
         super(500, message);
     }
 
     /**
-     * Creates a new InternalServerErrorException with the specified message and cause. This constructor allows for creating an exception with a specific message and cause, providing more detailed error information when the exception is thrown.
+     * 使用指定的消息和原因构造异常。
      *
-     * @param message The detail message for the exception.
-     * @param cause The cause of the exception.
+     * @param message 错误描述
+     * @param cause   异常的根因
      */
     public InternalServerErrorException(String message, Throwable cause) {
         super(500, message, cause);

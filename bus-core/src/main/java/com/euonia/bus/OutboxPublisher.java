@@ -1,10 +1,10 @@
 package com.euonia.bus;
 
+import com.euonia.bus.behavior.OutboxCompletionBehavior;
 import com.euonia.bus.consistency.OutboxStore;
 import com.euonia.bus.exception.MessageTransportException;
 import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.tuple.Duet;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -94,28 +94,13 @@ final class OutboxPublisher {
         LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", message.getMessageId(), message.getClass().getName(), name, message.getChannel()));
         var transport = transports.computeIfAbsent(name, k -> provider.getService(Transport.class).orElseThrow(() -> new MessageTransportException("Transport service not found: " + k)));
 
-        Pipeline<Duet<String, MessageEnvelope<?>>, Void> pipeline = pipelineFactory.create();
+        Pipeline<MessageEnvelope<?>, Void> pipeline = pipelineFactory.create();
 
         if (outboxStore != null) {
-            pipeline.use(OutboxCompletionBehavior.class);
+            pipeline.use(OutboxCompletionBehavior.class, outboxStore, name);
         }
 
-        return pipeline.runAsync(new Duet<>(name, message), ctx -> transport.publishAsync(ctx.value2()))
+        return pipeline.runAsync(message, transport::publishAsync)
                        .toCompletableFuture();
-    }
-
-    class OutboxCompletionBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Void> {
-
-        @Override
-        public CompletionStage<Void> handleAsync(Duet<String, MessageEnvelope<?>> context, PipelineDelegate<Duet<String, MessageEnvelope<?>>, Void> next) {
-            return next.invoke(context).whenComplete((message, throwable) -> {
-                assert outboxStore != null;
-                if (throwable != null) {
-                    outboxStore.markAsFailed(context.value2().getMessageId(), context.value1(), throwable.getMessage());
-                } else {
-                    outboxStore.markAsSuccess(context.value2().getMessageId(), context.value1());
-                }
-            });
-        }
     }
 }

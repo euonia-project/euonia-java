@@ -43,13 +43,13 @@
 
     <licenses>
         <license>
-            <name>GNU General Public License v3.0</name>
-            <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
         </license>
     </licenses>
 
     <properties>
-        <revision>10.0.1</revision>
+        <revision>10.0.2</revision>
         <maven.compiler.release>17</maven.compiler.release>
         <project.version>1.0</project.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -66,15 +66,5 @@ class SendOptionsTest {
             opts.setPriority(3);
             assertThat(opts.getPriority()).isEqualTo(3);
         }
-
-        @Test
-        @DisplayName("should configure pipeline behaviors")
-        void shouldConfigurePipelineBehaviors() {
-            var opts = new SendOptions();
-
-            assertThat(opts.isEnablePipelineBehaviors()).isNull();
-            opts.setEnablePipelineBehaviors(true);
-            assertThat(opts.isEnablePipelineBehaviors()).isTrue();
-        }
     }
 }

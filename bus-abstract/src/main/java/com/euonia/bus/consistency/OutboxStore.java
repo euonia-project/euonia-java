@@ -18,15 +18,14 @@ public interface OutboxStore {
     /**
      * 插入一条消息到发件箱。
      *
-     * @param channel    消息通道
      * @param message    消息内容
      * @param transports 投递方式列表
      * @return 插入是否成功
      */
-    default boolean insert(String channel, MessageEnvelope<?> message, List<String> transports) {
+    default boolean insert(MessageEnvelope<?> message, List<String> transports) {
         var entry = new OutboxEntry();
         entry.setMessageId(message.getMessageId());
-        entry.setChannel(channel);
+        entry.setChannel(message.getChannel());
         entry.setContent(message);
         entry.setMessageType(message.getPayload().getClass().getName());
         entry.setCreatedAt(java.time.LocalDateTime.now());
