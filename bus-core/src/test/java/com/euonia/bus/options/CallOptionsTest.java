@@ -65,14 +65,5 @@ class CallOptionsTest {
 
             assertThat(opts.getMessageId()).isEqualTo("custom-id");
         }
-
-        @Test
-        @DisplayName("should disable default pipeline behaviors")
-        void shouldDisableDefaultPipelineBehaviors() {
-            var opts = new CallOptions();
-            opts.setAttachDefaultPipelineBehaviors(false);
-
-            assertThat(opts.isAttachDefaultPipelineBehaviors()).isFalse();
-        }
     }
 }

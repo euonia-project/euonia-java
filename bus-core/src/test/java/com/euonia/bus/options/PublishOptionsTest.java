@@ -61,14 +61,6 @@ class PublishOptionsTest {
         }
 
         @Test
-        @DisplayName("should attach default pipeline behaviors by default")
-        void shouldAttachDefaultPipelineByDefault() {
-            var opts = new PublishOptions();
-
-            assertThat(opts.isAttachDefaultPipelineBehaviors()).isTrue();
-        }
-
-        @Test
         @DisplayName("should set metadata setter")
         void shouldSetMetadataSetter() {
             var opts = new PublishOptions();

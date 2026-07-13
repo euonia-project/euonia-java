@@ -10,11 +10,11 @@ import java.util.logging.Logger;
 
 import com.euonia.bus.MessageContext;
 import com.euonia.bus.MessageEnvelope;
+import com.euonia.bus.behavior.InboxCompletionBehavior;
 import com.euonia.bus.consistency.InboxStore;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.tuple.Duet;
 
 /**
  * 收件箱处理器，在处理消息前检查 {@link InboxStore} 是否已处理该消息以确保幂等性，
@@ -112,11 +112,11 @@ final class IdempotentHandler {
      */
     public CompletableFuture<Object> executeHandlerAsync(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
-        Pipeline<Duet<String, MessageEnvelope<?>>, Object> pipeline = pipelineFactory.create();
+        Pipeline<MessageEnvelope<?>, Object> pipeline = pipelineFactory.create();
         if (inboxStore != null) {
-            pipeline.use(InboxCompletionBehavior.class);
+            pipeline.use(InboxCompletionBehavior.class, inboxStore, registration.handlerType().getTypeName());
         }
-        return pipeline.runAsync(new Duet<>(registration.handlerType().getTypeName(), message), ctx -> CompletableFuture.supplyAsync(() -> executeHandler(registration, message, context), customExecutor))
+        return pipeline.runAsync(message, ctx -> CompletableFuture.supplyAsync(() -> executeHandler(registration, message, context), customExecutor))
                        .toCompletableFuture();
     }
 
@@ -133,19 +133,5 @@ final class IdempotentHandler {
     public Object executeHandler(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         var delegate = registration.factory().createDelegate(provider);
         return delegate.handle(message.getPayload(), context);
-    }
-
-    class InboxCompletionBehavior implements PipelineBehavior<Duet<String, MessageEnvelope<?>>, Object> {
-        @Override
-        public CompletionStage<Object> handleAsync(Duet<String, MessageEnvelope<?>> context, PipelineDelegate<Duet<String, MessageEnvelope<?>>, Object> next) {
-            assert inboxStore != null;
-            return next.invoke(context).whenComplete((message, throwable) -> {
-                if (throwable != null) {
-                    inboxStore.markAsFailed(context.value2().getMessageId(), context.value1(), throwable.getMessage());
-                } else {
-                    inboxStore.markAsSuccess(context.value2().getMessageId(), context.value1());
-                }
-            });
-        }
     }
 }

@@ -3,10 +3,15 @@ package com.euonia.bus;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.euonia.bus.annotation.Channel;
+import com.euonia.bus.behavior.OutgoingLoggingBehavior;
+import com.euonia.bus.behavior.OutboxCompletionBehavior;
+import com.euonia.bus.consistency.OutboxStore;
+import com.euonia.bus.exception.MessagePersistentException;
 import com.euonia.bus.message.Message;
 import com.euonia.bus.message.Request;
 import com.euonia.bus.exception.MessageConventionException;
@@ -19,6 +24,7 @@ import com.euonia.bus.options.SendOptions;
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
 import com.euonia.http.RequestContextAccessor;
+import com.euonia.pipeline.Pipeline;
 import com.euonia.pipeline.PipelineFactory;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.utility.StringUtility;
@@ -66,6 +72,8 @@ public final class MessageBus implements Bus {
      */
     private final PipelineFactory pipelineFactory;
 
+    private final OutboxStore outboxStore;
+
     /**
      * 消息发布器，用于将消息发送到传输实例。
      */
@@ -94,6 +102,7 @@ public final class MessageBus implements Bus {
         this.configurator = configurator;
         this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
+        this.outboxStore = provider.getService(OutboxStore.class).orElse(null);
         this.publisher = new OutboxPublisher(provider);
         this.publisher.start();
     }
@@ -112,7 +121,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是多播类型
      */
     @Override
-    public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<PipelineMessage<RoutedMessage<T>, Void>> behavior) {
+    public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
         if (options == null) {
             options = new PublishOptions();
         }
@@ -134,28 +143,28 @@ public final class MessageBus implements Bus {
             options.getMetadataSetter().accept(pack.getMetadata());
         }
 
-        return executePipelineAsync(pack, messageType, behavior, options)
-            .thenCompose(finalPack -> {
-                RequestContextAccessor.set(context);
-                try {
-                    var customerPublisher = configurator.getCustomPublisher();
+        var transports = dispatcher.determine(channelName, messageType);
 
-                    if (customerPublisher != null) {
-                        return customerPublisher.apply(finalPack);
-                    } else {
+        if (outboxStore != null && !outboxStore.insert(pack, transports)) {
+            throw new MessagePersistentException(String.format("Failed to insert message '%s' in outbox", pack.getMessageId()));
+        }
 
-                        var transports = dispatcher.determine(channelName, messageType);
+        var tasks = transports.stream()
+                              .map(name -> {
+                                  var transport = provider.getService(Transport.class, name)
+                                                          .orElseThrow(() -> new MessageTransportException("The transport " + name + " was not found."));
+                                  return executePipelineAsync(pack, messageType, pipeline -> {
+                                      if (behavior != null) {
+                                          behavior.accept(pipeline);
+                                      }
+                                      if (outboxStore != null) {
+                                          pipeline.use(OutboxCompletionBehavior.class, outboxStore, name);
+                                      }
+                                  }, name, transport::publishAsync);
+                              })
+                              .toArray(CompletableFuture[]::new);
 
-                        var tasks = transports.stream()
-                                              .map(transport -> publisher.publishAsync(transport, finalPack))
-                                              .toArray(CompletableFuture[]::new);
-
-                        return CompletableFuture.allOf(tasks);
-                    }
-                } finally {
-                    RequestContextAccessor.remove();
-                }
-            });
+        return CompletableFuture.allOf(tasks);
     }
 
     /**
@@ -175,7 +184,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是单播类型
      */
     @Override
-    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions options, Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new SendOptions();
         }
@@ -199,52 +208,40 @@ public final class MessageBus implements Bus {
             options.getMetadataSetter().accept(pack.getMetadata());
         }
 
-        return executePipelineAsync(pack, messageType, behavior, options)
-            .thenCompose(finalPack -> {
-                RequestContextAccessor.set(context);
-                try {
-                    var transports = dispatcher.determine(channelName, messageType);
+        var transports = dispatcher.determine(channelName, messageType);
 
-                    if (transports.isEmpty()) {
-                        throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
-                    } else if (transports.size() > 1) {
-                        throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
+        if (transports.isEmpty()) {
+            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+        } else if (transports.size() > 1) {
+            throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
+        }
+
+        var transportName = transports.get(0);
+
+        var transport = provider.getService(Transport.class, transportName)
+                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+
+        return executePipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.sendAsync(ctx, responseType))
+            .whenComplete((response, ex) -> {
+                if (ex != null) {
+                    LOGGER.log(Level.SEVERE, ex, () -> "Failed to send message: " + messageType.getName());
+                    if (callback != null) {
+                        callback.onError(ex);
+                    } else {
+                        if (ex instanceof RuntimeException exception) {
+                            throw exception;
+                        } else {
+                            throw new RuntimeException(ex);
+                        }
                     }
-
-                    var transportName = transports.get(0);
-
-                    var transport = provider.getService(Transport.class, transportName)
-                                            .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
-
-                    LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transport, channelName));
-
-                    return transport.sendAsync(finalPack, responseType)
-                                    .whenComplete((response, ex) -> {
-                                        if (ex != null) {
-                                            LOGGER.log(Level.SEVERE, ex, () -> "Failed to send message: " + messageType.getName());
-                                            if (callback != null) {
-                                                callback.onError(ex);
-                                            } else {
-                                                if (ex instanceof RuntimeException exception) {
-                                                    throw exception;
-                                                } else {
-                                                    throw new RuntimeException(ex);
-                                                }
-                                            }
-                                        } else {
-                                            if (callback != null) {
-                                                callback.onNext(response);
-                                            }
-                                        }
-                                    })
-                                    .thenAccept(v -> {
-                                        if (callback != null) {
-                                            callback.onComplete();
-                                        }
-                                    });
-                } finally {
-                    RequestContextAccessor.remove();
+                } else {
+                    if (callback != null) {
+                        callback.onNext(response);
+                        callback.onComplete();
+                    }
                 }
+            }).thenAccept(response -> {
+                // No action needed here, as the response is already handled in the whenComplete block
             });
     }
 
@@ -264,7 +261,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是请求类型
      */
     @Override
-    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
         if (options == null) {
             options = new CallOptions();
         }
@@ -288,62 +285,40 @@ public final class MessageBus implements Bus {
             options.getMetadataSetter().accept(pack.getMetadata());
         }
 
-        return executePipelineAsync(pack, messageType, behavior, options)
-            .thenCompose(finalPack -> {
-                RequestContextAccessor.set(context);
-                try {
-                    var transportNames = dispatcher.determine(channelName, messageType);
-                    if (transportNames.isEmpty()) {
-                        throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
-                    }
+        var transportNames = dispatcher.determine(channelName, messageType);
+        if (transportNames.isEmpty()) {
+            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+        }
 
-                    var transportName = transportNames.get(0);
+        var transportName = transportNames.get(0);
 
-                    var transport = provider.getService(Transport.class, transportName)
-                                            .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+        var transport = provider.getService(Transport.class, transportName)
+                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
 
-                    LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", finalPack.getMessageId(), messageType.getName(), transportName, channelName));
-
-                    return transport.callAsync(finalPack, responseType);
-                } finally {
-                    RequestContextAccessor.remove();
-                }
-            });
+        return executePipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.callAsync(ctx, responseType));
     }
 
-    private <T, R> CompletableFuture<RoutedMessage<T>> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<PipelineMessage<RoutedMessage<T>, R>> behavior, ExtendableOptions options) {
-
-        // 优先使用 options 中的配置，如果未设置，则使用 configurator 的全局配置
-        var isEnablePipelineBehaviors = options.isEnablePipelineBehaviors() != null ? options.isEnablePipelineBehaviors() : configurator.isEnablePipelineBehaviors();
-
-        if (!isEnablePipelineBehaviors) {
-            return CompletableFuture.completedFuture(pack);
-        }
-
+    private <T, R> CompletableFuture<R> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<Pipeline<RoutedMessage<T>, R>> behavior, String transportName, Function<RoutedMessage<T>, CompletableFuture<R>> callback) {
         var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
         if (pipeline == null) {
-            return CompletableFuture.completedFuture(pack);
+            return CompletableFuture.completedFuture(null);
         }
-
-        var future = new CompletableFuture<RoutedMessage<T>>();
-        var pipelineMessage = new PipelineMessage<>(pack, pipeline);
-        if (options.isAttachDefaultPipelineBehaviors()) {
-            pipelineMessage.getPipeline().useOf(messageType, true);
-        }
+        pipeline.use(OutgoingLoggingBehavior.class, messageType, transportName);
+        pipeline.useOf(messageType, true);
 
         if (behavior != null) {
-            behavior.accept(pipelineMessage);
+            behavior.accept(pipeline);
         }
-        pipelineMessage.executeAsync()
-                       .whenComplete((result, error) -> {
-                           if (error != null) {
-                               LOGGER.log(Level.SEVERE, error, () -> String.format("Pipeline execution failed for message: %s", messageType.getName()));
-                               future.completeExceptionally(error);
-                           } else {
-                               future.complete(pipelineMessage.getMessage());
-                           }
-                       });
-        return future;
+
+        return pipeline.runAsync(pack, ctx -> {
+            try {
+                var context = RequestContextAccessor.get();
+                RequestContextAccessor.set(context);
+                return callback.apply(ctx);
+            } finally {
+                RequestContextAccessor.remove();
+            }
+        }).toCompletableFuture();
     }
 
     private String getChannelName(Class<?> messageType, ExtendableOptions options) {
