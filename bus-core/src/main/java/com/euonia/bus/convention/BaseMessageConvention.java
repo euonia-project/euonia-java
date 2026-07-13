@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 /**
  * 内置的消息约定，聚合多个 {@link MessageConvention} 实例，并使用 {@link ConcurrentHashMap} 缓存类型分类结果。
  * <p>
- * 每种消息类型（unicast、multicast、request）都有自己专用的缓存，由 {@code ConcurrentHashMap&lt;Class&lt;?&gt;, Boolean&gt;} 支持。
+ * 每种消息类型（unicast、multicast、request）都有自己专用的缓存，由 {@code ConcurrentHashMap<Class<?>, Boolean>} 支持。
  *
  * @author damon(zhaorong@outlook.com)
  */
@@ -25,8 +25,7 @@ public class BaseMessageConvention implements MessageConvention {
     /**
      * 默认可覆盖的消息约定实例
      */
-    private final OverridableMessageConvention defaultConvention =
-        new OverridableMessageConvention(new DefaultMessageConvention());
+    private final OverridableMessageConvention defaultConvention = new OverridableMessageConvention(new DefaultMessageConvention());
 
     /**
      * 已注册的消息约定列表

@@ -145,8 +145,18 @@ public class MessageHandlerFinder {
         }
     }
 
+    /**
+     * 代理接口，用于处理找到的消息处理器。
+     */
     @FunctionalInterface
     public interface Delegate {
+        /**
+         * 处理找到的消息处理器。
+         *
+         * @param channel     通道名称
+         * @param messageType 消息类型
+         * @param handler     消息处理器封装对象
+         */
         void next(String channel, Class<?> messageType, ChannelHandler handler);
     }
 }
