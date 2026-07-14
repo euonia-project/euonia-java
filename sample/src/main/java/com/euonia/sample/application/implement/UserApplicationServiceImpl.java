@@ -1,6 +1,7 @@
 package com.euonia.sample.application.implement;
 
 import com.euonia.application.BaseApplicationService;
+import com.euonia.bus.Bus;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.sample.application.command.UserCreateCommand;
 import com.euonia.sample.application.contract.UserApplicationService;
@@ -20,8 +21,11 @@ import java.util.concurrent.Flow;
 @Component
 @RequestScope
 public class UserApplicationServiceImpl extends BaseApplicationService implements UserApplicationService {
-    protected UserApplicationServiceImpl(ServiceProvider serviceProvider) {
+    private final Bus bus;
+
+    protected UserApplicationServiceImpl(ServiceProvider serviceProvider, Bus bus) {
         super(serviceProvider);
+        this.bus = bus;
     }
 
     @Override
@@ -56,7 +60,7 @@ public class UserApplicationServiceImpl extends BaseApplicationService implement
 
         return bus.send(command, Long.class)
                   .withCallback(subscribe)
-                  .runAsync()
+                  .executeAsync()
                   .thenCompose(result -> future);
 
 //        return bus.sendAsync(command, Long.class, subscribe)

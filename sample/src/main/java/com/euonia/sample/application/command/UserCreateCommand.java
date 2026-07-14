@@ -1,8 +1,9 @@
 package com.euonia.sample.application.command;
 
+import com.euonia.bus.message.Message;
 import com.euonia.domain.command.CommandBase;
 
-public class UserCreateCommand extends CommandBase {
+public class UserCreateCommand extends CommandBase implements Message {
     private String name;
     private String email;
 
