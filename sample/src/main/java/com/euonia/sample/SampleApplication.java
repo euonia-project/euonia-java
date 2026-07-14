@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
+@Import({/*PipelineConfiguration.class*/})
 //@Import(PipelineConfiguration.class)
 public class SampleApplication {
 

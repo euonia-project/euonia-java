@@ -68,8 +68,8 @@ public class User extends EditableObjectBase<User, Long> {
     protected void addRules() {
         super.addRules();
         addRule(new UserNameRule(this.name));
-        addRule(this.age, (age, context) -> age != null && age >= 18, "Age must be at least 18");
-        addRule(this.email, (email, context) -> email != null && email.contains("@"), "Email must be valid");
+        addRule(this.age, (value, context) -> value != null && value >= 18, "Age must be at least 18");
+        addRule(this.email, (value, context) -> value != null && value.contains("@"), "Email must be valid");
     }
 
     @FactoryCreate
