@@ -70,7 +70,7 @@ public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, A
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         ((SubmissionPublisher<O>) publisher).close();
     }
 

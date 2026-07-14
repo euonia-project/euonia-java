@@ -124,7 +124,7 @@ public class ValueObject<T extends ValueObject<T>> implements Comparable<T> {
                 } else {
                     hashCode ^= 13;
                 }
-            } catch (IllegalAccessException | IllegalArgumentException exception) {
+            } catch (IllegalAccessException | IllegalArgumentException ignored) {
             }
         }
         return hashCode;

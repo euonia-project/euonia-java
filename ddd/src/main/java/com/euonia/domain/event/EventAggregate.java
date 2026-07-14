@@ -107,66 +107,146 @@ public class EventAggregate implements Aggregate<String> {
         this.timestamp = timestamp.toEpochMilli();
     }
 
+    /**
+     * 设置时间戳（支持多种输入格式：{@link Instant}、{@code String}、{@code long}、{@link LocalDateTime}、{@link ZonedDateTime}）。
+     *
+     * @param timestamp 时间戳，可以是 {@link Instant}、{@code String}、{@code long}、{@link LocalDateTime} 或 {@link ZonedDateTime} 类型
+     */
     public void setTimestamp(String timestamp) {
         this.timestamp = Instant.parse(timestamp).toEpochMilli();
     }
 
+    /**
+     * 设置时间戳（支持多种输入格式：{@link Instant}、{@code String}、{@code long}、{@link LocalDateTime}、{@link ZonedDateTime}）。
+     *
+     * @param timestamp 时间戳，单位为毫秒
+     */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
+    /**
+     * 设置时间戳（支持多种输入格式：{@link Instant}、{@code String}、{@code long}、{@link LocalDateTime}、{@link ZonedDateTime}）。
+     *
+     * @param timestamp 时间戳，可以是 {@link LocalDateTime} 类型
+     */
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp.toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
     }
 
+    /**
+     * 设置时间戳（支持多种输入格式：{@link Instant}、{@code String}、{@code long}、{@link LocalDateTime}、{@link ZonedDateTime}）。
+     *
+     * @param timestamp 时间戳，可以是 {@link ZonedDateTime} 类型
+     */
     public void setTimestamp(ZonedDateTime timestamp) {
         this.timestamp = timestamp.toInstant().toEpochMilli();
     }
 
+    /**
+     * 获取事件类型名称。
+     *
+     * @return 事件类型名称
+     */
     public String getTypeName() {
         return typeName;
     }
 
+    /**
+     * 设置事件类型名称。
+     *
+     * @param typeName 事件类型名称
+     */
     public void setTypeName(String typeName) {
         this.typeName = typeName;
     }
 
+    /**
+     * 获取事件意图。
+     *
+     * @return 事件意图
+     */
     public String getEventIntent() {
         return eventIntent;
     }
 
+    /**
+     * 设置事件意图。
+     *
+     * @param eventIntent 事件意图
+     */
     public void setEventIntent(String eventIntent) {
         this.eventIntent = eventIntent;
     }
 
+    /**
+     * 获取事件发起者类型。
+     *
+     * @return 事件发起者类型
+     */
     public String getOriginatorType() {
         return originatorType;
     }
 
+    /**
+     * 设置事件发起者类型。
+     *
+     * @param originatorType 事件发起者类型
+     */
     public void setOriginatorType(String originatorType) {
         this.originatorType = originatorType;
     }
 
+    /**
+     * 获取事件发起者 ID。
+     *
+     * @return 事件发起者 ID
+     */
     public String getOriginatorId() {
         return originatorId;
     }
 
+    /**
+     * 设置事件发起者 ID。
+     *
+     * @param originatorId 事件发起者 ID
+     */
     public void setOriginatorId(String originatorId) {
         this.originatorId = originatorId;
     }
 
+    /**
+     * 获取事件负载。
+     *
+     * @return 事件负载
+     */
     public Object getEventPayload() {
         return eventPayload;
     }
 
+    /**
+     * 设置事件负载。
+     *
+     * @param eventPayload 事件负载
+     */
     public void setEventPayload(Object eventPayload) {
         this.eventPayload = eventPayload;
     }
 
+    /**
+     * 获取事件序列号。
+     *
+     * @return 事件序列号
+     */
     public long getEventSequence() {
         return eventSequence;
     }
 
+    /**
+     * 设置事件序列号。
+     *
+     * @param eventSequence 事件序列号
+     */
     public void setEventSequence(long eventSequence) {
         this.eventSequence = eventSequence;
     }
