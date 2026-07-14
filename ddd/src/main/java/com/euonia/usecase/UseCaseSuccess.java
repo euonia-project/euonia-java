@@ -1,8 +1,7 @@
 package com.euonia.usecase;
 
 /**
- * 表示用例执行的成功输出。
- * 该接口定义了一个方法来处理用例执行成功的结果。
+ * 表示用例执行的成功输出。该接口定义了一个方法来处理用例执行成功的结果。
  *
  * @param <O> 成功输出的类型
  * @author damon(zhaorong@outlook.com)

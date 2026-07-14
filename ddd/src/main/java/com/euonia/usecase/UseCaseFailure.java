@@ -1,8 +1,7 @@
 package com.euonia.usecase;
 
 /**
- * 表示用例执行的失败输出。
- * 该接口定义了一个方法来处理用例执行过程中发生的错误。
+ * 表示用例执行的失败输出。该接口定义了一个方法来处理用例执行过程中发生的错误。
  *
  * @author damon(zhaorong@outlook.com)
  */

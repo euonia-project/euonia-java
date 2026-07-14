@@ -6,9 +6,7 @@ import java.util.Objects;
 /**
  * 值对象的基类，提供了 {@code equals}、{@code hashCode} 和 {@code compareTo} 方法的实现。
  * <p>
- * 通过反射比较对象的所有声明字段。{@code compareTo} 按字段顺序比较，
- * 第一个不相等的字段决定排序结果；{@code equals} 要求所有字段相等；
- * {@code hashCode} 使用交替乘数计算哈希值。
+ * 通过反射比较对象的所有声明字段。{@code compareTo} 按字段顺序比较，第一个不相等的字段决定排序结果；{@code equals} 要求所有字段相等；{@code hashCode} 使用交替乘数计算哈希值。
  *
  * @param <T> 值对象的类型
  * @author damon(zhaorong@outlook.com)

@@ -6,8 +6,7 @@ import com.euonia.core.ObjectId;
 import com.euonia.domain.Aggregate;
 
 /**
- * 领域事件的基类实现，具体的领域事件可继承此类。
- * 提供了处理领域事件的公共属性和方法，例如附加到聚合和转换为事件聚合。
+ * 领域事件的基类实现，具体的领域事件可继承此类。提供了处理领域事件的公共属性和方法，例如附加到聚合和转换为事件聚合。
  *
  * @author damon(zhaorong@outlook.com)
  */

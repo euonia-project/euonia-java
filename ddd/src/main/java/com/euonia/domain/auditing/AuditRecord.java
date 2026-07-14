@@ -7,8 +7,7 @@ import com.euonia.domain.EntityBase;
 /**
  * 审计记录实体，用于记录对领域实体的操作审计信息。
  * <p>
- * 包含被审计实体的名称、ID、操作类型、时间戳以及执行操作的用户信息。
- * 继承自 {@link EntityBase}，支持自定义 ID 类型。
+ * 包含被审计实体的名称、ID、操作类型、时间戳以及执行操作的用户信息。继承自 {@link EntityBase}，支持自定义 ID 类型。
  *
  * @param <ID> 实体 ID 的类型
  * @author damon(zhaorong@outlook.com)
