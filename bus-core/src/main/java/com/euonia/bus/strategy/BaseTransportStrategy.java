@@ -10,8 +10,7 @@ import java.util.function.BiPredicate;
 import com.euonia.utility.Assert;
 
 /**
- * 组合传输策略，聚合多个 {@link TransportStrategy} 实例，
- * 并使用 {@link ConcurrentHashMap} 缓存出入站通道的评估结果。
+ * 组合传输策略，聚合多个 {@link TransportStrategy} 实例，并使用 {@link ConcurrentHashMap} 缓存出入站通道的评估结果。
  * <p>
  * 出入站方向各有专属缓存，基于 {@code ConcurrentHashMap} 实现。
  * <p>
@@ -31,11 +30,23 @@ public class BaseTransportStrategy implements TransportStrategy {
         strategies.add(defaultStrategy);
     }
 
+    /**
+     * 获取组合传输策略的名称。
+     *
+     * @return 组合传输策略的名称
+     */
     @Override
     public String getName() {
         return "Composite transport strategy";
     }
 
+    /**
+     * 判断指定的通道和消息类型是否允许发送出站消息。
+     *
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @return 如果允许发送出站消息则返回 true，否则返回 false
+     */
     @Override
     public boolean allowOutgoing(String channel, Class<?> messageType) {
         Assert.notNull(channel, "channel cannot be null.");
@@ -43,6 +54,13 @@ public class BaseTransportStrategy implements TransportStrategy {
         return outgoingCache.apply(channel, messageType, (ch, mt) -> strategies.stream().anyMatch(s -> s.allowOutgoing(ch, mt)));
     }
 
+    /**
+     * 判断指定的通道和消息类型是否允许接收入站消息。
+     *
+     * @param channel     通道名称
+     * @param messageType 消息类型
+     * @return 如果允许接收入站消息则返回 true，否则返回 false
+     */
     @Override
     public boolean allowIncoming(String channel, Class<?> messageType) {
         Assert.notNull(channel, "channel cannot be null.");

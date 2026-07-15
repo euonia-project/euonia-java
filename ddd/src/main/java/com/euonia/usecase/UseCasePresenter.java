@@ -1,6 +1,5 @@
 package com.euonia.usecase;
 
-import java.util.concurrent.Flow.*;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
@@ -10,8 +9,7 @@ import java.util.function.Consumer;
 /**
  * 用例呈现器，实现了用例的输出端口，允许订阅者监听成功和失败事件。
  * <p>
- * 同时实现了 {@link UseCaseSuccess}、{@link UseCaseFailure} 和 {@link AutoCloseable} 接口，
- * 基于 {@link SubmissionPublisher} 实现响应式的事件传递。
+ * 同时实现了 {@link UseCaseSuccess}、{@link UseCaseFailure} 和 {@link AutoCloseable} 接口，基于 {@link SubmissionPublisher} 实现响应式的事件传递。
  *
  * @param <O> 用例成功输出的类型
  * @author damon(zhaorong@outlook.com)
@@ -70,7 +68,7 @@ public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, A
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         ((SubmissionPublisher<O>) publisher).close();
     }
 

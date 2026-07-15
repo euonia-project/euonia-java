@@ -20,7 +20,6 @@ class InMemoryDeadLetterQueueTest {
         InMemoryDeadLetterQueue.getInstance().reset();
     }
 
-    @SuppressWarnings("unchecked")
     private static DeadLetterMessage<String> createDeadLetter(String payload, String reason) {
         MessageEnvelope<String> envelope = new MessageEnvelope<>() {
             @Override public String getMessageId() { return "id-" + payload; }

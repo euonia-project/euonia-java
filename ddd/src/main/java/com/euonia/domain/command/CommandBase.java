@@ -8,8 +8,7 @@ import com.euonia.reflection.TypeHelper;
 /**
  * 命令基类，实现 {@link Command} 接口并提供键值对属性存储功能。
  * <p>
- * 命令的属性以字符串形式存储，支持通过 {@link #get(String, Class)} 方法
- * 进行类型安全的属性值转换。具体的命令类应继承此基类。
+ * 命令的属性以字符串形式存储，支持通过 {@link #get(String, Class)} 方法进行类型安全的属性值转换。具体的命令类应继承此基类。
  *
  * @author damon(zhaorong@outlook.com)
  */
