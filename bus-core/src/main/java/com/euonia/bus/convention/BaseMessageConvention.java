@@ -1,5 +1,7 @@
 package com.euonia.bus.convention;
 
+import com.euonia.core.ArgumentNullException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,8 +65,7 @@ public class BaseMessageConvention implements MessageConvention {
      */
     @Override
     public boolean isUnicast(String channel) {
-        Objects.requireNonNull(channel, "channel cannot be null.");
-
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         return unicastConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isUnicast(type)));
     }
 
@@ -77,7 +78,7 @@ public class BaseMessageConvention implements MessageConvention {
      */
     @Override
     public boolean isMulticast(String channel) {
-        Objects.requireNonNull(channel, "channel cannot be null.");
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
 
         return multicastConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isMulticast(type)));
     }
@@ -91,7 +92,7 @@ public class BaseMessageConvention implements MessageConvention {
      */
     @Override
     public boolean isRequest(String channel) {
-        Objects.requireNonNull(channel, "channel cannot be null.");
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
 
         return requestConventionCache.apply(channel, type -> conventions.stream().anyMatch(c -> c.isRequest(type)));
     }
@@ -114,6 +115,7 @@ public class BaseMessageConvention implements MessageConvention {
      * @param convention 判断指定类型是否为单播的谓词
      */
     public void defineUnicastTypeConvention(Predicate<String> convention) {
+        ArgumentNullException.throwIfNull(convention, "convention");
         defaultConvention.setUnicastPredicate(convention);
     }
 
@@ -123,6 +125,7 @@ public class BaseMessageConvention implements MessageConvention {
      * @param convention 判断指定类型是否为组播的谓词
      */
     public void defineMulticastTypeConvention(Predicate<String> convention) {
+        ArgumentNullException.throwIfNull(convention, "convention");
         defaultConvention.setMulticastPredicate(convention);
     }
 
@@ -132,6 +135,7 @@ public class BaseMessageConvention implements MessageConvention {
      * @param convention 判断指定类型是否为请求的谓词
      */
     public void defineRequestTypeConvention(Predicate<String> convention) {
+        ArgumentNullException.throwIfNull(convention, "convention");
         defaultConvention.setRequestPredicate(convention);
     }
 
@@ -142,7 +146,7 @@ public class BaseMessageConvention implements MessageConvention {
      * @param convention 将类型分类为约定类别的函数
      */
     public void defineTypeConvention(Function<String, MessageConventionType> convention) {
-        Objects.requireNonNull(convention, "convention cannot be null.");
+        ArgumentNullException.throwIfNull(convention, "convention");
 
         defineUnicastTypeConvention(type -> convention.apply(type) == MessageConventionType.UNICAST);
         defineMulticastTypeConvention(type -> convention.apply(type) == MessageConventionType.MULTICAST);
@@ -156,9 +160,7 @@ public class BaseMessageConvention implements MessageConvention {
      * @throws IllegalArgumentException 若 {@code conventions} 为 {@code null} 或空数组
      */
     public void add(MessageConvention... conventions) {
-        if (conventions == null || conventions.length == 0) {
-            throw new IllegalArgumentException("At least one convention must be provided.");
-        }
+        ArgumentNullException.throwIfNullOrEmpty(conventions, "conventions");
         this.conventions.addAll(Arrays.asList(conventions));
         resetCache(); // 重置缓存以确保新约定生效
     }
@@ -203,6 +205,8 @@ public class BaseMessageConvention implements MessageConvention {
          * @return 缓存或新计算的布尔值
          */
         boolean apply(String type, Predicate<String> convention) {
+            ArgumentNullException.throwIfNullOrEmpty(type, "type");
+            ArgumentNullException.throwIfNull(convention, "convention");
             return cache.computeIfAbsent(type, convention::test);
         }
 

@@ -1,5 +1,7 @@
 package com.euonia.bus.convention;
 
+import com.euonia.core.ArgumentNullException;
+
 import java.util.function.Predicate;
 
 /**
@@ -43,6 +45,7 @@ class OverridableMessageConvention implements MessageConvention {
 
     @Override
     public boolean isUnicast(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         if (unicastPredicate == null) {
             return innerConvention.isUnicast(channel);
         } else {
@@ -52,6 +55,7 @@ class OverridableMessageConvention implements MessageConvention {
 
     @Override
     public boolean isMulticast(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         if (multicastPredicate == null) {
             return innerConvention.isMulticast(channel);
         } else {
@@ -61,6 +65,7 @@ class OverridableMessageConvention implements MessageConvention {
 
     @Override
     public boolean isRequest(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         if (requestPredicate == null) {
             return innerConvention.isRequest(channel);
         } else {
@@ -74,6 +79,7 @@ class OverridableMessageConvention implements MessageConvention {
      * @param unicastPredicate 单播断言
      */
     public void setUnicastPredicate(Predicate<String> unicastPredicate) {
+        ArgumentNullException.throwIfNull(unicastPredicate, "unicastPredicate");
         this.unicastPredicate = unicastPredicate;
     }
 
@@ -83,6 +89,7 @@ class OverridableMessageConvention implements MessageConvention {
      * @param multicastPredicate 多播断言
      */
     public void setMulticastPredicate(Predicate<String> multicastPredicate) {
+        ArgumentNullException.throwIfNull(multicastPredicate, "multicastPredicate");
         this.multicastPredicate = multicastPredicate;
     }
 
@@ -92,6 +99,7 @@ class OverridableMessageConvention implements MessageConvention {
      * @param requestPredicate 请求断言
      */
     public void setRequestPredicate(Predicate<String> requestPredicate) {
+        ArgumentNullException.throwIfNull(requestPredicate, "requestPredicate");
         this.requestPredicate = requestPredicate;
     }
 }

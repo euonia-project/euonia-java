@@ -97,10 +97,12 @@ final class IdempotentTransport {
 
         return transport.publishAsync(message)
                         .whenComplete((ignored, error) -> {
-                            if (error != null) {
-                                outboxStore.markAsFailed(message.getMessageId(), name, error.getMessage());
-                            } else {
-                                outboxStore.markAsSuccess(message.getMessageId(), name);
+                            if (outboxStore != null) {
+                                if (error != null) {
+                                    outboxStore.markAsFailed(message.getMessageId(), name, error.getMessage());
+                                } else {
+                                    outboxStore.markAsSuccess(message.getMessageId(), name);
+                                }
                             }
                         });
 

@@ -4,6 +4,7 @@ import com.euonia.bus.ChannelRegistrar;
 import com.euonia.bus.message.Multicast;
 import com.euonia.bus.message.Request;
 import com.euonia.bus.message.Unicast;
+import com.euonia.core.ArgumentNullException;
 
 /**
  * {@link DefaultMessageConvention} 是 {@link MessageConvention} 接口的简单实现，使用类类型检查来判断消息类型。
@@ -25,6 +26,7 @@ public class DefaultMessageConvention implements MessageConvention {
 
     @Override
     public boolean isUnicast(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
         if (registration == null) {
             return false;
@@ -34,6 +36,7 @@ public class DefaultMessageConvention implements MessageConvention {
 
     @Override
     public boolean isMulticast(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
         if (registration == null) {
             return false;
@@ -43,6 +46,7 @@ public class DefaultMessageConvention implements MessageConvention {
 
     @Override
     public boolean isRequest(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         var registration = ChannelRegistrar.getRegistration(channel).orElse(null);
         if (registration == null) {
             return false;

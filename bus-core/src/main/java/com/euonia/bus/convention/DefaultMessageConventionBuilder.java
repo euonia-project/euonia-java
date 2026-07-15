@@ -4,7 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.utility.Assert;
+import com.euonia.utility.Resource;
 
 /**
  * {@link MessageConventionBuilder} 接口的默认实现。
@@ -46,7 +48,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluateMulticast(Predicate<String> predicate) {
-        Assert.notNull(predicate, "predicate cannot be null.");
+        ArgumentNullException.throwIfNull(predicate, "predicate");
         this.convention.defineMulticastTypeConvention(predicate);
         return this;
     }
@@ -59,7 +61,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluateRequest(Predicate<String> predicate) {
-        Assert.notNull(predicate, "predicate cannot be null.");
+        ArgumentNullException.throwIfNull(predicate, "predicate");
         this.convention.defineRequestTypeConvention(predicate);
         return this;
     }
@@ -72,7 +74,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public MessageConventionBuilder evaluate(Function<String, MessageConventionType> convention) {
-        Assert.notNull(convention, "convention cannot be null.");
+        ArgumentNullException.throwIfNull(convention, "convention");
         this.convention.defineTypeConvention(convention);
         return this;
     }
@@ -86,7 +88,7 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public <C extends MessageConvention> MessageConventionBuilder add(C convention) {
-        Assert.notNull(convention, "convention cannot be null.");
+        ArgumentNullException.throwIfNull(convention, "convention");
         this.convention.add(convention);
         return this;
     }
@@ -100,12 +102,13 @@ public class DefaultMessageConventionBuilder implements MessageConventionBuilder
      */
     @Override
     public <C extends MessageConvention> MessageConventionBuilder add(Class<C> conventionClass) {
-        Assert.notNull(conventionClass, "conventionClass cannot be null.");
+        ArgumentNullException.throwIfNull(conventionClass, "conventionClass");
         try {
             C instance = conventionClass.getDeclaredConstructor().newInstance();
             this.convention.add(instance);
-        } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException | InvocationTargetException exception) {
-            throw new RuntimeException("Failed to instantiate convention: " + conventionClass, exception);
+        } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException |
+                 InvocationTargetException exception) {
+            throw new RuntimeException(Resource.getString("resource", "DefaultMessageConventionBuilder.FailedToInstantiateConvention", conventionClass.getName()), exception);
         }
         return this;
     }

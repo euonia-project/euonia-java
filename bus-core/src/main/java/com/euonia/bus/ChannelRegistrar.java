@@ -67,7 +67,7 @@ public class ChannelRegistrar {
 
         var registration = registrations.computeIfAbsent(channel, k -> new ChannelRegistration(messageType));
         if (messageType != registration.getMessageType()) {
-            throw new IllegalStateException("Message type mismatch for channel: " + channel);
+            throw new IllegalStateException(Resource.getString("resource", "ChannelRegistrar.MessageTypeMismatch", messageType.getName(), channel));
         }
         registration.addHandler(handler);
         return this;
