@@ -167,4 +167,157 @@ class RoutedMessageTest {
             this.field = field;
         }
     }
+
+    @Nested
+    @DisplayName("conversationId")
+    class ConversationId {
+
+        @Test
+        @DisplayName("should update conversation id")
+        void shouldUpdateConversationId() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+            msg.setConversationId("conv-1");
+
+            assertThat(msg.getConversationId()).isEqualTo("conv-1");
+        }
+    }
+
+    @Nested
+    @DisplayName("setter validation")
+    class SetterValidation {
+
+        @Test
+        @DisplayName("should throw when conversationId is null")
+        void shouldThrowWhenConversationIdIsNull() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setConversationId(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when conversationId is empty")
+        void shouldThrowWhenConversationIdIsEmpty() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setConversationId(""))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when requestTrackId is null")
+        void shouldThrowWhenRequestTrackIdIsNull() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setRequestTrackId(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when requestTrackId is empty")
+        void shouldThrowWhenRequestTrackIdIsEmpty() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setRequestTrackId(""))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when channel is null")
+        void shouldThrowWhenChannelIsNull() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setChannel(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when channel is empty")
+        void shouldThrowWhenChannelIsEmpty() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setChannel(""))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when typeName is null")
+        void shouldThrowWhenTypeNameIsNull() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setTypeName(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw when typeName is empty")
+        void shouldThrowWhenTypeNameIsEmpty() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThatThrownBy(() -> msg.setTypeName(""))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("typeName")
+    class TypeName {
+
+        @Test
+        @DisplayName("should update typeName explicitly")
+        void shouldUpdateTypeName() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+            msg.setTypeName("com.example.MyMessage");
+
+            assertThat(msg.getTypeName()).isEqualTo("com.example.MyMessage");
+        }
+    }
+
+    @Nested
+    @DisplayName("raw metadata")
+    class RawMetadata {
+
+        @Test
+        @DisplayName("should return metadata container")
+        void shouldReturnMetadataContainer() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+
+            assertThat(msg.getMetadata()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("should store and retrieve raw metadata by key")
+        void shouldStoreAndRetrieveRawMetadata() {
+            var msg = new RoutedMessage<>(new TestPayload("p"), "c");
+            msg.setMetadata("custom-key", "custom-value");
+
+            assertThat(msg.getMetadata("custom-key")).isEqualTo("custom-value");
+        }
+    }
+
+    @Nested
+    @DisplayName("default constructor")
+    class DefaultConstructor {
+
+        @Test
+        @DisplayName("should allow setting fields after default construction")
+        void shouldAllowSettingFieldsAfterDefaultConstruction() {
+            var msg = new RoutedMessage<String>();
+            msg.setPayload("hello");
+            msg.setChannel("orders");
+            msg.setMessageId("id-1");
+            msg.setConversationId("conv-1");
+            msg.setRequestTrackId("trace-1");
+            msg.setAuthorization("Bearer abc");
+            msg.setTimestamp(999L);
+
+            assertThat(msg.getPayload()).isEqualTo("hello");
+            assertThat(msg.getChannel()).isEqualTo("orders");
+            assertThat(msg.getMessageId()).isEqualTo("id-1");
+            assertThat(msg.getConversationId()).isEqualTo("conv-1");
+            assertThat(msg.getRequestTrackId()).isEqualTo("trace-1");
+            assertThat(msg.getAuthorization()).isEqualTo("Bearer abc");
+            assertThat(msg.getTimestamp()).isEqualTo(999L);
+        }
+    }
 }

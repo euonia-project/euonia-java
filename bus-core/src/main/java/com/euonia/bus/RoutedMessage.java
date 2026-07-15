@@ -2,9 +2,9 @@ package com.euonia.bus;
 
 import java.time.Instant;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.core.GuidType;
 import com.euonia.core.ObjectId;
-import com.euonia.utility.Assert;
 
 /**
  * {@link RoutedMessage} 是表示带有路由信息的消息的不可变类。
@@ -80,7 +80,7 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
      * @param messageId 消息唯一标识符
      */
     public RoutedMessage(T payload, String channel, String messageId) {
-        Assert.notNull(payload, "payload should not be null");
+        ArgumentNullException.throwIfNull(payload, "payload");
         setPayload(payload);
         setChannel(channel);
         setMessageId(messageId);
@@ -109,7 +109,13 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
         return conversationId;
     }
 
+    /**
+     * 设置会话标识符，用于关联同一对话中的多条消息。
+     *
+     * @param conversationId 会话标识符
+     */
     public void setConversationId(String conversationId) {
+        ArgumentNullException.throwIfNullOrEmpty(conversationId, "conversationId");
         this.conversationId = conversationId;
     }
 
@@ -118,7 +124,13 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
         return requestTrackId;
     }
 
+    /**
+     * 设置请求追踪标识符，用于端到端请求追踪。
+     *
+     * @param requestTrackId 请求追踪标识符
+     */
     public void setRequestTrackId(String requestTrackId) {
+        ArgumentNullException.throwIfNullOrEmpty(requestTrackId, "requestTrackId");
         this.requestTrackId = requestTrackId;
     }
 
@@ -128,6 +140,7 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
     }
 
     public void setChannel(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         this.channel = channel;
     }
 
@@ -229,6 +242,7 @@ public final class RoutedMessage<T> implements MessageEnvelope<T> {
      * @param typeName 类型名称
      */
     public void setTypeName(String typeName) {
+        ArgumentNullException.throwIfNullOrEmpty(typeName, "typeName");
         this.metadata.put(MESSAGE_TYPE_KEY, typeName);
     }
 
