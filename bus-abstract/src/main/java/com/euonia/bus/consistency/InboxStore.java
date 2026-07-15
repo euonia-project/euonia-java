@@ -1,6 +1,7 @@
 package com.euonia.bus.consistency;
 
 import com.euonia.bus.MessageEnvelope;
+import com.euonia.core.ArgumentNullException;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,10 +32,10 @@ public interface InboxStore {
         entry.setMessageType(message.getPayload().getClass().getName());
         entry.setCreatedAt(java.time.LocalDateTime.now());
         handlers.forEach(handler -> {
-            var handle = new InboxHandle();
-            handle.setHandler(handler);
-            handle.setStatus(InboxHandle.Status.PENDING.getValue());
-            entry.getHandles().add(handle);
+            var handle = new InboxHandler();
+            handle.setName(handler);
+            handle.setStatus(InboxHandler.Status.PENDING);
+            entry.getHandlers().add(handle);
         });
         return insert(entry);
     }
@@ -79,6 +80,7 @@ public interface InboxStore {
      * @return 收件箱条目
      */
     default InboxEntry getAndCache(String messageId) {
+        ArgumentNullException.throwIfNullOrEmpty(messageId, "messageId");
         return CACHE.computeIfAbsent(messageId, this::get);
     }
 
@@ -94,5 +96,5 @@ public interface InboxStore {
      *
      * @return 处理失败的消息列表
      */
-    List<InboxHandle> getFailedMessages();
+    List<InboxHandler> getFailedMessages();
 }
