@@ -95,7 +95,17 @@ public class User extends EditableObjectBase<User, Long> {
         }
     }
 
-    public class UserNameRule extends RuleBase {
+    @Override
+    protected void update() {
+        super.update();
+    }
+
+    @Override
+    protected void delete() {
+        super.delete();
+    }
+
+    static class UserNameRule extends RuleBase {
 
         public UserNameRule(PropertyInfo<?> property) {
             super(property);
