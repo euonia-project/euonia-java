@@ -7,6 +7,8 @@ import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.PublishOptions;
+import com.euonia.core.ArgumentNullException;
+import com.euonia.core.ArgumentOutOfRangeException;
 import com.euonia.pipeline.Pipeline;
 
 /**
@@ -40,6 +42,7 @@ public final class PublishBuilder<T> {
      * 指定消息所属通道。
      */
     public PublishBuilder<T> withChannel(String channel) {
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         options.setChannel(channel);
         return this;
     }
@@ -48,6 +51,7 @@ public final class PublishBuilder<T> {
      * 配置管道行为回调。
      */
     public PublishBuilder<T> withBehavior(Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
+        ArgumentNullException.throwIfNull(behavior, "behavior");
         this.behavior = behavior;
         return this;
     }
@@ -56,6 +60,7 @@ public final class PublishBuilder<T> {
      * 配置元数据设置器。
      */
     public PublishBuilder<T> withMetadata(Consumer<MessageMetadata> metadataSetter) {
+        ArgumentNullException.throwIfNull(metadataSetter, "metadataSetter");
         options.setMetadataSetter(metadataSetter);
         return this;
     }
@@ -67,6 +72,7 @@ public final class PublishBuilder<T> {
      * @return 当前的 PublishBuilder 实例
      */
     public PublishBuilder<T> withMessageId(String messageId) {
+        ArgumentNullException.throwIfNullOrEmpty(messageId, "messageId");
         options.setMessageId(messageId);
         return this;
     }
@@ -89,6 +95,7 @@ public final class PublishBuilder<T> {
      * @return 当前的 PublishBuilder 实例
      */
     public PublishBuilder<T> withTimeout(long timeoutMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(timeoutMillis, "timeoutMillis");
         options.setTimeout(timeoutMillis);
         return this;
     }
@@ -100,6 +107,7 @@ public final class PublishBuilder<T> {
      * @return 当前的 PublishBuilder 实例
      */
     public PublishBuilder<T> withDelay(long delayMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(delayMillis, "delayMillis");
         options.setDelay(delayMillis);
         return this;
     }
