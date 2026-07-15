@@ -2,7 +2,6 @@ package com.euonia.bus;
 
 import com.euonia.bus.consistency.OutboxStore;
 import com.euonia.bus.exception.MessageTransportNotFoundException;
-import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
 
 import java.util.ArrayList;
