@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import com.euonia.bus.annotation.Channel;
 import com.euonia.bus.behavior.OutgoingLoggingBehavior;
-import com.euonia.bus.behavior.OutboxCompletionBehavior;
 import com.euonia.bus.consistency.OutboxStore;
 import com.euonia.bus.exception.*;
 import com.euonia.bus.message.Message;
@@ -77,7 +76,7 @@ public final class MessageBus implements Bus {
     /**
      * 消息发布器，用于将消息发送到传输实例。
      */
-    private final OutboxPublisher publisher;
+    private final IdempotentTransport idempotentTransport;
 
     /**
      * 使用服务提供者创建消息总线实例。
@@ -103,8 +102,8 @@ public final class MessageBus implements Bus {
         this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
         this.outboxStore = provider.getService(OutboxStore.class).orElse(null);
-        this.publisher = new OutboxPublisher(provider);
-        this.publisher.start();
+        this.idempotentTransport = new IdempotentTransport(provider);
+        this.idempotentTransport.start();
     }
 
     /**
@@ -150,18 +149,7 @@ public final class MessageBus implements Bus {
         }
 
         var tasks = transports.stream()
-                              .map(name -> {
-                                  var transport = provider.getService(Transport.class, name)
-                                                          .orElseThrow(() -> new MessageTransportNotFoundException(name));
-                                  return runWithPipelineAsync(pack, messageType, pipeline -> {
-                                      if (behavior != null) {
-                                          behavior.accept(pipeline);
-                                      }
-                                      if (outboxStore != null) {
-                                          pipeline.use(OutboxCompletionBehavior.class, outboxStore, name);
-                                      }
-                                  }, name, transport::publishAsync);
-                              })
+                              .map(name -> runWithPipelineAsync(pack, messageType, behavior, name, msg -> idempotentTransport.publishAsync(name, msg)))
                               .toArray(CompletableFuture[]::new);
 
         return CompletableFuture.allOf(tasks);

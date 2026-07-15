@@ -1,8 +1,7 @@
 package com.euonia.bus;
 
-import com.euonia.bus.behavior.OutboxCompletionBehavior;
 import com.euonia.bus.consistency.OutboxStore;
-import com.euonia.bus.exception.MessageTransportException;
+import com.euonia.bus.exception.MessageTransportNotFoundException;
 import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
 
@@ -18,24 +17,21 @@ import java.util.logging.Logger;
  * <p>
  * 用法：
  * <pre>{@code
- * var publisher = new OutboxPublisher(provider);
+ * var publisher = new IdempotentPublisher(provider);
  * publisher.start();
  * }</pre>
  */
-final class OutboxPublisher {
-    private static final Logger LOGGER = Logger.getLogger(OutboxPublisher.class.getName());
+final class IdempotentTransport {
+    private static final Logger LOGGER = Logger.getLogger(IdempotentTransport.class.getName());
     private final OutboxStore outboxStore;
     private final ScheduledExecutorService scheduler;
     private final ServiceProvider provider;
-    private final PipelineFactory pipelineFactory;
     private final AtomicInteger runningLock = new AtomicInteger(0);
     private final ConcurrentMap<String, Transport> transports = new ConcurrentHashMap<>();
 
-    OutboxPublisher(ServiceProvider provider) {
+    IdempotentTransport(ServiceProvider provider) {
         this.provider = provider;
         this.outboxStore = provider.getService(OutboxStore.class).orElse(null);
-        this.pipelineFactory = provider.getService(PipelineFactory.class)
-                                       .orElse(new DefaultPipelineFactory(provider));
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "euonia-inbox-handler");
             t.setDaemon(true);
@@ -57,7 +53,7 @@ final class OutboxPublisher {
         LOGGER.info(() -> "OutboxPublisher started with interval 60 SECONDS");
     }
 
-    void retryAll() {
+    private void retryAll() {
         if (runningLock.get() > 0) {
             return;
         }
@@ -90,17 +86,24 @@ final class OutboxPublisher {
         }
     }
 
+    /**
+     * 异步发布消息到指定传输通道，并在完成后更新 {@link OutboxStore} 的状态。
+     *
+     * @param name    传输通道名称
+     * @param message 消息封装对象
+     * @return 完成发布操作的 {@link CompletableFuture}
+     */
     CompletableFuture<Void> publishAsync(String name, MessageEnvelope<?> message) {
-        LOGGER.info(() -> String.format("Message '%s'(%s) transport via %s on channel: %s", message.getMessageId(), message.getClass().getName(), name, message.getChannel()));
-        var transport = transports.computeIfAbsent(name, k -> provider.getService(Transport.class).orElseThrow(() -> new MessageTransportException("Transport service not found: " + k)));
+        var transport = transports.computeIfAbsent(name, k -> provider.getService(Transport.class).orElseThrow(() -> new MessageTransportNotFoundException(k)));
 
-        Pipeline<MessageEnvelope<?>, Void> pipeline = pipelineFactory.create();
+        return transport.publishAsync(message)
+                        .whenComplete((ignored, error) -> {
+                            if (error != null) {
+                                outboxStore.markAsFailed(message.getMessageId(), name, error.getMessage());
+                            } else {
+                                outboxStore.markAsSuccess(message.getMessageId(), name);
+                            }
+                        });
 
-        if (outboxStore != null) {
-            pipeline.use(OutboxCompletionBehavior.class, outboxStore, name);
-        }
-
-        return pipeline.runAsync(message, transport::publishAsync)
-                       .toCompletableFuture();
     }
 }

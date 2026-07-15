@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
-import com.euonia.bus.handle.DefaultHandlerContext;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.reflection.ServiceProvider;
 import com.euonia.utility.Assert;
