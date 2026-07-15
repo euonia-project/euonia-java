@@ -6,7 +6,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
+import com.euonia.bus.event.MessageHandledEvent;
 import com.euonia.bus.event.MessageRepliedEvent;
 
 import org.junit.jupiter.api.DisplayName;
@@ -93,6 +95,14 @@ class MessageContextBaseTest {
 
             assertThat(ctx.getMessageId()).isNull();
         }
+
+        @Test
+        @DisplayName("should return null for user")
+        void shouldReturnNullForUser() {
+            var ctx = new MessageContextBase("msg");
+
+            assertThat(ctx.getUser()).isNull();
+        }
     }
 
     @Nested
@@ -164,6 +174,56 @@ class MessageContextBaseTest {
             assertThat(ctx.getMessageId()).isEqualTo(rm.getMessageId());
             assertThat(ctx.getCorrelationId()).isEqualTo(rm.getCorrelationId());
             assertThat(ctx.getAuthorization()).isEqualTo("Bearer abc");
+        }
+    }
+
+    @Nested
+    @DisplayName("RoutedMessage constructor — full fields")
+    class RoutedMessageFullFields {
+
+        @Test
+        @DisplayName("should copy conversation id and request trace id from envelope")
+        void shouldCopyConversationAndTraceIds() {
+            var rm = new MessageEnvelope<>() {
+                @Override public String getMessageId() { return "msg-1"; }
+                @Override public String getCorrelationId() { return "corr-1"; }
+                @Override public String getConversationId() { return "conv-1"; }
+                @Override public String getRequestTrackId() { return "trace-1"; }
+                @Override public String getChannel() { return "test"; }
+                @Override public String getAuthorization() { return ""; }
+                @Override public long getTimestamp() { return 0; }
+                @Override public Object getPayload() { return "payload"; }
+                @Override public String getTypeName() { return ""; }
+                @Override public MessageMetadata getMetadata() { return null; }
+            };
+
+            var ctx = new MessageContextBase(rm);
+
+            assertThat(ctx.getConversationId()).isEqualTo("conv-1");
+            assertThat(ctx.getRequestTraceId()).isEqualTo("trace-1");
+        }
+
+        @Test
+        @DisplayName("should copy metadata from envelope")
+        void shouldCopyMetadataFromEnvelope() {
+            var meta = new MessageMetadata();
+            meta.put("key", "value");
+            var rm = new MessageEnvelope<>() {
+                @Override public String getMessageId() { return "msg-1"; }
+                @Override public String getCorrelationId() { return ""; }
+                @Override public String getConversationId() { return ""; }
+                @Override public String getRequestTrackId() { return ""; }
+                @Override public String getChannel() { return "test"; }
+                @Override public String getAuthorization() { return ""; }
+                @Override public long getTimestamp() { return 0; }
+                @Override public Object getPayload() { return "payload"; }
+                @Override public String getTypeName() { return ""; }
+                @Override public MessageMetadata getMetadata() { return meta; }
+            };
+
+            var ctx = new MessageContextBase(rm);
+
+            assertThat(ctx.getMetadata()).isSameAs(meta);
         }
     }
 
@@ -284,6 +344,68 @@ class MessageContextBaseTest {
             ctx.setMetadata(meta);
 
             assertThat(ctx.getMetadata()).isSameAs(meta);
+        }
+    }
+
+    @Nested
+    @DisplayName("complete")
+    class Complete {
+
+        @Test
+        @DisplayName("should fire completed event with given message")
+        void shouldFireCompletedEventWithMessage() throws Exception {
+            var ctx = new MessageContextBase("original");
+            var latch = new CountDownLatch(1);
+            var captured = new AtomicReference<Object>();
+
+            ctx.addCompletedSubscriber(e -> {
+                captured.set(e.getMessage());
+                latch.countDown();
+            });
+
+            ctx.complete("done");
+
+            assertThat(latch.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThat(captured.get()).isEqualTo("done");
+        }
+
+        @Test
+        @DisplayName("should fire completed event with handler type")
+        void shouldFireCompletedEventWithHandlerType() throws Exception {
+            var ctx = new MessageContextBase("msg");
+            var latch = new CountDownLatch(1);
+            var capturedHandlerType = new AtomicReference<Class<?>>();
+
+            ctx.addCompletedSubscriber(e -> {
+                capturedHandlerType.set(e.getHandlerType());
+                latch.countDown();
+            });
+
+            ctx.complete("done", String.class);
+
+            assertThat(latch.await(2, TimeUnit.SECONDS)).isTrue();
+            assertThat(capturedHandlerType.get()).isEqualTo(String.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("remove subscriber")
+    class RemoveSubscriber {
+
+        @Test
+        @DisplayName("should not notify removed subscriber")
+        void shouldNotNotifyRemovedSubscriber() throws Exception {
+            var ctx = new MessageContextBase("msg");
+            var called = new AtomicReference<Boolean>(false);
+
+            Consumer<MessageHandledEvent> consumer = e -> called.set(true);
+            ctx.addCompletedSubscriber(consumer);
+            ctx.removeCompletedSubscriber(consumer);
+
+            ctx.close();
+            Thread.sleep(100);
+
+            assertThat(called.get()).isFalse();
         }
     }
 
