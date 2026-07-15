@@ -78,8 +78,8 @@ final class IdempotentHandler {
                 }
 
                 for (var factory : factories) {
-                    if (factory.handlerType().getTypeName().equals(item.getHandler())) {
-                        LOGGER.info(() -> "Retrying message " + entry.getMessageId() + " with handler " + item.getHandler());
+                    if (factory.handlerType().getTypeName().equals(item.getName())) {
+                        LOGGER.info(() -> "Retrying message " + entry.getMessageId() + " with handler " + item.getName());
                         var task = executeHandlerAsync(factory, entry.getContent(), null);
                         tasks.add(task);
                         break;
