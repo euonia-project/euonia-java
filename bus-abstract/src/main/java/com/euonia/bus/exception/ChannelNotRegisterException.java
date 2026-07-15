@@ -17,7 +17,7 @@ public class ChannelNotRegisterException extends RuntimeException {
      * @param channel 未注册的消息通道名称
      */
     public ChannelNotRegisterException(String channel) {
-        super(Resource.getString("exception", "ChannelNotRegisterException.Message", channel));
+        super(Resource.getString("resource", "ChannelNotRegisterException.Message", channel));
         this.channel = channel;
     }
 
