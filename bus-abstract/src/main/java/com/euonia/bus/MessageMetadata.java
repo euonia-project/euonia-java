@@ -1,5 +1,8 @@
 package com.euonia.bus;
 
+import com.euonia.core.ArgumentNullException;
+import com.euonia.utility.Resource;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +16,7 @@ import java.util.Set;
  *
  * @author damon(zhaorong@outlook.com)
  */
+@SuppressWarnings("NullableProblems")
 public class MessageMetadata implements Map<String, Object> {
     /**
      * 底层元数据存储
@@ -24,16 +28,34 @@ public class MessageMetadata implements Map<String, Object> {
         return metadata.size();
     }
 
+    /**
+     * 检查元数据映射是否为空。
+     *
+     * @return 如果元数据映射为空，则返回 true；否则返回 false
+     */
     @Override
     public boolean isEmpty() {
         return metadata.isEmpty();
     }
 
+    /**
+     * 检查元数据映射中是否包含指定的键。
+     *
+     * @param key 要检查的键
+     * @return 如果元数据映射中包含指定的键，则返回 true；否则返回 false
+     */
     @Override
     public boolean containsKey(Object key) {
+        ArgumentNullException.throwIfNull(key, "key");
         return metadata.containsKey(key);
     }
 
+    /**
+     * 检查元数据映射中是否包含指定的值。
+     *
+     * @param value 要检查的值
+     * @return 如果元数据映射中包含指定的值，则返回 true；否则返回 false
+     */
     @Override
     public boolean containsValue(Object value) {
         return metadata.containsValue(value);
@@ -46,6 +68,7 @@ public class MessageMetadata implements Map<String, Object> {
      * @return 元数据值，如果键不存在则返回 null
      */
     public Object get(String key) {
+        ArgumentNullException.throwIfNull(key, "key");
         return metadata.getOrDefault(key, null);
     }
 
@@ -68,45 +91,90 @@ public class MessageMetadata implements Map<String, Object> {
         if (type.isInstance(value)) {
             return type.cast(value);
         }
-        throw new IllegalStateException(
-            String.format("Value for key '%s' is not of type %s", key, type.getName()));
+        throw new IllegalStateException(Resource.getString("resource", "MessageMetadata.ValueOfKeyIsNotTypeOf", key, type.getName()));
     }
 
+    /**
+     * 根据键获取元数据值，如果键不存在则返回 null。
+     *
+     * @param key 要获取的键
+     * @return 键对应的值，如果键不存在则返回 null
+     */
     @Override
     public Object get(Object key) {
-        return metadata.getOrDefault(key, null);
+        ArgumentNullException.throwIfNull(key, "key");
+        return metadata.get(key);
     }
 
+    /**
+     * 将指定键值对存储到元数据映射中。
+     *
+     * @param key   元数据键
+     * @param value 元数据值
+     * @return 之前与键关联的值，如果键不存在则返回 null
+     */
     @Override
     public Object put(String key, Object value) {
+        ArgumentNullException.throwIfNullOrEmpty(key, "key");
         return metadata.put(key, value);
     }
 
+    /**
+     * 从元数据映射中移除指定键的映射关系。
+     *
+     * @param key 要移除的键
+     * @return 移除的键对应的值，如果键不存在则返回 null
+     */
     @Override
     public Object remove(Object key) {
+        ArgumentNullException.throwIfNull(key, "key");
         return metadata.remove(key);
     }
 
+    /**
+     * 将指定映射中的所有键值对存储到此元数据映射中。
+     *
+     * @param map 要存储到此映射中的映射
+     */
     @Override
-    public void putAll(Map<? extends String, ? extends Object> m) {
-        metadata.putAll(m);
+    public void putAll(Map<? extends String, ?> map) {
+        ArgumentNullException.throwIfNull(map, "map");
+        metadata.putAll(map);
     }
 
+    /**
+     * 清空元数据映射中的所有键值对。
+     */
     @Override
     public void clear() {
         metadata.clear();
     }
 
+    /**
+     * 获取元数据映射中的所有键。
+     *
+     * @return 包含所有键的 {@link Set} 集合
+     */
     @Override
     public Set<String> keySet() {
         return metadata.keySet();
     }
 
+    /**
+     * 获取元数据映射中的所有值。
+     *
+     * @return 包含所有值的 {@link Collection} 集合
+     */
     @Override
     public Collection<Object> values() {
         return metadata.values();
     }
 
+    /**
+     * 获取元数据映射中的所有键值对。
+     *
+     * @return 包含所有键值对的 {@link Set} 集合
+     */
     @Override
     public Set<Entry<String, Object>> entrySet() {
         return metadata.entrySet();
