@@ -1,5 +1,7 @@
 package com.euonia.reflection;
 
+import com.euonia.utility.Resource;
+
 /**
  * MissingMethodException 是一个自定义异常，当在给定类中找不到具有特定名称或注解的方法时抛出。
  * 它继承自 RuntimeException，并提供有关未找到的类型和方法的相关信息。
@@ -19,7 +21,7 @@ public class MissingMethodException extends RuntimeException {
      * @param methodName 预期但未找到的方法名称或注解。
      */
     public MissingMethodException(String typeName, String methodName) {
-        super("No method named " + methodName + " or annotated with convention found in " + typeName);
+        super(Resource.getString("reflection", "MissingMethodException.Message", typeName, methodName));
         this.typeName = typeName;
         this.methodName = methodName;
     }
