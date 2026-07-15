@@ -10,6 +10,7 @@ import com.euonia.bus.annotation.Subscribe;
 import com.euonia.bus.message.Message;
 import com.euonia.core.PriorityValueFinder;
 import com.euonia.reflection.ClassScanner;
+import com.euonia.utility.Resource;
 import com.euonia.utility.StringUtility;
 
 /**
@@ -24,6 +25,9 @@ import com.euonia.utility.StringUtility;
  * @author damon(zhaorong@outlook.com)
  */
 public class MessageHandlerFinder {
+
+    private static final String RESOURCE_NAME = "resource";
+
     /**
      * 扫描指定包下的所有类，查找其中带有 {@link Subscribe} 注解的方法，
      * 并为每个匹配的方法生成一个 {@link ChannelRegistration}。
@@ -111,11 +115,11 @@ public class MessageHandlerFinder {
 
                 var parameters = method.getParameters();
                 if (parameters.length < 1) {
-                    throw new IllegalStateException(String.format("方法 %s.%s 必须包含至少一个参数", handlerType.getName(), method.getName()));
+                    throw new IllegalStateException(Resource.getString(RESOURCE_NAME, "MessageHandlerFinder.MethodMustContainOneParameter", handlerType.getName(), method.getName()));
                 }
                 var messageParameter = parameters[0];
                 if (parameters.length == 2 && parameters[1].getType() != MessageContext.class) {
-                    throw new IllegalStateException(String.format("方法 %s.%s 的第2个参数必须是 MessageContext 类型", handlerType.getName(), method.getName()));
+                    throw new IllegalStateException(Resource.getString(RESOURCE_NAME, "MessageHandlerFinder.SecondParameterMustBeOfTypeMessageContext", handlerType.getName(), method.getName()));
                 }
 
                 String channel = PriorityValueFinder.find(queue -> {
@@ -135,7 +139,7 @@ public class MessageHandlerFinder {
 
                 if (StringUtility.isNullOrBlank(channel)) {
                     if (!Message.class.isAssignableFrom(messageParameter.getType())) {
-                        throw new IllegalStateException("如果 @Subscribe 注解和 @Channel 注解都未指定通道名，则参数类型 " + messageParameter.getType().getName() + " 必须实现 Message 接口。");
+                        throw new IllegalStateException(Resource.getString(RESOURCE_NAME, "MessageHandlerFinder.ParameterTypeMustImplementMessageInterface", messageParameter.getType().getName(), handlerType.getName(), method.getName()));
                     }
                     channel = messageParameter.getType().getName();
                 }

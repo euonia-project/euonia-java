@@ -8,8 +8,9 @@ import com.euonia.bus.Bus;
 import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.SendOptions;
+import com.euonia.core.ArgumentNullException;
+import com.euonia.core.ArgumentOutOfRangeException;
 import com.euonia.pipeline.Pipeline;
-import com.euonia.utility.Assert;
 
 /**
  * 发送/命令模式的 Builder。
@@ -51,7 +52,7 @@ public final class SendBuilder<T, R> {
      * 指定消息所属通道。
      */
     public SendBuilder<T, R> withChannel(String channel) {
-        Assert.notNull(channel, "channel must not be null");
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         options.setChannel(channel);
         return this;
     }
@@ -60,7 +61,7 @@ public final class SendBuilder<T, R> {
      * 配置响应回调（兼容 Flow.Subscriber）。
      */
     public SendBuilder<T, R> withCallback(Flow.Subscriber<R> callback) {
-        Assert.notNull(callback, "callback is null");
+        ArgumentNullException.throwIfNull(callback, "callback");
         this.callback = callback;
         return this;
     }
@@ -69,7 +70,7 @@ public final class SendBuilder<T, R> {
      * 配置管道行为回调。
      */
     public SendBuilder<T, R> withBehavior(Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
-        Assert.notNull(behavior, "behavior is null");
+        ArgumentNullException.throwIfNull(behavior, "behavior");
         this.behavior = behavior;
         return this;
     }
@@ -78,7 +79,7 @@ public final class SendBuilder<T, R> {
      * 配置元数据设置器。
      */
     public SendBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {
-        Assert.notNull(metadataSetter, "metadataSetter must not be null");
+        ArgumentNullException.throwIfNull(metadataSetter, "metadataSetter");
         options.setMetadataSetter(metadataSetter);
         return this;
     }
@@ -90,7 +91,7 @@ public final class SendBuilder<T, R> {
      * @return 当前的 SendBuilder 实例
      */
     public SendBuilder<T, R> withMessageId(String messageId) {
-        Assert.notEmpty(messageId, "messageId must not be empty");
+        ArgumentNullException.throwIfNullOrEmpty(messageId, "messageId");
         options.setMessageId(messageId);
         return this;
     }
@@ -102,7 +103,7 @@ public final class SendBuilder<T, R> {
      * @return 当前的 SendBuilder 实例
      */
     public SendBuilder<T, R> withCorrelationId(String correlationId) {
-        Assert.notEmpty(correlationId, "correlationId must not be empty");
+        ArgumentNullException.throwIfNullOrEmpty(correlationId, "correlationId");
         options.setCorrelationId(correlationId);
         return this;
     }
@@ -125,6 +126,7 @@ public final class SendBuilder<T, R> {
      * @return 当前的 SendBuilder 实例
      */
     public SendBuilder<T, R> withTimeout(long timeoutMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(timeoutMillis, "timeoutMillis");
         options.setTimeout(timeoutMillis);
         return this;
     }
@@ -136,6 +138,7 @@ public final class SendBuilder<T, R> {
      * @return 当前的 SendBuilder 实例
      */
     public SendBuilder<T, R> withDelay(long delayMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(delayMillis, "delayMillis");
         options.setDelay(delayMillis);
         return this;
     }

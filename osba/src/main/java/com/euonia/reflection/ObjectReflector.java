@@ -1,5 +1,8 @@
 package com.euonia.reflection;
 
+import com.euonia.core.ArgumentNullException;
+import com.euonia.utility.Resource;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -33,7 +36,7 @@ public final class ObjectReflector {
      * @return 匹配的方法。
      */
     public static <T, A extends Annotation> Method findFactoryMethod(Class<T> targetType, Class<A> annotationType,
-            Object[] criteria) {
+                                                                     Object[] criteria) {
         var name = getMethodName(targetType, annotationType, criteria);
         return factoryMethodCache.computeIfAbsent(name, s -> findMatchedMethod(targetType, annotationType, criteria));
     }
@@ -45,11 +48,10 @@ public final class ObjectReflector {
      * @param annotationType 注解类型。
      * @param criteria       匹配条件。
      * @param <T>            目标类型的泛型。
-     * @param <A>            注解类型的泛型。
      * @return 方法名称。
      */
     private static <T> String getMethodName(Class<T> targetType, Class<? extends Annotation> annotationType,
-            Object[] criteria) {
+                                            Object[] criteria) {
         var typeName = targetType.getName();
         var annotationName = annotationType.getSimpleName();
         var parameterNames = getParameterTypeName(criteria);
@@ -65,9 +67,8 @@ public final class ObjectReflector {
      * @param <T>            目标类型的泛型。
      * @return 匹配的方法。
      */
-    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     private static <T> Method findMatchedMethod(Class<T> targetType, Class<? extends Annotation> annotationType,
-            Object[] criteria) {
+                                                Object[] criteria) {
         var candidates = getCandidateMethods(targetType, annotationType, 0);
         if (candidates.isEmpty()) {
             var names = getConventionMethodNames(annotationType);
@@ -93,9 +94,7 @@ public final class ObjectReflector {
                 }
 
                 var index = 0;
-                if(criteria == null){
-                    throw new IllegalArgumentException("Criteria cannot be null when parameter count is greater than 0.");
-                }
+                ArgumentNullException.throwIfNull(criteria, Resource.getString("resource", "ObjectReflector.CriteriaRequired"));
                 if (criteria.getClass() == Object[].class) {
                     for (var c : criteria) {
                         var currentScore = calculateParameterMatchScore(methodParameters[index], c);
@@ -139,17 +138,17 @@ public final class ObjectReflector {
             var names = getConventionMethodNames(annotationType);
             var parameterNames = getParameterTypeName(criteria);
             throw new MissingMethodException(targetType.getTypeName(),
-                    String.join("/", names) + "(" + parameterNames + ")");
+                                             String.join("/", names) + "(" + parameterNames + ")");
         }
 
         if (matches.size() > 1) {
 
             var maxScore = matches.stream().map(Map.Entry::getValue)
-                    .max(Integer::compareTo)
-                    .orElse(0);
+                                  .max(Integer::compareTo)
+                                  .orElse(0);
             var topMatches = matches.stream().filter(m -> Objects.equals(m.getValue(), maxScore)).toList();
             if (topMatches.size() > 1) {
-                throw new AmbiguousMethodException("Multiple methods were found for the specified operation");
+                throw new AmbiguousMethodException();
             }
 
             return topMatches.get(0).getKey();
@@ -238,20 +237,20 @@ public final class ObjectReflector {
      * @return 候选方法及其匹配度。
      */
     private static Map<Method, Integer> getCandidateMethods(Class<?> targetType,
-            Class<? extends Annotation> annotationType, int level) {
+                                                            Class<? extends Annotation> annotationType, int level) {
         var validNames = getConventionMethodNames(annotationType);
         var result = new HashMap<Method, Integer>();
 
         var methods = Arrays.stream(targetType.getDeclaredMethods())
-                .filter(method -> method.isAnnotationPresent(annotationType) || validNames.contains(method.getName()))
-                .toList();
+                            .filter(method -> method.isAnnotationPresent(annotationType) || validNames.contains(method.getName()))
+                            .toList();
 
         for (var method : methods) {
             result.put(method, level);
         }
 
         if (result.isEmpty() && targetType.getSuperclass() != Object.class
-                && !targetType.getSuperclass().isInterface()) {
+            && !targetType.getSuperclass().isInterface()) {
             result.putAll(getCandidateMethods(targetType.getSuperclass(), annotationType, level - 1));
         }
         return result;

@@ -12,7 +12,7 @@ import com.euonia.bus.convention.DefaultMessageConventionBuilder;
 import com.euonia.bus.convention.MessageConventionBuilder;
 import com.euonia.bus.strategy.DefaultTransportStrategyBuilder;
 import com.euonia.bus.strategy.TransportStrategyBuilder;
-import com.euonia.utility.Assert;
+import com.euonia.core.ArgumentNullException;
 
 /**
  * DefaultConfigurator 是 {@link Configurator} 接口的默认实现。
@@ -70,7 +70,7 @@ public final class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator setConvention(Consumer<MessageConventionBuilder> conventionConfig) {
-        Assert.notNull(conventionConfig, "Convention configuration cannot be null");
+        ArgumentNullException.throwIfNull(conventionConfig, "conventionConfig");
         conventionConfig.accept(conventionBuilder);
         return this;
     }
@@ -83,8 +83,8 @@ public final class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator setStrategy(String name, Consumer<TransportStrategyBuilder> strategyConfig) {
-        Assert.notNull(strategyConfig, "Strategy configuration cannot be null");
-        Assert.notEmpty(name, "Strategy name cannot be null or empty");
+        ArgumentNullException.throwIfNull(strategyConfig, "strategyConfig");
+        ArgumentNullException.throwIfNullOrEmpty(name, "name");
         var builder = strategyBuilders.computeIfAbsent(name, k -> new DefaultTransportStrategyBuilder());
         strategyConfig.accept(builder);
         return this;
@@ -160,7 +160,7 @@ public final class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator registerChannel(String... packageNames) {
-        Assert.notContains(packageNames, String::isBlank, "Package names cannot contain null or empty values");
+        ArgumentNullException.throwIfNullOrEmpty(packageNames, "packageNames");
         ChannelRegistrar.instance().registrar(packageNames);
         return this;
     }
@@ -172,7 +172,7 @@ public final class DefaultConfigurator implements Configurator {
      * @return 当前配置器实例
      */
     public DefaultConfigurator setDefaultTransport(Supplier<String> defaultTransportSupplier) {
-        Assert.notNull(defaultTransportSupplier, "Default transport supplier cannot be null");
+        ArgumentNullException.throwIfNull(defaultTransportSupplier, "defaultTransportSupplier");
         this.defaultTransportSupplier = defaultTransportSupplier;
         return this;
     }

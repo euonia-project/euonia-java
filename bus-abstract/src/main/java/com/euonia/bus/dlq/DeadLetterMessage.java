@@ -3,6 +3,7 @@ package com.euonia.bus.dlq;
 import java.time.Instant;
 
 import com.euonia.bus.MessageEnvelope;
+import com.euonia.utility.Resource;
 
 /**
  * 死信消息包装器，记录被移入死信队列的原始消息及失败原因。
@@ -41,7 +42,7 @@ public final class DeadLetterMessage<T> {
      */
     public DeadLetterMessage(MessageEnvelope<T> originalMessage, Throwable error) {
         this.originalMessage = originalMessage;
-        this.reason = error != null ? error.getMessage() : "unknown";
+        this.reason = error != null ? error.getMessage() : Resource.getString("resource", "DeadLetterMessage.ReasonUnknown");
         this.exceptionType = error != null ? error.getClass().getName() : null;
         this.exceptionMessage = error != null ? error.toString() : null;
         this.timestamp = Instant.now().toEpochMilli();

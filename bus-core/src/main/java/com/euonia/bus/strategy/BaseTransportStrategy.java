@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 
-import com.euonia.utility.Assert;
+import com.euonia.core.ArgumentNullException;
 
 /**
  * 组合传输策略，聚合多个 {@link TransportStrategy} 实例，并使用 {@link ConcurrentHashMap} 缓存出入站通道的评估结果。
@@ -49,8 +49,6 @@ public class BaseTransportStrategy implements TransportStrategy {
      */
     @Override
     public boolean allowOutgoing(String channel, Class<?> messageType) {
-        Assert.notNull(channel, "channel cannot be null.");
-        Assert.notNull(messageType, "messageType cannot be null.");
         return outgoingCache.apply(channel, messageType, (ch, mt) -> strategies.stream().anyMatch(s -> s.allowOutgoing(ch, mt)));
     }
 
@@ -63,8 +61,6 @@ public class BaseTransportStrategy implements TransportStrategy {
      */
     @Override
     public boolean allowIncoming(String channel, Class<?> messageType) {
-        Assert.notNull(channel, "channel cannot be null.");
-        Assert.notNull(messageType, "messageType cannot be null.");
         return incomingCache.apply(channel, messageType, (ch, mt) -> strategies.stream().anyMatch(s -> s.allowIncoming(ch, mt)));
     }
 
@@ -75,7 +71,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      * @param strategies 要添加的传输策略
      */
     public void add(TransportStrategy... strategies) {
-        Assert.notEmpty(strategies, "strategies cannot be null or empty.");
+        ArgumentNullException.throwIfNullOrEmpty(strategies, "strategies");
         Collections.addAll(this.strategies, strategies);
         resetCache(); // 重置缓存以确保新策略生效
     }
@@ -86,7 +82,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      * @param strategy 判断通道是否视为出站的断言
      */
     public void defineOutgoingStrategy(BiPredicate<String, Class<?>> strategy) {
-        Assert.notNull(strategy, "strategy cannot be null.");
+        ArgumentNullException.throwIfNull(strategy, "strategy");
         defaultStrategy.setOutgoingPredicate(strategy);
     }
 
@@ -96,7 +92,7 @@ public class BaseTransportStrategy implements TransportStrategy {
      * @param strategy 判断通道是否视为入站的断言
      */
     public void defineIncomingStrategy(BiPredicate<String, Class<?>> strategy) {
-        Assert.notNull(strategy, "strategy cannot be null.");
+        ArgumentNullException.throwIfNull(strategy, "strategy");
         defaultStrategy.setIncomingPredicate(strategy);
     }
 

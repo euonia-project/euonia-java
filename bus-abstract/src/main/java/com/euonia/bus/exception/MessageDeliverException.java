@@ -13,7 +13,7 @@ public class MessageDeliverException extends RuntimeException {
      * 使用默认错误消息构造异常。
      */
     public MessageDeliverException() {
-        this(Resource.getString("exception", "MessageDeliverException.Message"));
+        this(Resource.getString("resource", "MessageDeliverException.Message"));
     }
 
     /**

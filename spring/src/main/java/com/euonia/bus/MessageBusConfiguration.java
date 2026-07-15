@@ -4,14 +4,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 
+import com.euonia.core.ArgumentNullException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
-import com.euonia.bus.handle.DefaultHandlerContext;
 import com.euonia.bus.recipient.RecipientRegistrar;
 import com.euonia.reflection.ServiceProvider;
-import com.euonia.utility.Assert;
 
 /**
  * 消息总线的 Spring 配置类，负责创建和注册消息总线相关的 Bean。
@@ -37,8 +36,8 @@ public class MessageBusConfiguration {
      */
     @Bean
     public Bus bus(ServiceProvider provider, Configurator configurator) {
-        Assert.notNull(provider, "ServiceProvider cannot be null");
-        Assert.notNull(configurator, "Configurator cannot be null");
+        ArgumentNullException.throwIfNull(provider, "ServiceProvider");
+        ArgumentNullException.throwIfNull(configurator, "Configurator");
         if (!CollectionUtils.isEmpty(configurator.getRegistrations())) {
             var registrars = provider.getServices(RecipientRegistrar.class);
             for (var registrar : registrars) {
@@ -62,8 +61,9 @@ public class MessageBusConfiguration {
     @Bean
     public HandlerContext handlerContext(ServiceProvider provider, Configurator configurator) {
 
-        Assert.notNull(provider, "ServiceProvider cannot be null");
-        Assert.notNull(configurator, "Configurator cannot be null");
+        ArgumentNullException.throwIfNull(provider, "ServiceProvider");
+        ArgumentNullException.throwIfNull(configurator, "Configurator");
+
         var context = new DefaultHandlerContext(provider);
 
         try {

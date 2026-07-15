@@ -1,8 +1,7 @@
-package com.euonia.bus.handle;
+package com.euonia.bus;
 
 import java.lang.reflect.InvocationTargetException;
 
-import com.euonia.bus.*;
 import com.euonia.bus.message.Message;
 import com.euonia.bus.convention.MessageConvention;
 import com.euonia.bus.convention.BaseMessageConvention;
@@ -161,7 +160,7 @@ public final class DefaultHandlerContext implements HandlerContext {
                 var registration = factories.get(0);
 
                 try {
-                    var result = idempotentHandler.executeHandler(registration, envelope, context);
+                    var result = idempotentHandler.execute(registration, envelope, context);
                     future.complete(result);
                 } catch (Exception exception) {
                     future.completeExceptionally(exception);
@@ -175,7 +174,7 @@ public final class DefaultHandlerContext implements HandlerContext {
                 } else {
                     // 多个处理器 — 并行执行所有（多播场景）
                     var futures = factories.stream()
-                                           .map(reg -> idempotentHandler.executeHandlerAsync(reg, envelope, context))
+                                           .map(reg -> idempotentHandler.executeAsync(reg, envelope, context))
                                            .toArray(CompletableFuture[]::new);
 
                     CompletableFuture.allOf(futures).whenComplete((result, exception) -> {

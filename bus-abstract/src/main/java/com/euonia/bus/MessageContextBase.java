@@ -23,20 +23,34 @@ import com.euonia.security.UserPrincipal;
  */
 public final class MessageContextBase implements MessageContext {
 
-    /** 消息负载。 */
+    /**
+     * 消息负载。
+     */
     private final Object message;
-    /** 消息头字典。 */
+    /**
+     * 消息头字典。
+     */
     private final Map<String, String> headers = new java.util.HashMap<>();
-    /** 当前用户主体。 */
+    /**
+     * 当前用户主体。
+     */
     private final UserPrincipal user;
-    /** 消息元数据。 */
+    /**
+     * 消息元数据。
+     */
     private MessageMetadata metadata;
-    /** 是否已释放。 */
+    /**
+     * 是否已释放。
+     */
     private boolean disposed;
 
-    /** 消息已回复事件的发布者。 */
+    /**
+     * 消息已回复事件的发布者。
+     */
     private final SubmissionPublisher<MessageRepliedEvent> publisher = new SubmissionPublisher<>();
-    /** 消息处理完成事件的消费者列表。 */
+    /**
+     * 消息处理完成事件的消费者列表。
+     */
     private final List<Consumer<MessageHandledEvent>> onCompletedConsumers = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     /**
@@ -71,10 +85,9 @@ public final class MessageContextBase implements MessageContext {
     /**
      * 注册消息已回复事件的订阅者。
      *
-     * @param <R>        响应类型
      * @param subscriber 消息已回复事件的订阅者
      */
-    public <R> void onReplied(Flow.Subscriber<? super MessageRepliedEvent> subscriber) {
+    public void onReplied(Flow.Subscriber<? super MessageRepliedEvent> subscriber) {
         publisher.subscribe(subscriber);
     }
 

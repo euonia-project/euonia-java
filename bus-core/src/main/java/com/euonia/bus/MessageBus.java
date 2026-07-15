@@ -9,14 +9,10 @@ import java.util.logging.Logger;
 
 import com.euonia.bus.annotation.Channel;
 import com.euonia.bus.behavior.OutgoingLoggingBehavior;
-import com.euonia.bus.behavior.OutboxCompletionBehavior;
 import com.euonia.bus.consistency.OutboxStore;
-import com.euonia.bus.exception.MessagePersistentException;
+import com.euonia.bus.exception.*;
 import com.euonia.bus.message.Message;
 import com.euonia.bus.message.Request;
-import com.euonia.bus.exception.MessageConventionException;
-import com.euonia.bus.exception.MessageTransportException;
-import com.euonia.bus.exception.MessageTypeException;
 import com.euonia.bus.options.CallOptions;
 import com.euonia.bus.options.ExtendableOptions;
 import com.euonia.bus.options.PublishOptions;
@@ -27,6 +23,7 @@ import com.euonia.http.RequestContextAccessor;
 import com.euonia.pipeline.Pipeline;
 import com.euonia.pipeline.PipelineFactory;
 import com.euonia.reflection.ServiceProvider;
+import com.euonia.utility.Resource;
 import com.euonia.utility.StringUtility;
 
 /**
@@ -46,6 +43,8 @@ import com.euonia.utility.StringUtility;
  * @author damon(zhaorong@outlook.com)
  */
 public final class MessageBus implements Bus {
+
+    private static final String RESOURCE_NAME = "resource";
 
     /**
      * 日志记录器。
@@ -77,7 +76,7 @@ public final class MessageBus implements Bus {
     /**
      * 消息发布器，用于将消息发送到传输实例。
      */
-    private final OutboxPublisher publisher;
+    private final IdempotentTransport idempotentTransport;
 
     /**
      * 使用服务提供者创建消息总线实例。
@@ -88,7 +87,7 @@ public final class MessageBus implements Bus {
      * @throws IllegalStateException 如果 Dispatcher 服务未找到
      */
     public MessageBus(ServiceProvider provider) {
-        this(provider, provider.getService(Configurator.class).orElseThrow(() -> new IllegalStateException("Configurator service not found")));
+        this(provider, provider.getService(Configurator.class).orElseThrow(() -> new IllegalStateException(Resource.getString(RESOURCE_NAME, "MessageBus.ConfiguratorNotRegistered"))));
     }
 
     /**
@@ -103,8 +102,8 @@ public final class MessageBus implements Bus {
         this.dispatcher = provider.getService(Dispatcher.class).orElseGet(() -> new StrategicDispatcher(configurator));
         this.pipelineFactory = provider.getService(PipelineFactory.class).orElse(null);
         this.outboxStore = provider.getService(OutboxStore.class).orElse(null);
-        this.publisher = new OutboxPublisher(provider);
-        this.publisher.start();
+        this.idempotentTransport = new IdempotentTransport(provider);
+        this.idempotentTransport.start();
     }
 
     /**
@@ -131,7 +130,7 @@ public final class MessageBus implements Bus {
         var channelName = getChannelName(messageType, options);
 
         if (!configurator.getConvention().isMulticast(channelName)) {
-            throw new MessageConventionException("The message type " + message.getClass().getName() + " is not multicast");
+            throw new MessageConventionException(Resource.getString(RESOURCE_NAME, "MessageBus.MessageTypeIsNotMulticast", message.getClass().getName()));
         }
 
         var context = RequestContextAccessor.get();
@@ -146,22 +145,11 @@ public final class MessageBus implements Bus {
         var transports = dispatcher.determine(channelName, messageType);
 
         if (outboxStore != null && !outboxStore.insert(pack, transports)) {
-            throw new MessagePersistentException(String.format("Failed to insert message '%s' in outbox", pack.getMessageId()));
+            throw new MessagePersistentException(Resource.getString(RESOURCE_NAME, "MessageBus.FailedInsertOutboxEntry", pack.getMessageId()));
         }
 
         var tasks = transports.stream()
-                              .map(name -> {
-                                  var transport = provider.getService(Transport.class, name)
-                                                          .orElseThrow(() -> new MessageTransportException("The transport " + name + " was not found."));
-                                  return executePipelineAsync(pack, messageType, pipeline -> {
-                                      if (behavior != null) {
-                                          behavior.accept(pipeline);
-                                      }
-                                      if (outboxStore != null) {
-                                          pipeline.use(OutboxCompletionBehavior.class, outboxStore, name);
-                                      }
-                                  }, name, transport::publishAsync);
-                              })
+                              .map(name -> runWithPipelineAsync(pack, messageType, behavior, name, msg -> idempotentTransport.publishAsync(name, msg)))
                               .toArray(CompletableFuture[]::new);
 
         return CompletableFuture.allOf(tasks);
@@ -194,7 +182,7 @@ public final class MessageBus implements Bus {
         var channelName = getChannelName(messageType, options);
 
         if (!configurator.getConvention().isUnicast(channelName)) {
-            throw new MessageConventionException("The message type " + message.getClass().getName() + " is not unicast");
+            throw new MessageConventionException(Resource.getString(RESOURCE_NAME, "MessageBus.MessageTypeIsNotUnicast", message.getClass().getName()));
         }
 
         var context = RequestContextAccessor.get();
@@ -211,17 +199,17 @@ public final class MessageBus implements Bus {
         var transports = dispatcher.determine(channelName, messageType);
 
         if (transports.isEmpty()) {
-            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+            throw new MessageTransportException(Resource.getString(RESOURCE_NAME, "MessageBus.NoneTransportFound", messageType.getName()));
         } else if (transports.size() > 1) {
-            throw new MessageTypeException("Multiple transport found for message type: " + messageType.getName());
+            throw new MessageTransportException(Resource.getString(RESOURCE_NAME, "MessageBus.MultipleTransportsFound", messageType.getName()));
         }
 
         var transportName = transports.get(0);
 
         var transport = provider.getService(Transport.class, transportName)
-                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+                                .orElseThrow(() -> new MessageTransportNotFoundException(transportName));
 
-        return executePipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.sendAsync(ctx, responseType))
+        return runWithPipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.sendAsync(ctx, responseType))
             .whenComplete((response, ex) -> {
                 if (ex != null) {
                     LOGGER.log(Level.SEVERE, ex, () -> "Failed to send message: " + messageType.getName());
@@ -271,7 +259,7 @@ public final class MessageBus implements Bus {
         var channelName = getChannelName(messageType, options);
 
         if (!configurator.getConvention().isRequest(channelName)) {
-            throw new MessageConventionException("The message type " + messageType.getName() + " is not request");
+            throw new MessageConventionException(Resource.getString(RESOURCE_NAME, "MessageBus.MessageTypeIsNotRequest", messageType.getName()));
         }
 
         var context = RequestContextAccessor.get();
@@ -287,18 +275,33 @@ public final class MessageBus implements Bus {
 
         var transportNames = dispatcher.determine(channelName, messageType);
         if (transportNames.isEmpty()) {
-            throw new MessageTransportException(String.format("No transport found for message type: %s", messageType.getName()));
+            throw new MessageTransportException(Resource.getString(RESOURCE_NAME, "MessageBus.NoneTransportFound", messageType.getName()));
         }
 
         var transportName = transportNames.get(0);
 
         var transport = provider.getService(Transport.class, transportName)
-                                .orElseThrow(() -> new MessageTransportException("The transport " + transportName + " was not found."));
+                                .orElseThrow(() -> new MessageTransportNotFoundException(transportName));
 
-        return executePipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.callAsync(ctx, responseType));
+        return runWithPipelineAsync(pack, messageType, behavior, transportName, ctx -> transport.callAsync(ctx, responseType));
     }
 
-    private <T, R> CompletableFuture<R> executePipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<Pipeline<RoutedMessage<T>, R>> behavior, String transportName, Function<RoutedMessage<T>, CompletableFuture<R>> callback) {
+    /**
+     * 在管道中异步运行消息处理逻辑。
+     * <p>
+     * 该方法创建一个管道实例，并将消息传递给指定的行为和回调函数进行处理。
+     * 在管道运行期间，会设置请求上下文以确保在异步操作中保持上下文一致性。
+     *
+     * @param pack          要处理的路由消息
+     * @param messageType   消息类型
+     * @param behavior      消息处理行为
+     * @param transportName 传输名称
+     * @param callback      回调函数
+     * @param <T>           请求类型
+     * @param <R>           响应类型
+     * @return 异步处理结果
+     */
+    private <T, R> CompletableFuture<R> runWithPipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<Pipeline<RoutedMessage<T>, R>> behavior, String transportName, Function<RoutedMessage<T>, CompletableFuture<R>> callback) {
         var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
         if (pipeline == null) {
             return CompletableFuture.completedFuture(null);
@@ -332,7 +335,7 @@ public final class MessageBus implements Bus {
         } else if (Message.class.isAssignableFrom(messageType)) {
             channelName = messageType.getName();
         } else {
-            throw new MessageTypeException(String.format("The message type '%s' is not registered and does not implement the Message interface. Please specify a channel name in the options.", messageType.getName()));
+            throw new MessageTypeException(Resource.getString(RESOURCE_NAME, "MessageBus.CanNotResolveChannelFromMessageType", messageType.getName()));
         }
         return channelName;
     }

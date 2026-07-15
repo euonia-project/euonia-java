@@ -6,11 +6,11 @@ import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.http.RequestContextAwareExecutor;
 import com.euonia.osba.abstracts.Savable;
 import com.euonia.osba.rules.BrokenRule;
 import com.euonia.osba.rules.RuleCheckException;
-import com.euonia.utility.Assert;
 
 /**
  * 表示可编辑的业务对象，可以保存到数据库或其他持久化存储中。
@@ -30,7 +30,7 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
      * @param listener 对象保存时要通知的监听器
      */
     public final void onSaved(Consumer<SavedEventArgs> listener) {
-        Assert.notNull(listener, "Listener cannot be null.");
+        ArgumentNullException.throwIfNull(listener, "listener");
         savedEventPublisher.consume(listener);
     }
 
@@ -75,7 +75,7 @@ public abstract class EditableObject<T extends EditableObject<T>> extends Observ
      * @param userState   传递给 onSaved 事件的附加信息
      * @return 已保存的对象
      */
-    @SuppressWarnings({ "SameParameterValue", "unchecked" })
+    @SuppressWarnings({"SameParameterValue", "unchecked"})
     protected T save(boolean forceUpdate, Object userState) {
         if (getState() == ObjectEditState.NONE) {
             if (forceUpdate) {

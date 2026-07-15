@@ -8,8 +8,9 @@ import com.euonia.bus.MessageMetadata;
 import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.message.Request;
 import com.euonia.bus.options.CallOptions;
+import com.euonia.core.ArgumentNullException;
+import com.euonia.core.ArgumentOutOfRangeException;
 import com.euonia.pipeline.Pipeline;
-import com.euonia.utility.Assert;
 
 /**
  * 请求/响应模式的 Builder。
@@ -36,6 +37,13 @@ public final class CallBuilder<T, R> {
     private Consumer<Pipeline<RoutedMessage<T>, R>> behavior;
     private final CallOptions options = new CallOptions();
 
+    /**
+     * 创建一个新的 CallBuilder 实例。
+     *
+     * @param bus          消息总线实例
+     * @param request      请求对象
+     * @param responseType 响应类型
+     */
     public CallBuilder(Bus bus, T request, Class<R> responseType) {
         this.bus = bus;
         this.request = request;
@@ -46,7 +54,7 @@ public final class CallBuilder<T, R> {
      * 指定消息所属通道。
      */
     public CallBuilder<T, R> withChannel(String channel) {
-        Assert.notNull(channel, "channel must not be null");
+        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
         options.setChannel(channel);
         return this;
     }
@@ -55,7 +63,7 @@ public final class CallBuilder<T, R> {
      * 配置管道行为回调。
      */
     public CallBuilder<T, R> withBehavior(Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
-        Assert.notNull(behavior, "behavior is null");
+        ArgumentNullException.throwIfNull(behavior, "behavior");
         this.behavior = behavior;
         return this;
     }
@@ -64,7 +72,7 @@ public final class CallBuilder<T, R> {
      * 配置元数据设置器。
      */
     public CallBuilder<T, R> withMetadata(Consumer<MessageMetadata> metadataSetter) {
-        Assert.notNull(metadataSetter, "metadataSetter must not be null");
+        ArgumentNullException.throwIfNull(metadataSetter, "metadataSetter");
         options.setMetadataSetter(metadataSetter);
         return this;
     }
@@ -76,7 +84,7 @@ public final class CallBuilder<T, R> {
      * @return 当前的 CallBuilder 实例
      */
     public CallBuilder<T, R> withMessageId(String messageId) {
-        Assert.notEmpty(messageId, "messageId must not be empty");
+        ArgumentNullException.throwIfNullOrEmpty(messageId, "messageId");
         options.setMessageId(messageId);
         return this;
     }
@@ -88,7 +96,7 @@ public final class CallBuilder<T, R> {
      * @return 当前的 CallBuilder 实例
      */
     public CallBuilder<T, R> withCorrelationId(String correlationId) {
-        Assert.notEmpty(correlationId, "correlationId must not be empty");
+        ArgumentNullException.throwIfNullOrEmpty(correlationId, "correlationId");
         options.setCorrelationId(correlationId);
         return this;
     }
@@ -111,6 +119,7 @@ public final class CallBuilder<T, R> {
      * @return 当前的 CallBuilder 实例
      */
     public CallBuilder<T, R> withTimeout(long timeoutMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(timeoutMillis, "timeoutMillis");
         options.setTimeout(timeoutMillis);
         return this;
     }
@@ -122,6 +131,7 @@ public final class CallBuilder<T, R> {
      * @return 当前的 CallBuilder 实例
      */
     public CallBuilder<T, R> withDelay(long delayMillis) {
+        ArgumentOutOfRangeException.throwIfNegative(delayMillis, "delayMillis");
         options.setDelay(delayMillis);
         return this;
     }

@@ -1,4 +1,4 @@
-package com.euonia.bus.handle;
+package com.euonia.bus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,12 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.euonia.bus.MessageContext;
-import com.euonia.bus.MessageEnvelope;
-import com.euonia.bus.behavior.InboxCompletionBehavior;
 import com.euonia.bus.consistency.InboxStore;
 import com.euonia.http.RequestContextAwareExecutor;
-import com.euonia.pipeline.*;
 import com.euonia.reflection.ServiceProvider;
 
 /**
@@ -36,7 +32,6 @@ final class IdempotentHandler {
     private final InboxStore inboxStore;
     private final ScheduledExecutorService scheduler;
     private final ServiceProvider provider;
-    private final PipelineFactory pipelineFactory;
     private final Map<String, List<HandlerRegistration>> handlerContainer;
     private final AtomicInteger runningLock = new AtomicInteger(0);
 
@@ -44,8 +39,6 @@ final class IdempotentHandler {
         this.inboxStore = provider.getService(InboxStore.class).orElse(null);
         this.provider = provider;
         this.handlerContainer = handlerContainer;
-        this.pipelineFactory = provider.getService(PipelineFactory.class)
-                                       .orElse(new DefaultPipelineFactory(provider));
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "euonia-inbox-handler");
             t.setDaemon(true);
@@ -78,9 +71,9 @@ final class IdempotentHandler {
                 }
 
                 for (var factory : factories) {
-                    if (factory.handlerType().getTypeName().equals(item.getHandler())) {
-                        LOGGER.info(() -> "Retrying message " + entry.getMessageId() + " with handler " + item.getHandler());
-                        var task = executeHandlerAsync(factory, entry.getContent(), null);
+                    if (factory.handlerType().getTypeName().equals(item.getName())) {
+                        LOGGER.info(() -> "Retrying message " + entry.getMessageId() + " with handler " + item.getName());
+                        var task = executeAsync(factory, entry.getContent(), null);
                         tasks.add(task);
                         break;
                     }
@@ -110,14 +103,19 @@ final class IdempotentHandler {
      * @param context      消息上下文
      * @return 异步处理结果
      */
-    public CompletableFuture<Object> executeHandlerAsync(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
+    public CompletableFuture<Object> executeAsync(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         Executor customExecutor = RequestContextAwareExecutor.fromCommonPool();
-        Pipeline<MessageEnvelope<?>, Object> pipeline = pipelineFactory.create();
-        if (inboxStore != null) {
-            pipeline.use(InboxCompletionBehavior.class, inboxStore, registration.handlerType().getTypeName());
-        }
-        return pipeline.runAsync(message, ctx -> CompletableFuture.supplyAsync(() -> executeHandler(registration, message, context), customExecutor))
-                       .toCompletableFuture();
+
+        return CompletableFuture.supplyAsync(() -> execute(registration, message, context), customExecutor)
+                                .whenComplete((result, error) -> {
+                                    if (inboxStore != null) {
+                                        if (error != null) {
+                                            inboxStore.markAsFailed(message.getMessageId(), registration.handlerType().getName(), error.getMessage());
+                                        } else {
+                                            inboxStore.markAsSuccess(message.getMessageId(), registration.handlerType().getName());
+                                        }
+                                    }
+                                });
     }
 
     /**
@@ -130,7 +128,7 @@ final class IdempotentHandler {
      * @param context      消息上下文
      * @return 处理结果
      */
-    public Object executeHandler(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
+    public Object execute(HandlerRegistration registration, MessageEnvelope<?> message, MessageContext context) {
         var delegate = registration.factory().createDelegate(provider);
         return delegate.handle(message.getPayload(), context);
     }

@@ -1,6 +1,4 @@
-package com.euonia.bus.handle;
-
-import com.euonia.bus.MessageContext;
+package com.euonia.bus;
 
 /**
  * 处理器委托函数式接口，定义处理消息并返回结果的契约。
@@ -11,7 +9,7 @@ import com.euonia.bus.MessageContext;
  * @author damon(zhaorong@outlook.com)
  */
 @FunctionalInterface
-public interface HandlerDelegate {
+interface HandlerDelegate {
     /**
      * 处理给定的消息并返回结果。
      *

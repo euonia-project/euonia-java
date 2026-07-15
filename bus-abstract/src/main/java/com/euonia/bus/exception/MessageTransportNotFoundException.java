@@ -18,7 +18,7 @@ public class MessageTransportNotFoundException extends MessageTransportException
      * @param transportName 未找到的消息传输名称
      */
     public MessageTransportNotFoundException(String transportName) {
-        super(Resource.getString("exception", "MessageTransportNotFoundException.Message", transportName));
+        super(Resource.getString("resource", "MessageTransportNotFoundException.Message", transportName));
         this.transportName = transportName;
     }
 

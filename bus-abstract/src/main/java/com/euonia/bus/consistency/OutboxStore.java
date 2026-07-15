@@ -31,8 +31,8 @@ public interface OutboxStore {
         entry.setCreatedAt(java.time.LocalDateTime.now());
         transports.forEach(transport -> {
             var outboxTransport = new OutboxTransport();
-            outboxTransport.setTransport(transport);
-            outboxTransport.setStatus(OutboxTransport.Status.PENDING.getValue());
+            outboxTransport.setName(transport);
+            outboxTransport.setStatus(OutboxTransport.Status.PENDING);
             entry.addTransport(outboxTransport);
         });
         return insert(entry);

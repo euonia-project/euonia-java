@@ -1,4 +1,4 @@
-package com.euonia.bus.handle;
+package com.euonia.bus;
 
 import com.euonia.reflection.ServiceProvider;
 
@@ -8,7 +8,7 @@ import com.euonia.reflection.ServiceProvider;
  * @author damon(zhaorong@outlook.com)
  */
 @FunctionalInterface
-public interface HandlerFactory {
+interface HandlerFactory {
     /**
      * 创建一个新的 {@link HandlerDelegate} 实例。
      *

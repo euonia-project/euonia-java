@@ -8,8 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.core.Singleton;
-import com.euonia.utility.Assert;
+import com.euonia.utility.Resource;
 
 /**
  * ChannelRegistrar 是一个用于注册和管理通道处理器的类。
@@ -61,12 +62,12 @@ public class ChannelRegistrar {
      * @return ChannelRegistrar 实例
      */
     public ChannelRegistrar register(String channel, Class<?> messageType, ChannelHandler handler) {
-        Assert.notNull(messageType, "Message type cannot be null");
-        Assert.notNull(handler, "Handling cannot be null");
+        ArgumentNullException.throwIfNull(messageType, "messageType");
+        ArgumentNullException.throwIfNull(handler, "handler");
 
         var registration = registrations.computeIfAbsent(channel, k -> new ChannelRegistration(messageType));
         if (messageType != registration.getMessageType()) {
-            throw new IllegalStateException("Message type mismatch for channel: " + channel);
+            throw new IllegalStateException(Resource.getString("resource", "ChannelRegistrar.MessageTypeMismatch", messageType.getName(), channel));
         }
         registration.addHandler(handler);
         return this;
@@ -81,12 +82,12 @@ public class ChannelRegistrar {
      * @return ChannelRegistrar 实例
      */
     public ChannelRegistrar register(String channel, Class<?> messageType, List<ChannelHandler> handling) {
-        Assert.notNull(messageType, "Message type cannot be null");
-        Assert.notEmpty(handling, "Handling cannot be null or empty");
+        ArgumentNullException.throwIfNull(messageType, "messageType");
+        ArgumentNullException.throwIfNullOrEmpty(handling, "handling");
 
         var registration = registrations.computeIfAbsent(channel, k -> new ChannelRegistration(messageType));
         if (messageType != registration.getMessageType()) {
-            throw new IllegalStateException("Message type mismatch for channel: " + channel);
+            throw new IllegalStateException(Resource.getString("resource", "ChannelRegistrar.MessageTypeMismatch", messageType.getName(), channel));
         }
         handling.forEach(registration::addHandler);
         return this;
@@ -99,7 +100,7 @@ public class ChannelRegistrar {
      * @return ChannelRegistrar 实例
      */
     public ChannelRegistrar registrar(List<Class<?>> types) {
-        Assert.notEmpty(types, "Types cannot be null or empty");
+        ArgumentNullException.throwIfNullOrEmpty(types, "types");
         return registrar(types.toArray(Class<?>[]::new));
     }
 
@@ -110,7 +111,7 @@ public class ChannelRegistrar {
      * @return ChannelRegistrar 实例
      */
     public ChannelRegistrar registrar(Class<?>... types) {
-        Assert.notEmpty(types, "Types cannot be null or empty");
+        ArgumentNullException.throwIfNullOrEmpty(types, "types");
         MessageHandlerFinder.find(this::register, types);
         return this;
     }
@@ -122,7 +123,7 @@ public class ChannelRegistrar {
      * @return ChannelRegistrar 实例
      */
     public ChannelRegistrar registrar(String... packageNames) {
-        Assert.notEmpty(packageNames, "Package names cannot be null or empty");
+        ArgumentNullException.throwIfNullOrEmpty(packageNames, "packageNames");
         MessageHandlerFinder.find(this::register, packageNames);
         return this;
     }

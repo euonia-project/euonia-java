@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 
 import com.euonia.annotation.Validator;
+import com.euonia.core.ArgumentNullException;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.utility.Assert;
@@ -30,7 +31,8 @@ public class DataAnnotationRule<A extends Annotation> extends RuleBase {
      */
     public DataAnnotationRule(PropertyInfo<?> property, A annotation, Class<?> validatorType) {
         super(property, annotation.annotationType().getSimpleName());
-        Assert.notNull(validatorType, "Validator type cannot be null.");
+        ArgumentNullException.throwIfNull(annotation, "annotation");
+        ArgumentNullException.throwIfNull(validatorType, "validatorType");
         this.annotation = annotation;
         this.validatorType = validatorType;
     }
