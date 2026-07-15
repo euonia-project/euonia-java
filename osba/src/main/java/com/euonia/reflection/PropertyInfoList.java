@@ -1,5 +1,7 @@
 package com.euonia.reflection;
 
+import com.euonia.utility.Resource;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -66,7 +68,7 @@ public class PropertyInfoList extends ArrayList<PropertyInfo<?>> {
         try {
             semaphore.acquire();
             var existing = this.stream().filter(p -> p.getName().equals(propertyInfo.getName())).findFirst()
-                    .orElse(null);
+                               .orElse(null);
             if (existing != null) {
                 return existing;
             }
@@ -74,7 +76,7 @@ public class PropertyInfoList extends ArrayList<PropertyInfo<?>> {
             return propertyInfo;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread was interrupted while trying to acquire semaphore.", e);
+            throw new RuntimeException(Resource.getString("resource", "PropertyInfoList.ThreadInterruptedException"), e);
         } finally {
             semaphore.release();
         }

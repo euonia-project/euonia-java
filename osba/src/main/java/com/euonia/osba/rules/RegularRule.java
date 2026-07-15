@@ -2,6 +2,7 @@ package com.euonia.osba.rules;
 
 import java.util.function.Function;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
 
@@ -19,6 +20,11 @@ public class RegularRule extends RuleBase {
 
     private boolean ignoreNullValue = true;
 
+    /**
+     * 使用指定的属性创建 RegularRule 类的新实例。
+     *
+     * @param property 需要验证的属性
+     */
     public RegularRule(PropertyInfo<String> property) {
         super(property);
         this.property = property;
@@ -105,27 +111,61 @@ public class RegularRule extends RuleBase {
         }
     }
 
+    /**
+     * 设置正则表达式。
+     *
+     * @param expression 正则表达式
+     * @return 当前 RegularRule 实例，以便进行链式调用
+     */
     public RegularRule expression(String expression) {
+        ArgumentNullException.throwIfNullOrEmpty(expression, "expression");
         this.expression = expression;
         return this;
     }
 
+    /**
+     * 设置消息工厂函数。
+     *
+     * @param messageFactory 消息工厂函数，根据属性值生成适当的错误消息
+     * @return 当前 RegularRule 实例，以便进行链式调用
+     */
     public RegularRule message(Function<String, String> messageFactory) {
+        ArgumentNullException.throwIfNull(messageFactory, "messageFactory");
         this.messageFactory = messageFactory;
         return this;
     }
 
+    /**
+     * 设置固定的错误消息。
+     *
+     * @param message 错误消息
+     * @return 当前 RegularRule 实例，以便进行链式调用
+     */
     public RegularRule message(String message) {
+        ArgumentNullException.throwIfNullOrEmpty(message, "message");
         this.messageFactory = (x) -> message;
         return this;
     }
 
+    /**
+     * 设置是否忽略空值。
+     *
+     * @param ignoreNullValue 是否忽略空值
+     * @return 当前 RegularRule 实例，以便进行链式调用
+     */
     public RegularRule ignoreNullValue(boolean ignoreNullValue) {
         this.ignoreNullValue = ignoreNullValue;
         return this;
     }
 
+    /**
+     * 创建一个新的 RegularRule 实例，绑定到指定的属性。
+     *
+     * @param property 要验证的属性信息
+     * @return 一个新的 RegularRule 实例
+     */
     public static RegularRule of(PropertyInfo<String> property) {
+        ArgumentNullException.throwIfNull(property, "property");
         return new RegularRule(property);
     }
 }

@@ -2,8 +2,10 @@ package com.euonia.osba.rules;
 
 import java.util.function.Function;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
+import com.euonia.utility.Resource;
 
 /**
  * RequiredRule 类实现了一个验证规则，用于确保业务对象的特定属性具有非空值。
@@ -67,6 +69,7 @@ public class RequiredRule<T> extends RuleBase {
      * @return 当前的 RequiredRule 实例，以便进行链式调用
      */
     public RequiredRule<T> message(String message) {
+        ArgumentNullException.throwIfNullOrEmpty(message, "message");
         this.messageFactory = x -> message;
         return this;
     }
@@ -75,9 +78,10 @@ public class RequiredRule<T> extends RuleBase {
      * 设置自定义的消息工厂函数，用于根据属性值生成适当的错误消息。
      *
      * @param messageFactory 一个函数，接受属性值作为输入，并返回相应的错误消息字符串。
-     * @return 当前的 RequiredRule 实例，以便进行链式调用。
+     * @return 当前的 RequiredRule 实例，以便进行链式调用
      */
     public RequiredRule<T> message(Function<Object, String> messageFactory) {
+        ArgumentNullException.throwIfNull(messageFactory, "messageFactory");
         this.messageFactory = messageFactory;
         return this;
     }
@@ -90,6 +94,7 @@ public class RequiredRule<T> extends RuleBase {
      * @return 一个新的 RequiredRule 实例
      */
     public static <T> RequiredRule<T> of(PropertyInfo<T> property) {
-        return new RequiredRule<>(property, x -> String.format("Property '%s' is required.", property.getName()));
+        ArgumentNullException.throwIfNull(property, "property");
+        return new RequiredRule<>(property, x -> Resource.getString("resource", "RequiredRule.Message", property.getName()));
     }
 }

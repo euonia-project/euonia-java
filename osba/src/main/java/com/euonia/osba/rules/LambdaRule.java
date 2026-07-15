@@ -3,6 +3,7 @@ package com.euonia.osba.rules;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import com.euonia.core.ArgumentNullException;
 import com.euonia.osba.BusinessObject;
 import com.euonia.reflection.PropertyInfo;
 
@@ -24,12 +25,16 @@ public class LambdaRule<T> extends RuleBase {
 
     public LambdaRule(PropertyInfo<T> property, BiFunction<T, RuleContext, Boolean> function, String message) {
         this(property);
+        ArgumentNullException.throwIfNull(function, "function");
+        ArgumentNullException.throwIfNullOrEmpty(message, "message");
         this.function = function;
         this.messageFactory = (x) -> message;
     }
 
     public LambdaRule(PropertyInfo<T> property, BiFunction<T, RuleContext, Boolean> function, Function<T, String> messageFactory) {
         this(property);
+        ArgumentNullException.throwIfNull(function, "function");
+        ArgumentNullException.throwIfNull(messageFactory, "messageFactory");
         this.function = function;
         this.messageFactory = messageFactory;
     }
@@ -64,6 +69,7 @@ public class LambdaRule<T> extends RuleBase {
      * @return 一个新的 LambdaRule 实例
      */
     public static <T> LambdaRule<T> of(PropertyInfo<T> property) {
+        ArgumentNullException.throwIfNull(property, "property");
         return new LambdaRule<>(property);
     }
 
@@ -76,6 +82,7 @@ public class LambdaRule<T> extends RuleBase {
      * @return 当前 LambdaRule 实例，以便进行链式调用
      */
     public LambdaRule<T> check(BiFunction<T, RuleContext, Boolean> function) {
+        ArgumentNullException.throwIfNull(function, "function");
         this.function = function;
         return this;
     }
@@ -89,11 +96,21 @@ public class LambdaRule<T> extends RuleBase {
      * @return 当前 LambdaRule 实例，以便进行链式调用
      */
     public LambdaRule<T> message(Function<T, String> messageFactory) {
+        ArgumentNullException.throwIfNull(messageFactory, "messageFactory");
         this.messageFactory = messageFactory;
         return this;
     }
 
+    /**
+     * 设置验证失败时的固定错误消息。
+     * <p>
+     * 该方法接受一个字符串作为错误消息，当验证失败时将使用该消息。如果需要根据属性值动态生成消息，请使用 message(Function<T, String>) 方法。
+     *
+     * @param message 固定的错误消息字符串
+     * @return 当前 LambdaRule 实例，以便进行链式调用
+     */
     public LambdaRule<T> message(String message) {
+        ArgumentNullException.throwIfNullOrEmpty(message, "message");
         this.messageFactory = (x) -> message;
         return this;
     }

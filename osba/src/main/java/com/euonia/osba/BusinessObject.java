@@ -22,6 +22,7 @@ import com.euonia.reflection.FieldDataManager;
 import com.euonia.reflection.PropertyInfo;
 import com.euonia.reflection.PropertyInfoManager;
 import com.euonia.security.UnauthorizedAccessException;
+import com.euonia.utility.Resource;
 
 /**
  * 业务对象的抽象基类，提供属性管理、规则检查、授权和属性变更通知等核心功能。
@@ -498,7 +499,7 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
     public final boolean canReadProperty(PropertyInfo<?> propertyInfo, boolean throwOnFalse) {
         var result = canReadProperty(propertyInfo);
         if (!result && throwOnFalse) {
-            throw new UnauthorizedAccessException(String.format("属性 '%s' 不可读。", propertyInfo.getName()));
+            throw new UnauthorizedAccessException(Resource.getString("resource", "BusinessObject.PropertyNotReadable", propertyInfo.getName(), getClass().getName()));
         }
         return result;
     }
@@ -535,7 +536,7 @@ public abstract class BusinessObject<B extends BusinessObject<B>> implements Use
     public final boolean canWriteProperty(PropertyInfo<?> propertyInfo, boolean throwOnFalse) {
         var result = canWriteProperty(propertyInfo);
         if (!result && throwOnFalse) {
-            throw new UnauthorizedAccessException(String.format("属性 '%s' 不可写。", propertyInfo.getName()));
+            throw new UnauthorizedAccessException(Resource.getString("resource", "BusinessObject.PropertyNotWritable", propertyInfo.getName(), getClass().getName()));
         }
         return result;
     }

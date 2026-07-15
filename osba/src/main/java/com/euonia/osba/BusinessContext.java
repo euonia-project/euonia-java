@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.euonia.factory.ObjectFactory;
+import com.euonia.utility.Resource;
 
 /**
  * 业务上下文，为 OSBA 工厂创建的业务对象提供轻量级的服务解析和实例创建网关。
@@ -36,7 +37,7 @@ public final class BusinessContext {
     public <T> T getOrCreateObject(Class<T> objectType) {
         Objects.requireNonNull(objectType, "objectType");
         if (instanceCreator == null) {
-            throw new IllegalStateException("BusinessContext 不支持实例创建。");
+            throw new IllegalStateException(Resource.getString("resource", "BusinessContext.InstanceCreationNotSupported"));
         }
         return (T) instanceCreator.apply(objectType);
     }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.euonia.http.ResponseHttpStatusCode;
+import com.euonia.utility.Resource;
 
 /**
  * 规则校验异常，当对象不满足保存条件时抛出。
@@ -25,7 +26,7 @@ public class RuleCheckException extends RuntimeException {
     /**
      * 默认异常消息。
      */
-    private final static String MESSAGE = "Object not valid for save.";
+    private final static String MESSAGE = Resource.getString("resource", "RuleCheckException.Message");
 
     /**
      * 使用指定的校验错误信息构造异常。

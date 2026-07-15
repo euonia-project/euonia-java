@@ -211,9 +211,6 @@ public final class Rules {
             {
                 setRule(rule);
                 setTarget(target);
-                if (rule.getProperty() == null) {
-                    System.out.println(rule.getName());
-                }
                 setPropertyName(rule.getProperty().getName());
             }
         };

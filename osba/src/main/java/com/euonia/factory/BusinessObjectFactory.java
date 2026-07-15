@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.euonia.core.ArgumentOutOfRangeException;
 import com.euonia.core.PriorityValueFinder;
 import com.euonia.factory.annotation.FactoryCreate;
 import com.euonia.factory.annotation.FactoryDelete;
@@ -19,6 +20,7 @@ import com.euonia.osba.ReadOnlyObject;
 import com.euonia.osba.abstracts.UseBusinessContext;
 import com.euonia.reflection.ObjectReflector;
 import com.euonia.reflection.ServiceProvider;
+import com.euonia.utility.Resource;
 
 /**
  * BusinessObjectFactory 是 ObjectFactory 接口的实现，
@@ -129,12 +131,13 @@ public class BusinessObjectFactory implements ObjectFactory {
                 case NEW -> method = ObjectReflector.findFactoryMethod(type, FactoryInsert.class, new Object[0]);
                 case CHANGED -> method = ObjectReflector.findFactoryMethod(type, FactoryUpdate.class, new Object[0]);
                 case DELETED -> method = ObjectReflector.findFactoryMethod(type, FactoryDelete.class, new Object[0]);
-                default -> throw new IllegalArgumentException("Unexpected value: " + editableObject.getState());
+                default ->
+                    throw new ArgumentOutOfRangeException(Resource.getString("resource", "BusinessObjectFactory.UnexpectedState", editableObject.getState(), type.getName()));
             }
         } else if (target instanceof ExecutableObject) {
             method = ObjectReflector.findFactoryMethod(type, FactoryExecute.class, new Object[0]);
         } else if (target instanceof ReadOnlyObject) {
-            throw new UnsupportedOperationException("Cannot save a read-only object of type: " + type.getName());
+            throw new UnsupportedOperationException(Resource.getString("resource", "BusinessObjectFactory.CannotSaveReadOnly", type.getName()));
         } else {
             method = ObjectReflector.findFactoryMethod(type, FactoryUpdate.class, new Object[0]);
         }
@@ -197,13 +200,13 @@ public class BusinessObjectFactory implements ObjectFactory {
             queue.add(() -> {
                 try {
                     var constructors = Arrays.stream(type.getDeclaredConstructors())
-                            .sorted((a, b) -> Integer.compare(b.getParameterCount(), a.getParameterCount()))
-                            .toList();
+                                             .sorted((a, b) -> Integer.compare(b.getParameterCount(), a.getParameterCount()))
+                                             .toList();
 
                     var ctor = constructors.stream().findFirst().orElse(null);
 
                     if (ctor == null) {
-                        throw new RuntimeException("No constructor found for type: " + type.getName());
+                        throw new RuntimeException(Resource.getString("resource", "BusinessObjectFactory.NoConstructor", type.getName()));
                     }
 
                     var parameters = ctor.getParameters();
@@ -218,8 +221,8 @@ public class BusinessObjectFactory implements ObjectFactory {
                         return (T) ctor.newInstance(args);
                     }
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                        | InvocationTargetException e) {
-                    throw new RuntimeException("Failed to create instance of " + type.getName(), e);
+                         | InvocationTargetException e) {
+                    throw new RuntimeException(Resource.getString("resource", "BusinessObjectFactory.CreateInstanceFailed", type.getName()), e);
                 }
             }, 2);
         }, Objects::nonNull, null);
@@ -244,8 +247,7 @@ public class BusinessObjectFactory implements ObjectFactory {
             method.setAccessible(true);
             method.invoke(target, criteria);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(
-                    "Failed to invoke method: " + method.getName() + " on target: " + target.getClass().getName(), e);
+            throw new RuntimeException(Resource.getString("resource", "BusinessObjectFactory.InvokeMethodFailed", method.getName(), target.getClass().getName()), e);
         }
     }
 

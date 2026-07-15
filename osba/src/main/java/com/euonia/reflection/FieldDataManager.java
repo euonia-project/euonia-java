@@ -1,6 +1,7 @@
 package com.euonia.reflection;
 
 import com.euonia.osba.BusinessObject;
+import com.euonia.utility.Resource;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -65,9 +66,9 @@ public class FieldDataManager {
      */
     public PropertyInfo<?> getRegisteredProperty(String propertyName) {
         return getRegisteredProperties().stream()
-                .filter(p -> p.getName().equals(propertyName))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Property '" + propertyName + "' is not registered."));
+                                        .filter(p -> p.getName().equals(propertyName))
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalArgumentException(Resource.getString("resource", "FieldDataManager.PropertyNotRegistered", propertyName)));
     }
 
     public FieldData<?> getFieldData(String fieldName) {
