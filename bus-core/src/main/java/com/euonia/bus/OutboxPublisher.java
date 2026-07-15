@@ -72,7 +72,7 @@ final class OutboxPublisher {
                 if (entry == null) {
                     continue;
                 }
-                tasks.add(publishAsync(item.getTransport(), entry.getContent()));
+                tasks.add(publishAsync(item.getName(), entry.getContent()));
             }
 
             CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
