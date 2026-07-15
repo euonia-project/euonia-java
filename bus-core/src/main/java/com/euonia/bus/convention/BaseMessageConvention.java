@@ -1,14 +1,13 @@
 package com.euonia.bus.convention;
 
-import com.euonia.core.ArgumentNullException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import com.euonia.core.ArgumentNullException;
 
 /**
  * 内置的消息约定，聚合多个 {@link MessageConvention} 实例，并使用 {@link ConcurrentHashMap} 缓存类型分类结果。

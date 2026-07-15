@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiPredicate;
 
 import com.euonia.core.ArgumentNullException;
-import com.euonia.utility.Assert;
 import com.euonia.utility.Resource;
 
 /**
