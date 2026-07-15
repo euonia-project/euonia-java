@@ -85,13 +85,13 @@ public class MessageBusConfiguration {
                                         })
                                         .setStrategy("InMemoryMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("InMemoryMessageBusTransport"));
-                                            s.evaluateOutgoing((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
-                                            s.evaluateIncoming((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
+                                            s.evaluateOutgoing((_, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
+                                            s.evaluateIncoming((_, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Command"));
                                         })
                                         .setStrategy("RabbitMqMessageBusTransport", s -> {
                                             s.add(new AnnotationTransportStrategy("RabbitMqMessageBusTransport"));
-                                            s.evaluateIncoming((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
-                                            s.evaluateOutgoing((ch, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
+                                            s.evaluateIncoming((_, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
+                                            s.evaluateOutgoing((_, mt) -> mt.getName().startsWith(packageName) && mt.getSimpleName().endsWith("Eto"));
                                         })
                                         .registerChannel(packageName + ".application.handler")
                                         .setDefaultTransport(() -> environment.getProperty("euonia.bus.default-transport", "InMemoryMessageBusTransport"));
@@ -345,7 +345,7 @@ public class MessageBusConfiguration {
     @Bean
     public InboxStore inboxStore() {
         return new InboxStore() {
-            private List<InboxEntry> entries = Collections.synchronizedList(new ArrayList<>());
+            private final List<InboxEntry> entries = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public boolean insert(InboxEntry entry) {
@@ -362,18 +362,18 @@ public class MessageBusConfiguration {
             public void markAsSuccess(String messageId, String handler) {
                 var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
                                    .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
-                var handle = entry.getHandles().stream().filter(h -> h.getHandler().equals(handler)).findFirst()
+                var handle = entry.getHandlers().stream().filter(h -> h.getName().equals(handler)).findFirst()
                                   .orElseThrow(() -> new RuntimeException("No handle found for handler " + handler));
-                handle.setStatus(InboxHandle.Status.SUCCESS.getValue());
+                handle.setStatus(InboxHandler.Status.SUCCESS);
             }
 
             @Override
             public void markAsFailed(String messageId, String handler, String errorMessage) {
                 var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
                                    .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
-                var handle = entry.getHandles().stream().filter(h -> h.getHandler().equals(handler)).findFirst()
+                var handle = entry.getHandlers().stream().filter(h -> h.getName().equals(handler)).findFirst()
                                   .orElseThrow(() -> new RuntimeException("No handle found for handler " + handler));
-                handle.setStatus(InboxHandle.Status.FAILED.getValue());
+                handle.setStatus(InboxHandler.Status.FAILED);
                 handle.setError(errorMessage);
                 handle.setRetryAttempts(handle.getRetryAttempts() + 1);
             }
@@ -384,10 +384,10 @@ public class MessageBusConfiguration {
             }
 
             @Override
-            public List<InboxHandle> getFailedMessages() {
+            public List<InboxHandler> getFailedMessages() {
                 return entries.stream()
-                              .flatMap(e -> e.getHandles().stream())
-                              .filter(h -> h.getStatus() == InboxHandle.Status.FAILED.getValue())
+                              .flatMap(e -> e.getHandlers().stream())
+                              .filter(h -> h.getStatus() == InboxHandler.Status.FAILED)
                               .toList();
             }
         };
@@ -397,7 +397,7 @@ public class MessageBusConfiguration {
     public OutboxStore outboxStore() {
         return new OutboxStore() {
 
-            private List<OutboxEntry> entries = Collections.synchronizedList(new ArrayList<>());
+            private final List<OutboxEntry> entries = Collections.synchronizedList(new ArrayList<>());
 
             @Override
             public boolean insert(OutboxEntry entry) {
@@ -414,18 +414,18 @@ public class MessageBusConfiguration {
             public void markAsSuccess(String messageId, String transport) {
                 var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
                                    .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
-                var handle = entry.getTransports().stream().filter(h -> h.getTransport().equals(transport)).findFirst()
+                var handle = entry.getTransports().stream().filter(h -> h.getName().equals(transport)).findFirst()
                                   .orElseThrow(() -> new RuntimeException("No handle found for transport " + transport));
-                handle.setStatus(InboxHandle.Status.SUCCESS.getValue());
+                handle.setStatus(OutboxTransport.Status.SUCCESS);
             }
 
             @Override
             public void markAsFailed(String messageId, String transport, String errorMessage) {
                 var entry = entries.stream().filter(e -> e.getMessageId().equals(messageId)).findFirst()
                                    .orElseThrow(() -> new RuntimeException("No message found with id " + messageId));
-                var handle = entry.getTransports().stream().filter(h -> h.getTransport().equals(transport)).findFirst()
+                var handle = entry.getTransports().stream().filter(h -> h.getName().equals(transport)).findFirst()
                                   .orElseThrow(() -> new RuntimeException("No handle found for transport " + transport));
-                handle.setStatus(InboxHandle.Status.FAILED.getValue());
+                handle.setStatus(OutboxTransport.Status.FAILED);
                 handle.setError(errorMessage);
                 handle.setRetryAttempts(handle.getRetryAttempts() + 1);
             }
@@ -439,7 +439,7 @@ public class MessageBusConfiguration {
             public List<OutboxTransport> getFailedMessages() {
                 return entries.stream()
                               .flatMap(e -> e.getTransports().stream())
-                              .filter(h -> h.getStatus() == InboxHandle.Status.FAILED.getValue())
+                              .filter(h -> h.getStatus() == OutboxTransport.Status.FAILED)
                               .toList();
             }
         };
