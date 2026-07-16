@@ -217,7 +217,7 @@ ExtendableOptions (抽象基类)
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-core</artifactId>
-    <version>${revision}</version>
+    <version>${euonia.version}</version>
 </dependency>
 ```
 

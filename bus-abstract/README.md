@@ -208,7 +208,7 @@ bus-abstract  (本模块 — 契约层)
 <dependency>
     <groupId>com.euonia</groupId>
     <artifactId>bus-abstract</artifactId>
-    <version>${revision}</version>
+    <version>${euonia.version}</version>
 </dependency>
 ```
 
