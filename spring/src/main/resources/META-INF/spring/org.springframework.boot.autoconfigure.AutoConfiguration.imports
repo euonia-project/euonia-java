@@ -1,5 +1,4 @@
 com.euonia.bus.MessageBusConfiguration
-com.euonia.http.HttpContextAccessorConfiguration
 com.euonia.osba.OsbaConfiguration
 com.euonia.pipeline.PipelineConfiguration
 com.euonia.reflection.ServiceProviderConfiguration
