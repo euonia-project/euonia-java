@@ -70,7 +70,9 @@ public class UnitOfWork implements AutoCloseable {
     private boolean reserved;
     private String reservationName;
 
-    /** 使用默认（非事务性）选项创建工作单元。 */
+    /**
+     * 使用默认（非事务性）选项创建工作单元。
+     */
     public UnitOfWork() {
         this(new UnitOfWorkOptions());
     }
@@ -84,7 +86,9 @@ public class UnitOfWork implements AutoCloseable {
         this.defaultOptions = defaultOptions == null ? new UnitOfWorkOptions() : defaultOptions;
     }
 
-    /** @return 此工作单元的唯一标识符 */
+    /**
+     * @return 此工作单元的唯一标识符
+     */
     public String getId() {
         return id;
     }
@@ -107,32 +111,44 @@ public class UnitOfWork implements AutoCloseable {
         return Collections.unmodifiableMap(contexts);
     }
 
-    /** @return 活跃的选项，初始化前为 {@code null} */
+    /**
+     * @return 活跃的选项，初始化前为 {@code null}
+     */
     public UnitOfWorkOptions getOptions() {
         return options;
     }
 
-    /** @return 外部（父级）工作单元，如果当前已是最外层则返回 {@code null} */
+    /**
+     * @return 外部（父级）工作单元，如果当前已是最外层则返回 {@code null}
+     */
     public UnitOfWork getOuter() {
         return outer;
     }
 
-    /** @return 此工作单元是否已被预留 */
+    /**
+     * @return 此工作单元是否已被预留
+     */
     public boolean isReserved() {
         return reserved;
     }
 
-    /** @return 预留名称，如果未被预留则返回 {@code null} */
+    /**
+     * @return 预留名称，如果未被预留则返回 {@code null}
+     */
     public String getReservationName() {
         return reservationName;
     }
 
-    /** @return {@link #close()} 是否已被调用 */
+    /**
+     * @return {@link #close()} 是否已被调用
+     */
     public boolean isDisposed() {
         return disposed;
     }
 
-    /** @return {@link #completeAsync()} 是否已成功完成 */
+    /**
+     * @return {@link #completeAsync()} 是否已成功完成
+     */
     public boolean isCompleted() {
         return completed;
     }
@@ -233,8 +249,8 @@ public class UnitOfWork implements AutoCloseable {
         }
 
         return CompletableFuture.allOf(stages.stream()
-                .map(CompletionStage::toCompletableFuture)
-                .toArray(CompletableFuture[]::new));
+                                             .map(CompletionStage::toCompletableFuture)
+                                             .toArray(CompletableFuture[]::new));
     }
 
     /**
@@ -254,8 +270,8 @@ public class UnitOfWork implements AutoCloseable {
         }
 
         return CompletableFuture.allOf(stages.stream()
-                .map(CompletionStage::toCompletableFuture)
-                .toArray(CompletableFuture[]::new));
+                                             .map(CompletionStage::toCompletableFuture)
+                                             .toArray(CompletableFuture[]::new));
     }
 
     /**
@@ -445,7 +461,7 @@ public class UnitOfWork implements AutoCloseable {
 
     private static Throwable unwrap(Throwable throwable) {
         if (throwable instanceof java.util.concurrent.CompletionException completionException
-                && completionException.getCause() != null) {
+            && completionException.getCause() != null) {
             return completionException.getCause();
         }
 
