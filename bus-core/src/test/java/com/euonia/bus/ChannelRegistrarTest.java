@@ -150,7 +150,7 @@ class ChannelRegistrarTest {
 
             assertThatThrownBy(() -> registrar.register("shared", OtherMessage.class, dummyHandler()))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Message type mismatch");
+                    .hasMessageContaining("ChannelRegistrarTest$OtherMessage");
         }
 
         @Test
@@ -158,7 +158,7 @@ class ChannelRegistrarTest {
         void shouldRejectNullMessageType() {
             assertThatThrownBy(() -> ChannelRegistrar.instance().register("ch", null, dummyHandler()))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Message type");
+                    .hasMessageContaining("messageType");
         }
 
         @Test
@@ -166,7 +166,7 @@ class ChannelRegistrarTest {
         void shouldRejectNullHandler() {
             assertThatThrownBy(() -> ChannelRegistrar.instance().register("ch", TestMessage.class, (ChannelHandler) null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Handling");
+                    .hasMessageContaining("handler");
         }
 
         @Test

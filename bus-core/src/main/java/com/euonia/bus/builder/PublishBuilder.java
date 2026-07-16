@@ -1,15 +1,9 @@
 package com.euonia.bus.builder;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.MessageMetadata;
-import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.PublishOptions;
-import com.euonia.core.ArgumentNullException;
-import com.euonia.core.ArgumentOutOfRangeException;
-import com.euonia.pipeline.Pipeline;
 
 /**
  * 发布/订阅模式的 Builder。
@@ -26,90 +20,15 @@ import com.euonia.pipeline.Pipeline;
  * @param <T> 消息负载类型
  * @author damon(zhaorong@outlook.com)
  */
-public final class PublishBuilder<T> {
+public final class PublishBuilder<T> extends AbstractBuilder<PublishBuilder<T>, PublishOptions, T, Void> {
 
     private final Bus bus;
     private final T message;
-    private Consumer<Pipeline<RoutedMessage<T>, Void>> behavior;
-    private final PublishOptions options = new PublishOptions();
 
     public PublishBuilder(Bus bus, T message) {
+        super(new PublishOptions());
         this.bus = bus;
         this.message = message;
-    }
-
-    /**
-     * 指定消息所属通道。
-     */
-    public PublishBuilder<T> withChannel(String channel) {
-        ArgumentNullException.throwIfNullOrEmpty(channel, "channel");
-        options.setChannel(channel);
-        return this;
-    }
-
-    /**
-     * 配置管道行为回调。
-     */
-    public PublishBuilder<T> withBehavior(Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
-        ArgumentNullException.throwIfNull(behavior, "behavior");
-        this.behavior = behavior;
-        return this;
-    }
-
-    /**
-     * 配置元数据设置器。
-     */
-    public PublishBuilder<T> withMetadata(Consumer<MessageMetadata> metadataSetter) {
-        ArgumentNullException.throwIfNull(metadataSetter, "metadataSetter");
-        options.setMetadataSetter(metadataSetter);
-        return this;
-    }
-
-    /**
-     * 指定消息 ID。
-     *
-     * @param messageId 消息 ID
-     * @return 当前的 PublishBuilder 实例
-     */
-    public PublishBuilder<T> withMessageId(String messageId) {
-        ArgumentNullException.throwIfNullOrEmpty(messageId, "messageId");
-        options.setMessageId(messageId);
-        return this;
-    }
-
-    /**
-     * 指定消息优先级，数值越大优先级越高。未指定时，系统会使用默认的优先级。
-     *
-     * @param priority 消息优先级
-     * @return 当前的 PublishBuilder 实例
-     */
-    public PublishBuilder<T> withPriority(int priority) {
-        options.setPriority(priority);
-        return this;
-    }
-
-    /**
-     * 指定消息的超时时间，单位为毫秒。未指定时，系统会使用默认的超时时间。
-     *
-     * @param timeoutMillis 超时时间，单位为毫秒
-     * @return 当前的 PublishBuilder 实例
-     */
-    public PublishBuilder<T> withTimeout(long timeoutMillis) {
-        ArgumentOutOfRangeException.throwIfNegative(timeoutMillis, "timeoutMillis");
-        options.setTimeout(timeoutMillis);
-        return this;
-    }
-
-    /**
-     * 指定消息的延迟发送时间，单位为毫秒。未指定时，消息会立即发送。
-     *
-     * @param delayMillis 延迟发送时间，单位为毫秒
-     * @return 当前的 PublishBuilder 实例
-     */
-    public PublishBuilder<T> withDelay(long delayMillis) {
-        ArgumentOutOfRangeException.throwIfNegative(delayMillis, "delayMillis");
-        options.setDelay(delayMillis);
-        return this;
     }
 
     /**

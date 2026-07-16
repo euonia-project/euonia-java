@@ -120,7 +120,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是多播类型
      */
     @Override
-    public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
+    public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<MessageEnvelope<T>, Void>> behavior) {
         if (options == null) {
             options = new PublishOptions();
         }
@@ -172,7 +172,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是单播类型
      */
     @Override
-    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions options, Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions options, Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
         if (options == null) {
             options = new SendOptions();
         }
@@ -249,7 +249,7 @@ public final class MessageBus implements Bus {
      * @throws MessageTypeException 如果消息类型不是请求类型
      */
     @Override
-    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+    public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions options, Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
         if (options == null) {
             options = new CallOptions();
         }
@@ -301,8 +301,8 @@ public final class MessageBus implements Bus {
      * @param <R>           响应类型
      * @return 异步处理结果
      */
-    private <T, R> CompletableFuture<R> runWithPipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<Pipeline<RoutedMessage<T>, R>> behavior, String transportName, Function<RoutedMessage<T>, CompletableFuture<R>> callback) {
-        var pipeline = pipelineFactory.<RoutedMessage<T>, R>create();
+    private <T, R> CompletableFuture<R> runWithPipelineAsync(RoutedMessage<T> pack, Class<?> messageType, Consumer<Pipeline<MessageEnvelope<T>, R>> behavior, String transportName, Function<MessageEnvelope<T>, CompletableFuture<R>> callback) {
+        var pipeline = pipelineFactory.<MessageEnvelope<T>, R>create();
         if (pipeline == null) {
             return CompletableFuture.completedFuture(null);
         }

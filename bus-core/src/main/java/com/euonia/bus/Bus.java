@@ -104,7 +104,7 @@ public interface Bus {
      * @param behavior 可选的管道行为配置回调，可以为 {@code null}
      * @return 在所有传输实例完成发送后完成的 future
      */
-    <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior);
+    <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<MessageEnvelope<T>, Void>> behavior);
 
     /**
      * 以发送/命令模式异步发送一条单播消息并等待响应（完整参数版本）。
@@ -118,7 +118,7 @@ public interface Bus {
      * @param behavior     可选的管道行为配置回调，可以为 {@code null}
      * @return 在消息处理完毕时完成的 future
      */
-    <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions sendOptions, Consumer<Pipeline<RoutedMessage<T>, R>> behavior);
+    <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback, SendOptions sendOptions, Consumer<Pipeline<MessageEnvelope<T>, R>> behavior);
 
     /**
      * 以请求/响应模式异步发送一条请求消息并期待类型化的响应（完整参数版本）。
@@ -131,7 +131,7 @@ public interface Bus {
      * @param behavior     可选的管道行为配置回调，可以为 {@code null}
      * @return 在收到响应时完成并携带响应结果的 future
      */
-    <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<Pipeline<RoutedMessage<T>, R>> behavior);
+    <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, CallOptions callOptions, Consumer<Pipeline<MessageEnvelope<T>, R>> behavior);
 
     /**
      * 以发布/订阅模式异步发布一条多播消息。

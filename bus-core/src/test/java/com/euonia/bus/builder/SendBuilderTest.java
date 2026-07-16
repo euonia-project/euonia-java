@@ -8,13 +8,13 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import com.euonia.bus.MessageEnvelope;
 import com.euonia.pipeline.Pipeline;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.SendOptions;
 
 /**
@@ -33,30 +33,28 @@ class SendBuilderTest {
                                   AtomicReference<SendOptions> capturedOptions,
                                   AtomicReference<Consumer<?>> capturedBehavior) {
         return new Bus() {
-            @SuppressWarnings("unchecked")
             @Override
             public <T> CompletableFuture<Void> publishAsync(T message, com.euonia.bus.options.PublishOptions options,
-                                                             Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
+                                                             Consumer<Pipeline<MessageEnvelope<T>, Void>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
 
-            @SuppressWarnings("unchecked")
             @Override
             public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, Flow.Subscriber<R> callback,
                                                              SendOptions sendOptions,
-                                                             Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                             Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                 capturedMessage.set(message);
                 capturedResponseType.set(responseType);
                 capturedCallback.set(callback);
                 capturedOptions.set(sendOptions);
-                capturedBehavior.set((Consumer<?>) (Object) behavior);
+                capturedBehavior.set(behavior);
                 return CompletableFuture.completedFuture(null);
             }
 
             @Override
             public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType,
                                                           com.euonia.bus.options.CallOptions callOptions,
-                                                          Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                          Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
         };
@@ -129,7 +127,7 @@ class SendBuilderTest {
                                 new AtomicReference<>(), capturedBehavior);
             var builder = builderFor(bus, "msg", String.class);
 
-            Consumer<Pipeline<RoutedMessage<String>, String>> behavior = pm -> {};
+            Consumer<Pipeline<MessageEnvelope<String>, String>> behavior = pm -> {};
             builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
@@ -216,7 +214,7 @@ class SendBuilderTest {
         @Test
         @DisplayName("should chain multiple options correctly")
         void shouldChainMultipleOptions() {
-            var capturedMessage = new AtomicReference<Object>();
+            var capturedMessage = new AtomicReference<>();
             var capturedResponseType = new AtomicReference<Class<?>>();
             var capturedCallback = new AtomicReference<Flow.Subscriber<?>>();
             var capturedOptions = new AtomicReference<SendOptions>();
@@ -230,7 +228,7 @@ class SendBuilderTest {
                 @Override public void onError(Throwable t) {}
                 @Override public void onComplete() {}
             };
-            Consumer<Pipeline<RoutedMessage<String>, Integer>> behavior = pm -> {};
+            Consumer<Pipeline<MessageEnvelope<String>, Integer>> behavior = pm -> {};
 
             builder.withChannel("cmds")
                    .withCallback(subscriber)

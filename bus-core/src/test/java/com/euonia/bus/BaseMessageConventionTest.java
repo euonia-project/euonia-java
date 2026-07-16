@@ -2,6 +2,8 @@ package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.euonia.core.ArgumentNullException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,12 +17,6 @@ import com.euonia.bus.convention.MessageConventionType;
  */
 @DisplayName("BaseMessageConvention")
 class BaseMessageConventionTest {
-
-    // 测试用通道名
-    static final String UNICAST_CHANNEL = "unicast-demo-channel";
-    static final String MULTICAST_CHANNEL = "multicast-demo-channel";
-    static final String REQUEST_CHANNEL = "request-demo-channel";
-    static final String UNKNOWN_CHANNEL = "unknown-channel";
 
     @Nested
     @DisplayName("default convention")
@@ -40,7 +36,7 @@ class BaseMessageConventionTest {
             var conv = new BaseMessageConvention();
 
             assertThatThrownBy(() -> conv.isUnicast(null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(ArgumentNullException.class);
         }
     }
 

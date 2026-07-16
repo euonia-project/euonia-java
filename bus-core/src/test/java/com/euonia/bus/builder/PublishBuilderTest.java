@@ -1,19 +1,20 @@
 package com.euonia.bus.builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import com.euonia.bus.MessageEnvelope;
+import com.euonia.core.ArgumentNullException;
 import com.euonia.pipeline.Pipeline;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.euonia.bus.Bus;
-import com.euonia.bus.RoutedMessage;
 import com.euonia.bus.options.PublishOptions;
 
 /**
@@ -30,23 +31,23 @@ class PublishBuilderTest {
                                                       AtomicReference<Consumer<?>> capturedBehavior) {
         Bus bus = new Bus() {
             @Override
-            public <T> CompletableFuture<Void> publishAsync(T msg, PublishOptions opts, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
+            public <T> CompletableFuture<Void> publishAsync(T msg, PublishOptions opts, Consumer<Pipeline<MessageEnvelope<T>, Void>> behavior) {
                 capturedMessage.set((String) msg);
                 capturedOptions.set(opts);
-                capturedBehavior.set((Consumer<?>) (Object) behavior);
+                capturedBehavior.set(behavior);
                 return CompletableFuture.completedFuture(null);
             }
 
             @Override
             public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, java.util.concurrent.Flow.Subscriber<R> callback,
                                                              com.euonia.bus.options.SendOptions sendOptions,
-                                                             Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                             Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
 
             @Override
             public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, com.euonia.bus.options.CallOptions callOptions,
-                                                          Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                          Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                 return CompletableFuture.completedFuture(null);
             }
         };
@@ -62,20 +63,20 @@ class PublishBuilderTest {
         void shouldCreateViaBusPublish() {
             Bus bus = new Bus() {
                 @Override
-                public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<RoutedMessage<T>, Void>> behavior) {
+                public <T> CompletableFuture<Void> publishAsync(T message, PublishOptions options, Consumer<Pipeline<MessageEnvelope<T>, Void>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
 
                 @Override
                 public <T, R> CompletableFuture<Void> sendAsync(T message, Class<R> responseType, java.util.concurrent.Flow.Subscriber<R> callback,
                                                                  com.euonia.bus.options.SendOptions sendOptions,
-                                                                 Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                                 Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
 
                 @Override
                 public <T, R> CompletableFuture<R> callAsync(T request, Class<R> responseType, com.euonia.bus.options.CallOptions callOptions,
-                                                              Consumer<Pipeline<RoutedMessage<T>, R>> behavior) {
+                                                              Consumer<Pipeline<MessageEnvelope<T>, R>> behavior) {
                     return CompletableFuture.completedFuture(null);
                 }
             };
@@ -107,7 +108,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
-            Consumer<Pipeline<RoutedMessage<String>, Void>> behavior = pm -> {};
+            Consumer<Pipeline<MessageEnvelope<String>, Void>> behavior = pm -> {};
             builder.withBehavior(behavior).executeAsync();
 
             assertThat(capturedBehavior.get()).isSameAs(behavior);
@@ -176,7 +177,7 @@ class PublishBuilderTest {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("event", capturedMessage, capturedOptions, capturedBehavior);
 
-            Consumer<Pipeline<RoutedMessage<String>, Void>> behavior = pm -> {};
+            Consumer<Pipeline<MessageEnvelope<String>, Void>> behavior = pm -> {};
             builder.withChannel("notifications")
                    .withMessageId("msg-001")
                    .withPriority(10)
@@ -249,38 +250,38 @@ class PublishBuilderTest {
     class NullSafety {
 
         @Test
-        @DisplayName("should accept null channel")
-        void shouldAcceptNullChannel() {
+        @DisplayName("should not accept null channel")
+        void shouldNotAcceptNullChannel() {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            assertThatNoException().isThrownBy(() -> {
-                builder.withChannel(null);
-                builder.executeAsync();
-            });
-            assertThat(capturedOptions.get().getChannel()).isNull();
+            assertThatThrownBy(() -> builder.withChannel(null).executeAsync())
+                    .isInstanceOf(ArgumentNullException.class)
+                    .hasMessageContaining("channel");
         }
 
         @Test
-        @DisplayName("should accept null behavior")
-        void shouldAcceptNullBehavior() {
+        @DisplayName("should not accept null behavior")
+        void shouldNotAcceptNullBehavior() {
             var capturedBehavior = new AtomicReference<Consumer<?>>();
             var builder = builderFor("msg", new AtomicReference<>(), new AtomicReference<>(), capturedBehavior);
 
-            builder.withBehavior(null).executeAsync();
+            assertThatThrownBy(() -> builder.withBehavior(null).executeAsync())
+                    .isInstanceOf(ArgumentNullException.class)
+                    .hasMessageContaining("behavior");
 
             assertThat(capturedBehavior.get()).isNull();
         }
 
         @Test
-        @DisplayName("should accept null metadata setter")
-        void shouldAcceptNullMetadata() {
+        @DisplayName("should not accept null metadata setter")
+        void shouldNotAcceptNullMetadata() {
             var capturedOptions = new AtomicReference<PublishOptions>();
             var builder = builderFor("msg", new AtomicReference<>(), capturedOptions, new AtomicReference<>());
 
-            assertThatNoException().isThrownBy(() -> {
-                builder.withMetadata(null).executeAsync();
-            });
+            assertThatThrownBy(() -> builder.withMetadata(null).executeAsync())
+                    .isInstanceOf(ArgumentNullException.class)
+                    .hasMessageContaining("metadataSetter");
         }
     }
 }

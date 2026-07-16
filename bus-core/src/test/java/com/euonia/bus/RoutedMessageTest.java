@@ -2,6 +2,8 @@ package com.euonia.bus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.euonia.core.ArgumentNullException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,8 +23,8 @@ class RoutedMessageTest {
         @DisplayName("should throw when payload is null")
         void shouldThrowWhenPayloadIsNull() {
             assertThatThrownBy(() -> new RoutedMessage<>(null, "orders"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("payload should not be null");
+                .isInstanceOf(ArgumentNullException.class)
+                .hasMessageContaining("payload");
         }
 
         @Test
