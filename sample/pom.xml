@@ -15,7 +15,7 @@
     <description>sample</description>
     <properties>
         <java.version>25</java.version>
-        <euonia.version>2026.3.2</euonia.version>
+        <euonia.version>2026.3.3</euonia.version>
     </properties>
     <dependencies>
         <dependency>
