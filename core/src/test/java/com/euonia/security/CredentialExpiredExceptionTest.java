@@ -27,15 +27,22 @@ class CredentialExpiredExceptionTest {
     }
 
     @Test
-    @DisplayName("Given details map when setting values then unsupported operation is thrown by immutable backing map")
-    void givenDetailsWhenSettingThenThrowUnsupportedOperation() {
+    @DisplayName("Given details map when setting values then values are stored and retrievable")
+    void givenDetailsWhenSettingThenValuesAreStored() {
         CredentialExpiredException exception = new CredentialExpiredException("credential");
 
         assertNotNull(exception.getDetails());
         assertTrue(exception.getDetails().isEmpty());
         assertNull(exception.get("missing"));
-        assertThrows(UnsupportedOperationException.class, () -> exception.set("k", "v"));
-        assertThrows(UnsupportedOperationException.class, () -> exception.with("k", "v"));
+
+        exception.set("k", "v");
+        assertEquals("v", exception.get("k"));
+        assertEquals(1, exception.getDetails().size());
+
+        CredentialException chained = exception.with("k2", "v2");
+        assertSame(exception, chained);
+        assertEquals("v2", exception.get("k2"));
+        assertEquals(2, exception.getDetails().size());
     }
 
     @Test
