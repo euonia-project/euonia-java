@@ -8,12 +8,11 @@ import java.util.Map;
  *
  * @author damon(zhaorong@outlook.com)
  */
-@SuppressWarnings("unused")
 public abstract class CredentialException extends RuntimeException {
     /** 导致异常的凭证 */
     private final Object credential;
     /** 异常相关的额外详细信息 */
-    private final Map<String, Object> details = Collections.emptyMap();
+    private final Map<String, Object> details = Collections.synchronizedMap(new java.util.HashMap<>());
 
     /**
      * 使用指定的凭证构造异常。

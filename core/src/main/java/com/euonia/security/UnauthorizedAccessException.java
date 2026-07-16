@@ -6,7 +6,6 @@ package com.euonia.security;
  *
  * @author damon(zhaorong@outlook.com)
  */
-@SuppressWarnings("unused")
 public class UnauthorizedAccessException extends RuntimeException {
     /**
      * 使用指定的错误消息构造异常。

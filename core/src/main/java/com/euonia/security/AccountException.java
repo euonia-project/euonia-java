@@ -9,13 +9,12 @@ import java.util.Map;
  *
  * @author damon(zhaorong@outlook.com)
  */
-@SuppressWarnings("unused")
 public abstract class AccountException extends RuntimeException {
     /** 账户标识（如用户名、用户 ID 或邮箱） */
     private final Object identity;
 
     /** 异常相关的额外详细信息 */
-    private final Map<String, Object> details = Collections.emptyMap();
+    private final Map<String, Object> details = Collections.synchronizedMap(new java.util.HashMap<>());
 
     /**
      * 使用指定的账户标识构造异常。
