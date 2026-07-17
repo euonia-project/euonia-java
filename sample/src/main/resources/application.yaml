@@ -25,6 +25,13 @@ management:
         web:
             exposure:
                 include: "*"
-jwt:
-    secret: "019f69e568407251967628b47b106e13"
-    expiration: 3600000
+security:
+    jwt:
+        secret: "019f69e568407251967628b47b106e13"
+    anonymous:
+        matchers:
+            - "/api/auth/**"
+            - "/v3/api-docs/**"
+            - "/swagger-ui/**"
+            - "/swagger-ui.html"
+            - "/error"
