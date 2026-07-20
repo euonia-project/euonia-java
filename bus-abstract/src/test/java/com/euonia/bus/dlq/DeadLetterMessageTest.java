@@ -93,7 +93,7 @@ class DeadLetterMessageTest {
             var envelope = createEnvelope("msg-6");
             var dl = new DeadLetterMessage<>(envelope, null);
 
-            assertThat(dl.getReason()).isEqualTo("unknown");
+            assertThat(dl.getReason()).isEqualTo("Unknown");
             assertThat(dl.getExceptionType()).isNull();
             assertThat(dl.getExceptionMessage()).isNull();
         }
