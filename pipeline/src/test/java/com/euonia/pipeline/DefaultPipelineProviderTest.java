@@ -9,11 +9,11 @@ import java.util.concurrent.CompletionStage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.euonia.reflection.ServiceProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.euonia.reflection.ServiceProvider;
 
 //import com.euonia.reflection.SimpleServiceProvider;
 
@@ -51,7 +51,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class CustomBehavior implements PipelineBehavior<String, String> {
-            @SuppressWarnings("unused")
             public CustomBehavior() {
             }
 
@@ -62,7 +61,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class ForwardingBehavior implements PipelineBehavior<String, String> {
-            @SuppressWarnings("unused")
             public ForwardingBehavior() {
             }
 
@@ -116,7 +114,6 @@ class DefaultPipelineProviderTest {
         static class HandleMethodBehavior {
             private final PipelineDelegate<String, String> next;
 
-            @SuppressWarnings("unused")
             public HandleMethodBehavior(PipelineDelegate<String, String> next) {
                 this.next = next;
             }
@@ -129,7 +126,6 @@ class DefaultPipelineProviderTest {
         static class HandleAsyncMethodBehavior {
             private final PipelineDelegate<String, String> next;
 
-            @SuppressWarnings("unused")
             public HandleAsyncMethodBehavior(PipelineDelegate<String, String> next) {
                 this.next = next;
             }
@@ -140,7 +136,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class NonCompletionStageHandleStep {
-            @SuppressWarnings("unused")
             public NonCompletionStageHandleStep(PipelineDelegate<String, String> next) {
             }
 
@@ -190,7 +185,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class NoHandleMethodClass {
-            @SuppressWarnings("unused")
             public NoHandleMethodClass(PipelineDelegate<String, String> next) {
             }
 
@@ -199,7 +193,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class DualHandleMethodClass {
-            @SuppressWarnings("unused")
             public DualHandleMethodClass(PipelineDelegate<String, String> next) {
             }
 
@@ -213,7 +206,6 @@ class DefaultPipelineProviderTest {
         }
 
         static class ThrowingHandleStep {
-            @SuppressWarnings("unused")
             public ThrowingHandleStep(PipelineDelegate<String, String> next) {
             }
 
@@ -255,7 +247,6 @@ class DefaultPipelineProviderTest {
             private final PipelineDelegate<String, String> next;
             private final String name;
 
-            @SuppressWarnings("unused")
             public SingleCtorBehavior(PipelineDelegate<String, String> next, String name) {
                 this.next = next;
                 this.name = name;
@@ -269,7 +260,6 @@ class DefaultPipelineProviderTest {
         static class CapturingNextBehavior {
             private final PipelineDelegate<String, String> next;
 
-            @SuppressWarnings("unused")
             public CapturingNextBehavior(PipelineDelegate<String, String> next) {
                 this.next = next;
             }
