@@ -1,83 +1,64 @@
 package com.euonia.usecase;
 
-import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.Flow.Subscriber;
-import java.util.concurrent.Flow.Subscription;
-import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 
 /**
- * 用例呈现器，实现了用例的输出端口，允许订阅者监听成功和失败事件。
+ * 定义用例执行结果的呈现器。
  * <p>
- * 同时实现了 {@link UseCaseSuccess}、{@link UseCaseFailure} 和 {@link AutoCloseable} 接口，基于 {@link SubmissionPublisher} 实现响应式的事件传递。
+ * 对应 .NET 版的 {@code IUseCasePresenter<TOutput>}。调用方通过
+ * {@link #onSucceed(Consumer)}、{@link #onFailed(Consumer)} 与
+ * {@link #onCanceled(Runnable)} 订阅结果，无需自行编写 try/catch 分发逻辑。
  *
- * @param <O> 用例成功输出的类型
+ * @param <O> 用例执行结果（输出）的类型
  * @author damon(zhaorong@outlook.com)
  */
-public class UseCasePresenter<O> implements UseCaseSuccess<O>, UseCaseFailure, AutoCloseable {
-    /**
-     * 事件发布者，用于向订阅者推送成功/失败事件
-     */
-    private final Publisher<O> publisher = new SubmissionPublisher<>();
+public interface UseCasePresenter<O> extends UseCaseOutputSuccess<O>, UseCaseOutputFailure, AutoCloseable {
 
     /**
-     * 用例执行的成功输出
-     */
-    private O output;
-
-    /**
-     * 订阅呈现器以接收成功和失败事件。
+     * 注册用例成功执行时的监听器。
      *
-     * @param onSuccess 用于处理成功输出的消费者
-     * @param onFailure 用于处理错误的消费者
+     * @param listener 成功结果监听器
+     * @return 当前呈现器，便于链式调用
      */
-    public void subscribe(Consumer<O> onSuccess, Consumer<Throwable> onFailure) {
-        publisher.subscribe(new Subscriber<>() {
+    UseCasePresenter<O> onSucceed(Consumer<O> listener);
 
-            @Override
-            public void onSubscribe(Subscription subscription) {
-                subscription.request(Long.MAX_VALUE);
-            }
+    /**
+     * 注册用例执行失败时的监听器。
+     *
+     * @param listener 失败结果监听器
+     * @return 当前呈现器，便于链式调用
+     */
+    UseCasePresenter<O> onFailed(Consumer<Throwable> listener);
 
-            @Override
-            public void onNext(O item) {
-                onSuccess.accept(item);
-            }
+    /**
+     * 注册用例被取消时的监听器。
+     *
+     * @param listener 取消监听器
+     * @return 当前呈现器，便于链式调用
+     */
+    UseCasePresenter<O> onCanceled(Runnable listener);
 
-            @Override
-            public void onError(Throwable throwable) {
-                onFailure.accept(throwable);
-            }
+    /**
+     * 获取用例执行成功时的输出。
+     *
+     * @return 用例输出；尚未成功执行时为 {@code null}
+     */
+    O getOutput();
 
-            @Override
-            public void onComplete() {
-                // 如有需要，处理完成事件
-            }
-        });
-    }
-
-    @Override
-    public void success(O output) {
-        this.output = output;
-        ((SubmissionPublisher<O>) publisher).submit(output);
-    }
-
-    @Override
-    public void error(Throwable throwable) {
-        ((SubmissionPublisher<O>) publisher).closeExceptionally(throwable);
-    }
-
-    @Override
-    public void close() {
-        ((SubmissionPublisher<O>) publisher).close();
+    /**
+     * 同时订阅成功与失败结果。
+     *
+     * @param onSuccess 成功结果监听器
+     * @param onFailure 失败结果监听器
+     */
+    default void subscribe(Consumer<O> onSuccess, Consumer<Throwable> onFailure) {
+        onSucceed(onSuccess);
+        onFailed(onFailure);
     }
 
     /**
-     * 返回用例执行成功时的输出。
-     *
-     * @return 用例执行的输出
+     * 释放呈现器持有的监听器。
      */
-    public O getOutput() {
-        return output;
-    }
+    @Override
+    void close();
 }

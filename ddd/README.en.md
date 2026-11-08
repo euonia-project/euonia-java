@@ -2,7 +2,7 @@
 
 Domain-Driven Design tactical toolbox for the Euonia framework. Provides core DDD building blocks — Entity, Aggregate, ValueObject, Command, DomainEvent, UseCase, and ApplicationService — enabling developers to build highly cohesive, loosely coupled business systems centered around the domain model.
 
-This module depends on `core`, `pipeline`, `unit-of-work`, and `bus-core`, and is deeply integrated with the message bus to support **command dispatching**, **event-driven**, and **use-case orchestration** interaction patterns.
+This module depends on `core`, `bus-core`, and `slf4j-api`, and is deeply integrated with the message bus to support **command dispatching**, **event-driven**, and **use-case orchestration** interaction patterns.
 
 ---
 
@@ -39,13 +39,13 @@ This module depends on `core`, `pipeline`, `unit-of-work`, and `bus-core`, and i
 │  ┌──────────────────── Application Layer ──────────────────────┐ │
 │  │                                                              │ │
 │  │   ApplicationService ◄── BaseApplicationService             │ │
-│  │                        (ServiceProvider, Bus integration)    │ │
+│  │                        (LazyServiceProvider, Bus, Logger)    │ │
 │  │                                                              │ │
 │  ├──────────────────── Use Case Layer ─────────────────────────┤ │
 │  │                                                              │ │
-│  │   UseCase<I,O>         UseCaseSuccess<O>                    │ │
-│  │   UseCasePresenter<O>  UseCaseFailure                       │ │
-│  │   (Reactive Streams / SubmissionPublisher)                   │ │
+│  │   UseCase<I,O>           UseCaseOutputSuccess<O>            │ │
+│  │   UseCasePresenter<O>    UseCaseOutputFailure               │ │
+│  │   UseCaseExecutor        (CompletionStage async execution)   │ │
 │  │                                                              │ │
 │  └──────────────────────────────────────────────────────────────┘ │
 │                                                                  │
@@ -164,24 +164,35 @@ Commands are dispatched through the message bus's `Unicast` mechanism to designa
 
 | Class / Interface | Description |
 |-------------------|-------------|
-| `UseCase<I, O>` | Use case interface — defines `execute(I input): O`, representing a single business operation |
-| `UseCaseSuccess<O>` | Success output port — `success(O output)` |
-| `UseCaseFailure` | Failure output port — `error(Throwable throwable)` |
-| `UseCasePresenter<O>` | Use case presenter — implements both `UseCaseSuccess<O>` and `UseCaseFailure`, reactive subscription via `SubmissionPublisher` |
+| `UseCase<I, O>` | Use case interface — defines `executeAsync(I input): CompletionStage<O>` for a single asynchronous business operation |
+| `UntypedUseCase` | Untyped root use case contract used by the executor |
+| `NonOutputUseCase<I>` | Use case without business output — `executeVoidAsync(I input)` |
+| `NonInputUseCase<O>` | Use case without input — `executeAsync()` |
+| `ParameterlessUseCase` | Use case without input or output — `executeVoidAsync()` |
+| `UseCaseInput` / `UseCaseOutput` | Marker interfaces for use case input/output |
+| `EmptyUseCaseInput` / `EmptyUseCaseOutput` | Shared empty input/output instances |
+| `UseCaseOutputSuccess<O>` | Success output port — `ok(O output)` |
+| `UseCaseOutputFailure` | Failure output port — `error(Throwable throwable)` |
+| `UseCasePresenter<O>` | Presenter contract — supports success, failure and cancellation listeners |
+| `DefaultUseCasePresenter<O>` | Default presenter — stores output and dispatches events; `close()` clears listeners |
+| `UseCaseExecutor` / `DefaultUseCaseExecutor` | Executes use cases and dispatches results to presenters; supports container resolution |
 
-#### Use Case Presenter Pattern
+#### Use Case and Presenter
 
 ```java
-var presenter = new UseCasePresenter<OrderResult>();
+public class GreetUseCase implements UseCase<String, String> {
+    @Override
+    public CompletionStage<String> executeAsync(String name) {
+        return CompletableFuture.completedFuture("Hello, " + name + "!");
+    }
+}
 
-// Subscribe to success and failure events
-presenter.subscribe(
-    result -> System.out.println("Success: " + result),
-    error  -> System.err.println("Error: " + error.getMessage())
-);
+var presenter = new DefaultUseCasePresenter<String>()
+    .onSucceed(result -> System.out.println("Success: " + result))
+    .onFailed(error -> System.err.println("Error: " + error.getMessage()));
 
-// Notify after use case execution
-presenter.success(orderResult);   // or presenter.error(exception);
+var executor = new DefaultUseCaseExecutor(serviceProvider);
+executor.executeAsync(new GreetUseCase(), "Alice", presenter);
 ```
 
 ---
@@ -190,20 +201,27 @@ presenter.success(orderResult);   // or presenter.error(exception);
 
 | Class / Interface | Description |
 |-------------------|-------------|
-| `ApplicationService` | Application service marker interface |
-| `BaseApplicationService` | Application service base class — built-in `ServiceProvider` and `Bus` references with `getService()` and `getUser()` convenience methods |
+| `ApplicationService` | Application service marker — extends `HasLazyServiceProvider` |
+| `BaseApplicationService` | Application service base class — lazily resolves `Bus`, `UserPrincipal`, logger and `UseCaseExecutor` through `LazyServiceProvider`, and exposes the request context via `RequestContextAccessor` |
 
 ```java
 public abstract class BaseApplicationService implements ApplicationService {
-    protected final ServiceProvider provider;
-    protected final Bus bus;
+    public ServiceProvider getLazyServiceProvider() { ... }
+    public void setLazyServiceProvider(ServiceProvider provider) { ... }
 
     protected <T> Optional<T> getService(Class<T> type) { ... }
+    protected Bus getBus() { ... }
     protected UserPrincipal getUser() { ... }
+    protected RequestContext getRequestContext() { ... }
+    protected Logger getLogger() { ... }
+    protected UseCaseExecutor getExecutor() { ... }
 }
 ```
 
-Application services orchestrate domain objects, coordinate use case execution, and dispatch commands and events through the message bus.
+The Spring integration module injects `LazyServiceProvider` through
+`ApplicationServiceBeanPostProcessor` and registers a `UseCaseExecutor`. Application
+services only need to extend `BaseApplicationService` to use `getBus()`, `getUser()`
+and `getExecutor()`.
 
 ---
 
@@ -248,9 +266,16 @@ com.euonia
 │   └── BaseApplicationService.java # Application service base class
 └── usecase/
     ├── UseCase.java              # Use case interface
-    ├── UseCaseSuccess.java       # Success output port
-    ├── UseCaseFailure.java       # Failure output port
-    └── UseCasePresenter.java     # Use case presenter
+    ├── UntypedUseCase.java       # Untyped root use case contract
+    ├── NonOutputUseCase.java     # Use case without output
+    ├── NonInputUseCase.java      # Use case without input
+    ├── ParameterlessUseCase.java # Use case without input or output
+    ├── UseCaseOutputSuccess.java # Success output port
+    ├── UseCaseOutputFailure.java # Failure output port
+    ├── UseCasePresenter.java     # Presenter contract
+    ├── DefaultUseCasePresenter.java # Default presenter
+    ├── UseCaseExecutor.java      # Use case executor contract
+    └── DefaultUseCaseExecutor.java # Default use case executor
 ```
 
 ---
@@ -263,8 +288,8 @@ com.euonia
 | **Aggregate Pattern** | `AggregateBase` manages child entity consistency and domain events |
 | **Event Sourcing** | `HasDomainEvents` + `raiseEvent` / `applyEvent` |
 | **CQRS (Command Side)** | `Command` dispatched via `Unicast` bus |
-| **Ports & Adapters** | `UseCaseSuccess` / `UseCaseFailure` output ports |
-| **Observer Pattern** | `UseCasePresenter` uses `SubmissionPublisher` for reactive subscription |
+| **Ports & Adapters** | `UseCaseOutputSuccess` / `UseCaseOutputFailure` output ports |
+| **Observer Pattern** | `UseCasePresenter` listeners with result dispatching in `DefaultUseCaseExecutor` |
 | **Template Method** | `DomainEventBase.attach()` automatically sets originator info |
 | **Strategy Pattern** | `AuditStore` supports pluggable persistence strategies |
 
@@ -275,7 +300,6 @@ com.euonia
 ```
 ddd
  ├── core           (ID generation, reflection utilities)
- ├── pipeline       (pipeline/filter abstractions)
- ├── unit-of-work   (unit of work transaction management)
- └── bus-core       (message bus — Unicast for Command, Multicast for Event)
+ ├── bus-core       (message bus — Bus convenience access in application services)
+ └── slf4j-api      (application service logging)
 ```

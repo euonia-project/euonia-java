@@ -2,4 +2,5 @@ com.euonia.bus.MessageBusConfiguration
 com.euonia.osba.OsbaConfiguration
 com.euonia.pipeline.PipelineConfiguration
 com.euonia.reflection.ServiceProviderConfiguration
+com.euonia.spring.ApplicationConfiguration
 com.euonia.uow.UnitOfWorkAutoConfiguration

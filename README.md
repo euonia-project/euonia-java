@@ -78,9 +78,9 @@ graph TD
 | `com.euonia.domain.event` | `EventAggregate` | 聚合形态的事件数据：id、eventId、typeName、originator、timestamp、sequence |
 | `com.euonia.domain.command` | `Command` / `CommandBase` | 命令模式抽象：`Command` 继承 `Unicast`（消息总线集成），`CommandBase` 提供基类实现 |
 | `com.euonia.domain.auditing` | `@Audited` / `AuditRecord` / `AuditStore` | 领域对象变更审计支持 |
-| `com.euonia.application` | `ApplicationService` / `BaseApplicationService` | 应用服务标记接口与含依赖解析的基类 |
-| `com.euonia.usecase` | `UseCase<I,O>` / `UseCasePresenter` | 输入/输出用例契约与响应式结果发布 |
-| `com.euonia.usecase` | `UseCaseSuccess` / `UseCaseFailure` | 成功与失败输出端口 |
+| `com.euonia.application` | `ApplicationService` / `BaseApplicationService` | 应用服务标记接口与基于 `LazyServiceProvider` 的基类 |
+| `com.euonia.usecase` | `UseCase<I,O>` / `UseCaseExecutor` | 异步用例契约与统一执行/结果分发 |
+| `com.euonia.usecase` | `UseCasePresenter` / `DefaultUseCasePresenter` | 用例结果呈现器契约与默认实现 |
 
 ### UoW（euonia-unit-of-work）
 > Unit of Work 抽象：定义事务边界、提交/回滚生命周期与一致性的持久化编排。
@@ -357,6 +357,7 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 |-------|-------------|
 | `ApplicationContextServiceProvider` | 基于 Spring `ApplicationContext` 的 `ServiceProvider` 实现，支持 `getBeanProvider`、`autowireBean` 与构造参数创建 |
 | `ServiceProviderConfiguration` | Spring `@Configuration`，自动注册 `ServiceProvider` Bean |
+| `ApplicationConfiguration` | 注册 `UseCaseExecutor`，并为应用服务注入 `LazyServiceProvider` |
 
 **关键特性：**
 - 为 Pipeline 与其它 Euonia 组件提供 Spring DI 能力

@@ -22,6 +22,12 @@
 
         <dependency>
             <groupId>com.euonia</groupId>
+            <artifactId>domain-driven-design</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.euonia</groupId>
             <artifactId>osba</artifactId>
             <version>${revision}</version>
         </dependency>

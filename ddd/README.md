@@ -2,7 +2,7 @@
 
 领域驱动设计（Domain-Driven Design）—— Euonia 框架的战术设计工具箱。提供 Entity、Aggregate、ValueObject、Command、DomainEvent、UseCase 和 ApplicationService 等核心 DDD 构建块，帮助开发者以领域模型为中心构建高内聚、低耦合的业务系统。
 
-该模块依赖 `core`、`pipeline`、`unit-of-work`、`bus-core` 模块，并与消息总线深度集成，支持 **命令分发**、**事件驱动** 和 **用例编排** 等多种交互模式。
+该模块依赖 `core`、`bus-core` 与 `slf4j-api`，并与消息总线深度集成，支持 **命令分发**、**事件驱动** 和 **用例编排** 等多种交互模式。
 
 ---
 
@@ -39,13 +39,13 @@
 │  ┌─────────────────────── 应用层 ──────────────────────────────┐ │
 │  │                                                              │ │
 │  │   ApplicationService ◄── BaseApplicationService             │ │
-│  │                        (ServiceProvider、Bus 集成)            │ │
+│  │                        (LazyServiceProvider、Bus、Logger)     │ │
 │  │                                                              │ │
 │  ├─────────────────────── 用例层 ──────────────────────────────┤ │
 │  │                                                              │ │
-│  │   UseCase<I,O>         UseCaseSuccess<O>                    │ │
-│  │   UseCasePresenter<O>  UseCaseFailure                       │ │
-│  │   (Reactive Streams / SubmissionPublisher)                   │ │
+│  │   UseCase<I,O>           UseCaseOutputSuccess<O>            │ │
+│  │   UseCasePresenter<O>    UseCaseOutputFailure               │ │
+│  │   UseCaseExecutor        (CompletionStage 异步执行)          │ │
 │  │                                                              │ │
 │  └──────────────────────────────────────────────────────────────┘ │
 │                                                                  │
@@ -164,24 +164,35 @@ List<DomainEvent> events = order.getEvents();
 
 | 类 / 接口 | 描述 |
 |-----------|------|
-| `UseCase<I, O>` | 用例接口 — 定义 `execute(I input): O`，表示单个业务操作 |
-| `UseCaseSuccess<O>` | 成功输出端口 — `success(O output)` |
-| `UseCaseFailure` | 失败输出端口 — `error(Throwable throwable)` |
-| `UseCasePresenter<O>` | 用例展示器 — 同时实现 `UseCaseSuccess<O>` 和 `UseCaseFailure`，基于 `SubmissionPublisher` 的响应式订阅 |
+| `UseCase<I, O>` | 用例接口 — 定义 `executeAsync(I input): CompletionStage<O>`，表示单个异步业务操作 |
+| `UntypedUseCase` | 不区分输入/输出类型的用例根接口，供执行器统一解析与调用 |
+| `NonOutputUseCase<I>` | 无业务输出的用例 — `executeVoidAsync(I input)` |
+| `NonInputUseCase<O>` | 无输入参数的用例 — `executeAsync()` |
+| `ParameterlessUseCase` | 既无输入也无输出的用例 — `executeVoidAsync()` |
+| `UseCaseInput` / `UseCaseOutput` | 用例输入/输出标记接口 |
+| `EmptyUseCaseInput` / `EmptyUseCaseOutput` | 无输入/无输出的共享实例 |
+| `UseCaseOutputSuccess<O>` | 成功输出端口 — `ok(O output)` |
+| `UseCaseOutputFailure` | 失败输出端口 — `error(Throwable throwable)` |
+| `UseCasePresenter<O>` | 用例呈现器契约 — 支持成功、失败与取消监听器 |
+| `DefaultUseCasePresenter<O>` | 默认呈现器 — 保存输出并分发事件，`close()` 清空监听器 |
+| `UseCaseExecutor` / `DefaultUseCaseExecutor` | 执行用例并把结果分发到呈现器，支持从容器解析用例 |
 
-#### 用例展示器模式
+#### 用例与呈现器
 
 ```java
-var presenter = new UseCasePresenter<OrderResult>();
+public class GreetUseCase implements UseCase<String, String> {
+    @Override
+    public CompletionStage<String> executeAsync(String name) {
+        return CompletableFuture.completedFuture("Hello, " + name + "!");
+    }
+}
 
-// 订阅成功和失败事件
-presenter.subscribe(
-    result -> System.out.println("Success: " + result),
-    error  -> System.err.println("Error: " + error.getMessage())
-);
+var presenter = new DefaultUseCasePresenter<String>()
+    .onSucceed(result -> System.out.println("Success: " + result))
+    .onFailed(error -> System.err.println("Error: " + error.getMessage()));
 
-// 用例执行完成后通知
-presenter.success(orderResult);   // 或 presenter.error(exception);
+var executor = new DefaultUseCaseExecutor(serviceProvider);
+executor.executeAsync(new GreetUseCase(), "Alice", presenter);
 ```
 
 ---
@@ -190,20 +201,26 @@ presenter.success(orderResult);   // 或 presenter.error(exception);
 
 | 类 / 接口 | 描述 |
 |-----------|------|
-| `ApplicationService` | 应用服务标记接口 |
-| `BaseApplicationService` | 应用服务基类 — 内置 `ServiceProvider` 和 `Bus` 引用，提供 `getService()` 和 `getUser()` 便捷方法 |
+| `ApplicationService` | 应用服务标记接口 — 继承 `HasLazyServiceProvider` |
+| `BaseApplicationService` | 应用服务基类 — 通过 `LazyServiceProvider` 懒加载 `Bus`、`UserPrincipal`、日志与 `UseCaseExecutor`，并通过 `RequestContextAccessor` 访问请求上下文 |
 
 ```java
 public abstract class BaseApplicationService implements ApplicationService {
-    protected final ServiceProvider provider;
-    protected final Bus bus;
+    public ServiceProvider getLazyServiceProvider() { ... }
+    public void setLazyServiceProvider(ServiceProvider provider) { ... }
 
     protected <T> Optional<T> getService(Class<T> type) { ... }
+    protected Bus getBus() { ... }
     protected UserPrincipal getUser() { ... }
+    protected RequestContext getRequestContext() { ... }
+    protected Logger getLogger() { ... }
+    protected UseCaseExecutor getExecutor() { ... }
 }
 ```
 
-应用服务负责编排领域对象，协调用例执行，并通过消息总线发送命令和事件。
+Spring 集成模块会通过 `ApplicationServiceBeanPostProcessor` 自动注入
+`LazyServiceProvider`，并注册 `UseCaseExecutor`。应用服务只需继承
+`BaseApplicationService`，即可直接使用 `getBus()`、`getUser()` 与 `getExecutor()`。
 
 ---
 
@@ -248,9 +265,16 @@ com.euonia
 │   └── BaseApplicationService.java # 应用服务基类
 └── usecase/
     ├── UseCase.java              # 用例接口
-    ├── UseCaseSuccess.java       # 成功输出端口
-    ├── UseCaseFailure.java       # 失败输出端口
-    └── UseCasePresenter.java     # 用例展示器
+    ├── UntypedUseCase.java       # 未类型化用例根接口
+    ├── NonOutputUseCase.java     # 无输出用例
+    ├── NonInputUseCase.java      # 无输入用例
+    ├── ParameterlessUseCase.java # 无参用例
+    ├── UseCaseOutputSuccess.java # 成功输出端口
+    ├── UseCaseOutputFailure.java # 失败输出端口
+    ├── UseCasePresenter.java     # 用例呈现器契约
+    ├── DefaultUseCasePresenter.java # 默认呈现器
+    ├── UseCaseExecutor.java      # 用例执行器契约
+    └── DefaultUseCaseExecutor.java # 默认用例执行器
 ```
 
 ---
@@ -263,8 +287,8 @@ com.euonia
 | **聚合模式** | `AggregateBase` 管理子实体一致性和领域事件 |
 | **事件溯源** | `HasDomainEvents` + `raiseEvent` / `applyEvent` |
 | **CQRS（命令侧）** | `Command` 通过 `Unicast` 总线分发 |
-| **端口-适配器** | `UseCaseSuccess` / `UseCaseFailure` 输出端口 |
-| **观察者模式** | `UseCasePresenter` 使用 `SubmissionPublisher` 响应式订阅 |
+| **端口-适配器** | `UseCaseOutputSuccess` / `UseCaseOutputFailure` 输出端口 |
+| **观察者模式** | `UseCasePresenter` 的监听器与 `DefaultUseCaseExecutor` 结果分发 |
 | **模板方法** | `DomainEventBase.attach()` 自动设置来源信息 |
 | **策略模式** | `AuditStore` 可替换持久化策略 |
 
@@ -275,7 +299,6 @@ com.euonia
 ```
 ddd
  ├── core           (ID 生成、反射工具)
- ├── pipeline       (管道/过滤器抽象)
- ├── unit-of-work   (工作单元事务管理)
- └── bus-core       (消息总线 — Command 的 Unicast、Event 的 Multicast)
+ ├── bus-core       (消息总线 — 应用服务中的 Bus 便捷访问)
+ └── slf4j-api      (应用服务日志)
 ```

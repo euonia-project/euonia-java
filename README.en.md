@@ -78,9 +78,9 @@ graph TD
 | `com.euonia.domain.event` | `EventAggregate` | Aggregate-shaped event data: id, eventId, typeName, originator, timestamp, sequence |
 | `com.euonia.domain.command` | `Command` / `CommandBase` | Command pattern abstraction: `Command` extends `Unicast` (message bus integration), `CommandBase` provides base implementation |
 | `com.euonia.domain.auditing` | `@Audited` / `AuditRecord` / `AuditStore` | Change auditing support for domain entities |
-| `com.euonia.application` | `ApplicationService` / `BaseApplicationService` | Application service marker and base class with dependency resolution |
-| `com.euonia.usecase` | `UseCase<I,O>` / `UseCasePresenter` | Input/output use-case contract with reactive result publishing |
-| `com.euonia.usecase` | `UseCaseSuccess` / `UseCaseFailure` | Output ports for success and failure handling |
+| `com.euonia.application` | `ApplicationService` / `BaseApplicationService` | Application service marker and `LazyServiceProvider`-based base class |
+| `com.euonia.usecase` | `UseCase<I,O>` / `UseCaseExecutor` | Async use-case contract with unified execution/result dispatching |
+| `com.euonia.usecase` | `UseCasePresenter` / `DefaultUseCasePresenter` | Presenter contract and default implementation |
 
 ### UoW (`euonia-unit-of-work`)
 > Unit of Work abstraction for transaction boundaries, commit/rollback lifecycle, and consistent persistence orchestration.
@@ -357,6 +357,7 @@ pipeline.runAsync(new MyContext()).toCompletableFuture().join();
 |-------|-------------|
 | `ApplicationContextServiceProvider` | `ServiceProvider` implementation backed by Spring's `ApplicationContext` — supports `getBeanProvider`, `autowireBean`, and constructor-argument-based bean creation |
 | `ServiceProviderConfiguration` | Spring `@Configuration` auto-wiring `ServiceProvider` as a bean |
+| `ApplicationConfiguration` | Registers `UseCaseExecutor` and injects `LazyServiceProvider` into application services |
 
 **Key features:**
 - Enables Spring DI for pipeline behaviors and other Euonia components

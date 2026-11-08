@@ -1,18 +1,35 @@
 package com.euonia.usecase;
 
+import java.util.concurrent.CompletionStage;
+
 /**
- * 表示应用中的一个用例。用例是可以在系统内执行的特定操作或动作，定义了执行特定业务逻辑或功能的契约。
+ * 定义具有输入与输出的用例。
+ * <p>
+ * 对应 .NET 版的 {@code IUseCase<TInput, TOutput>}。Java 版使用
+ * {@link CompletionStage} 表示异步执行结果。
  *
  * @param <I> 用例输入的类型
  * @param <O> 用例输出的类型
  * @author damon(zhaorong@outlook.com)
  */
-public interface UseCase<I, O> {
+public interface UseCase<I, O> extends UntypedUseCase {
+
     /**
-     * 使用给定的输入执行用例并返回输出。
+     * 使用给定的输入异步执行用例。
      *
      * @param input 用例的输入数据
-     * @return 用例的输出数据
+     * @return 用例输出
      */
-    O execute(I input);
+    CompletionStage<O> executeAsync(I input);
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ClassCastException 当 {@code input} 无法转换为 {@code I} 时抛出
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    default CompletionStage<?> executeUntypedAsync(Object input) {
+        return executeAsync((I) input);
+    }
 }

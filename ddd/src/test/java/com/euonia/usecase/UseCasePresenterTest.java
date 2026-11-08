@@ -2,16 +2,18 @@ package com.euonia.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.euonia.application.StubServiceProvider;
+
 /**
- * 测试 {@link UseCase} 接口和 {@link UseCasePresenter}。
+ * 测试 {@link UseCase} 接口和 {@link DefaultUseCasePresenter}。
  */
 @SuppressWarnings("unused")
 @DisplayName("UseCase / UseCasePresenter")
@@ -19,8 +21,8 @@ class UseCasePresenterTest {
 
     static class GreetUseCase implements UseCase<String, String> {
         @Override
-        public String execute(String name) {
-            return "Hello, " + name + "!";
+        public CompletionStage<String> executeAsync(String name) {
+            return CompletableFuture.completedFuture("Hello, " + name + "!");
         }
     }
 
@@ -29,27 +31,33 @@ class UseCasePresenterTest {
     class Success {
 
         @Test
-        @DisplayName("should notify success subscriber")
-        void shouldNotifySuccessSubscriber() throws Exception {
-            var presenter = new UseCasePresenter<String>();
-            var result = new AtomicReference<String>();
-            var latch = new CountDownLatch(1);
+        @DisplayName("should notify success subscribers")
+        void shouldNotifySuccessSubscribers() {
+            var presenter = new DefaultUseCasePresenter<String>();
+            var first = new AtomicReference<String>();
+            var second = new AtomicReference<String>();
 
-            presenter.subscribe(r -> { result.set(r); latch.countDown(); }, err -> {});
+            presenter.onSucceed(first::set);
+            presenter.onSucceed(second::set);
 
-            presenter.success("Hello, World!");
-            latch.await(2, TimeUnit.SECONDS);
+            presenter.ok("Hello, World!");
 
-            assertThat(result.get()).isEqualTo("Hello, World!");
+            assertThat(first.get()).isEqualTo("Hello, World!");
+            assertThat(second.get()).isEqualTo("Hello, World!");
+            assertThat(presenter.getOutput()).isEqualTo("Hello, World!");
         }
 
         @Test
-        @DisplayName("should store output via getOutput")
-        void shouldStoreOutput() {
-            var presenter = new UseCasePresenter<String>();
-            presenter.success("result");
+        @DisplayName("should support subscribe convenience method")
+        void shouldSupportSubscribeConvenienceMethod() {
+            var presenter = new DefaultUseCasePresenter<String>();
+            var result = new AtomicReference<String>();
 
-            assertThat(presenter.getOutput()).isEqualTo("result");
+            presenter.subscribe(result::set, error -> {});
+
+            presenter.ok("result");
+
+            assertThat(result.get()).isEqualTo("result");
         }
     }
 
@@ -58,19 +66,53 @@ class UseCasePresenterTest {
     class Failure {
 
         @Test
-        @DisplayName("should notify failure subscriber")
-        void shouldNotifyFailureSubscriber() throws Exception {
-            var presenter = new UseCasePresenter<String>();
+        @DisplayName("should notify failure subscribers")
+        void shouldNotifyFailureSubscribers() {
+            var presenter = new DefaultUseCasePresenter<String>();
             var error = new AtomicReference<Throwable>();
-            var latch = new CountDownLatch(1);
 
-            presenter.subscribe(r -> {}, err -> { error.set(err); latch.countDown(); });
+            presenter.onFailed(error::set);
 
             var ex = new RuntimeException("test error");
             presenter.error(ex);
-            latch.await(2, TimeUnit.SECONDS);
 
             assertThat(error.get()).isSameAs(ex);
+            assertThat(presenter.getOutput()).isNull();
+        }
+
+        @Test
+        @DisplayName("should notify canceled listeners for cancellation exceptions")
+        void shouldNotifyCanceledListenersForCancellationExceptions() {
+            var presenter = new DefaultUseCasePresenter<String>();
+            var canceled = new AtomicReference<Boolean>();
+            var failed = new AtomicReference<Throwable>();
+
+            presenter.onCanceled(() -> canceled.set(true));
+            presenter.onFailed(failed::set);
+
+            presenter.error(new CancellationException("canceled"));
+
+            assertThat(canceled.get()).isTrue();
+            assertThat(failed.get()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("close")
+    class Close {
+
+        @Test
+        @DisplayName("should clear listeners on close")
+        void shouldClearListenersOnClose() {
+            var presenter = new DefaultUseCasePresenter<String>();
+            var result = new AtomicReference<String>();
+
+            presenter.onSucceed(result::set);
+            presenter.close();
+            presenter.ok("ignored");
+
+            assertThat(result.get()).isNull();
+            assertThat(presenter.getOutput()).isEqualTo("ignored");
         }
     }
 
@@ -80,32 +122,14 @@ class UseCasePresenterTest {
 
         @Test
         @DisplayName("should execute use case and deliver result via presenter")
-        void shouldExecuteAndDeliverViaPresenter() throws Exception {
+        void shouldExecuteAndDeliverViaPresenter() {
             var useCase = new GreetUseCase();
-            var presenter = new UseCasePresenter<String>();
-            var result = new AtomicReference<String>();
-            var latch = new CountDownLatch(1);
+            var presenter = new DefaultUseCasePresenter<String>();
+            var executor = new DefaultUseCaseExecutor(new StubServiceProvider());
 
-            presenter.subscribe(r -> { result.set(r); latch.countDown(); }, err -> {});
+            executor.executeAsync(useCase, "Alice", presenter).toCompletableFuture().join();
 
-            var output = useCase.execute("Alice");
-            presenter.success(output);
-            latch.await(2, TimeUnit.SECONDS);
-
-            assertThat(result.get()).isEqualTo("Hello, Alice!");
-        }
-    }
-
-    @Nested
-    @DisplayName("close")
-    class Close {
-
-        @Test
-        @DisplayName("should close without error")
-        void shouldCloseWithoutError() throws Exception {
-            var presenter = new UseCasePresenter<String>();
-            presenter.close();
-            // No exception thrown
+            assertThat(presenter.getOutput()).isEqualTo("Hello, Alice!");
         }
     }
 }

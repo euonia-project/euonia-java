@@ -10,16 +10,16 @@ import java.util.Optional;
 import com.euonia.reflection.ServiceProvider;
 
 /**
- * {@link ServiceProvider} 的轻量测试桩，用于 {@link BaseApplicationServiceTest}。
+ * {@link ServiceProvider} 的轻量测试桩，用于应用层测试。
  */
-class StubServiceProvider implements ServiceProvider {
+public class StubServiceProvider implements ServiceProvider {
 
     private final Map<Class<?>, Object> services = new HashMap<>();
 
     /**
      * 创建一个预注册了指定服务的桩实例。
      */
-    static <T> StubServiceProvider with(Class<T> type, T instance) {
+    public static <T> StubServiceProvider with(Class<T> type, T instance) {
         var stub = new StubServiceProvider();
         stub.services.put(type, instance);
         return stub;
